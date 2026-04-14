@@ -148,12 +148,7 @@ def run_daily(force: bool = False):
         sym for sym in top_execution
         if all_packets[sym].get("score", {}).get("score", 0) >= 65
     ][:cfg.TOP_EXECUTION_INTRADAY_COUNT]
-    narrative_candidates = [
-        sym for sym in ranked_watchlist
-        if all_packets[sym].get("score", {}).get("score", 0) >= 60
-        and all_checklists[sym].get("actionability", {}).get("label")
-        in ("BUY NOW", "WATCH BREAKOUT", "WAIT PULLBACK", "WAIT ZONE")
-    ][:cfg.TOP_NARRATIVE_COUNT]
+    narrative_candidates = ranked_watchlist[:cfg.TOP_NARRATIVE_COUNT]
     top_chart_symbols = ranked_watchlist[:cfg.TOP_CHART_COUNT]
 
     print("\n  PRIORITY LISTS:")
@@ -182,7 +177,7 @@ def run_daily(force: bool = False):
     narratives = narrative.generate_narratives(
         all_packets,
         regime_result,
-        min_score=60,
+        min_score=None,
         selected_symbols=narrative_candidates,
         max_count=cfg.TOP_NARRATIVE_COUNT,
     )

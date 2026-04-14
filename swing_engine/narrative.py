@@ -136,7 +136,7 @@ def generate_narrative(packet: dict, regime: dict) -> Optional[str]:
 
 
 def generate_narratives(packets: dict, regime: dict,
-                        min_score: int = 50,
+                        min_score: int | None = 50,
                         selected_symbols: list[str] | None = None,
                         max_count: int | None = None) -> dict:
     """
@@ -152,7 +152,7 @@ def generate_narratives(packets: dict, regime: dict,
     selected_set = set(selected_symbols or [])
     qualifying_items = [
         (s, p) for s, p in packets.items()
-        if p.get("score", {}).get("score", 0) >= min_score
+        if (min_score is None or p.get("score", {}).get("score", 0) >= min_score)
         and s not in ("SPY", "QQQ", "SOXX", "DIA")
         and (not selected_set or s in selected_set)
     ]
@@ -172,7 +172,8 @@ def generate_narratives(packets: dict, regime: dict,
     qualifying = dict(qualifying_items)
 
     if not qualifying:
-        print("  No symbols qualify for narrative (score >= 50)")
+        threshold_note = "ranked selection" if min_score is None else f"score >= {min_score}"
+        print(f"  No symbols qualify for narrative ({threshold_note})")
         return {}
 
     print(f"  Generating narratives for {len(qualifying)} symbols...")
