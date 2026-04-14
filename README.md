@@ -67,8 +67,8 @@ This project can run on GitHub Actions while your home computer is off.
 
 - The workflow lives at `.github/workflows/swing-engine.yml`
 - It runs on weekdays and can also be started manually
-- It updates `data/swing_engine.sqlite3`, `data/signals.csv`, `reports/`, and `dashboard.html`
-- It publishes the latest dashboard to GitHub Pages for phone access
+- It generates a fresh dashboard and publishes it to GitHub Pages for phone access
+- In a public-repo setup, generated trading data is not committed back into git
 
 Recommended repository settings:
 
@@ -79,7 +79,7 @@ Recommended repository settings:
 Phone access pattern:
 
 - Open the GitHub Pages URL for the latest dashboard
-- Use the repository itself as the durable store for the SQLite database and reports
+- Use GitHub Pages for the rendered dashboard only
 
 ## File Outputs
 

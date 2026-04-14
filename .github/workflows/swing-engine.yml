@@ -6,7 +6,6 @@ on:
     - cron: "30 13 * * 1-5"
 
 permissions:
-  contents: write
   pages: write
   id-token: write
 
@@ -52,19 +51,6 @@ jobs:
           cp dashboard.html site/index.html
           if ls reports/*.json >/dev/null 2>&1; then
             cp reports/*.json site/reports/
-          fi
-
-      - name: Commit generated data
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dashboard.html data/swing_engine.sqlite3 data/signals.csv reports
-          if git diff --cached --quiet; then
-            echo "No generated changes to commit."
-          else
-            git commit -m "Automated swing engine update [skip ci]"
-            git push
           fi
 
       - name: Upload Pages artifact
