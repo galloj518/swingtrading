@@ -142,6 +142,10 @@ def run_daily(force: bool = False):
     )
 
     top_execution = ranked_watchlist[:cfg.TOP_EXECUTION_COUNT]
+    top_execution_intraday = [
+        sym for sym in top_execution
+        if all_packets[sym].get("score", {}).get("score", 0) >= 65
+    ][:cfg.TOP_EXECUTION_INTRADAY_COUNT]
     narrative_candidates = [
         sym for sym in ranked_watchlist
         if all_packets[sym].get("score", {}).get("score", 0) >= 60
@@ -152,6 +156,7 @@ def run_daily(force: bool = False):
 
     print("\n  PRIORITY LISTS:")
     print(f"    Top execution: {', '.join(top_execution) if top_execution else 'None'}")
+    print(f"    Intraday ladder: {', '.join(top_execution_intraday) if top_execution_intraday else 'None'}")
     print(f"    Narrative set: {', '.join(narrative_candidates) if narrative_candidates else 'None'}")
     print(f"    Chart set: {', '.join(top_chart_symbols) if top_chart_symbols else 'None'}")
 
@@ -184,7 +189,12 @@ def run_daily(force: bool = False):
     print("\n[7/8] Generating charts...")
     from . import charts
     all_symbols = list(dict.fromkeys(cfg.BENCHMARKS + top_chart_symbols))
-    chart_data = charts.generate_all_charts(all_symbols, data_store, all_packets)
+    chart_data = charts.generate_all_charts(
+        all_symbols,
+        data_store,
+        all_packets,
+        intraday_emphasis_symbols=top_execution_intraday,
+    )
 
     # --- Dashboard ---
     print("\n[8/8] Generating dashboard...")
@@ -227,6 +237,7 @@ def run_daily(force: bool = False):
         "score_deltas": score_deltas,
         "narratives": narratives,
         "top_execution": top_execution,
+        "top_execution_intraday": top_execution_intraday,
         "top_narratives": narrative_candidates,
         "top_charts": top_chart_symbols,
         "leveraged_tactical": {s: {

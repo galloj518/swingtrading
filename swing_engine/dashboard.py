@@ -438,6 +438,16 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
           {f'<img src="data:image/png;base64,{chart_data["weekly_b64"]}" style="width:100%;border-radius:4px;" />' if chart_data.get("weekly_b64") else '<div style="color:#555;font-size:0.8em;">No weekly chart</div>'}
         </div>
 
+        {f'''<div class="card-section">
+          <h4>EXECUTION LADDER</h4>
+          <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
+            <div>{f'<img src="data:image/png;base64,{chart_data["intra_15m_b64"]}" style="width:100%;border-radius:4px;" />' if chart_data.get("intra_15m_b64") else '<div style="color:#555;font-size:0.8em;">No 15m chart</div>'}</div>
+            <div>{f'<img src="data:image/png;base64,{chart_data["intra_30m_b64"]}" style="width:100%;border-radius:4px;" />' if chart_data.get("intra_30m_b64") else '<div style="color:#555;font-size:0.8em;">No 30m chart</div>'}</div>
+            <div>{f'<img src="data:image/png;base64,{chart_data["intra_60m_b64"]}" style="width:100%;border-radius:4px;" />' if chart_data.get("intra_60m_b64") else '<div style="color:#555;font-size:0.8em;">No 60m chart</div>'}</div>
+          </div>
+          <div style="color:#666;font-size:0.78em;margin-top:6px;">Use 60m for structure, 30m for trigger quality, 15m for execution timing.</div>
+        </div>''' if chart_data.get("intra_15m_b64") or chart_data.get("intra_30m_b64") or chart_data.get("intra_60m_b64") else ''}
+
         <!-- TRADE LEVELS -->
         <div class="card-section">
           <h4>TRADE LEVELS</h4>
@@ -883,6 +893,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
     .action-grid {{ grid-template-columns: 1fr; }}
     .levels-grid {{ grid-template-columns: repeat(2, 1fr); }}
     .detail-row {{ font-size: 0.85em; }}
+    .card-section div[style*="grid-template-columns:repeat(3, 1fr)"] {{ grid-template-columns: 1fr !important; }}
   }}
 </style>
 </head>

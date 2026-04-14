@@ -27,6 +27,20 @@ GRID = "#1a1a1a"
 TXT = "#aaaaaa"
 
 
+def _resample_intraday(df: pd.DataFrame, rule: str) -> pd.DataFrame:
+    """Resample 5-minute intraday data into a higher intraday timeframe."""
+    if df.empty:
+        return pd.DataFrame()
+    out = df.copy().set_index("date").resample(rule).agg({
+        "open": "first",
+        "high": "max",
+        "low": "min",
+        "close": "last",
+        "volume": "sum",
+    }).dropna(subset=["open", "close"]).reset_index()
+    return out
+
+
 def _draw_candles(ax, dates, o, h, l, c, width=0.6):
     """Draw candlesticks using rectangles and lines."""
     for i in range(len(dates)):
@@ -207,7 +221,8 @@ def _make_chart(symbol, df_raw, sma_periods, state, avwap_map, pivots,
 
 def generate_chart(symbol, daily_df, weekly_df, daily_state=None, weekly_state=None,
                    avwap_map=None, pivots=None, session_vwaps=None,
-                   recent_high=None, recent_low=None, output_dir=None):
+                   recent_high=None, recent_low=None, output_dir=None,
+                   intraday_df=None, include_intraday_ladder: bool = False):
     output_dir = output_dir or cfg.CACHE_DIR
     daily_state = daily_state or {}
     weekly_state = weekly_state or {}
@@ -227,11 +242,32 @@ def generate_chart(symbol, daily_df, weekly_df, daily_state=None, weekly_state=N
         results["weekly_path"] = path
         results["weekly_b64"] = b64
 
+    if include_intraday_ladder and intraday_df is not None and not intraday_df.empty:
+        ladder = [
+            ("15m", "15min", cfg.INTRA_SMA_PERIODS, 80),
+            ("30m", "30min", cfg.INTRA_SMA_PERIODS, 60),
+            ("60m", "60min", [5, 10, 20], 40),
+        ]
+        for label, rule, periods, bars in ladder:
+            resampled = _resample_intraday(intraday_df, rule)
+            if len(resampled) < max(periods, default=1) + 5:
+                continue
+            resampled = feat.add_smas(resampled, periods)
+            state = feat.extract_ma_state(resampled, periods, f"intraday_{label}")
+            path, b64 = _make_chart(
+                symbol, resampled, periods, state,
+                {}, {}, {}, bars, f"{label} Execution", output_dir
+            )
+            results[f"intra_{label}_path"] = path
+            results[f"intra_{label}_b64"] = b64
+
     return results
 
 
-def generate_all_charts(symbols, data_store, packets, output_dir=None):
+def generate_all_charts(symbols, data_store, packets, output_dir=None,
+                        intraday_emphasis_symbols=None):
     output_dir = output_dir or cfg.CACHE_DIR
+    intraday_emphasis_symbols = set(intraday_emphasis_symbols or [])
     all_charts = {}
     print(f"  Generating charts for {len(symbols)} symbols...")
     for sym in symbols:
@@ -247,7 +283,10 @@ def generate_all_charts(symbols, data_store, packets, output_dir=None):
                 pkt.get("daily", {}), pkt.get("weekly", {}),
                 pkt.get("avwap_map"), pkt.get("pivots"),
                 pkt.get("session_vwaps"), pkt.get("recent_high"), pkt.get("recent_low"),
-                output_dir)
+                output_dir,
+                intraday_df=sdata.get("intraday", pd.DataFrame()),
+                include_intraday_ladder=sym in intraday_emphasis_symbols,
+            )
             print(f"    {sym}: done")
         except Exception as e:
             print(f"    {sym}: chart error - {e}")

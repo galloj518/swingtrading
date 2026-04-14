@@ -191,11 +191,14 @@ def _score_entry_quality(daily_state: dict, weekly_state: dict,
         score += 3
         reasons.append("+3 both 5+10 SMA will rise tomorrow")
 
-    # Extended from 10 SMA — don't chase
+    # Extended from the short-term zone — don't chase
     dist_10 = daily_state.get("dist_from_sma_10_pct", 0)
-    if dist_10 and dist_10 > 4:
+    dist_20_ext = daily_state.get("dist_from_sma_20_pct", 0)
+    if dist_10 and dist_20_ext and dist_10 > 4 and dist_20_ext > 2:
         score -= 8
-        reasons.append(f"-8 extended {dist_10:.1f}% above 10 SMA (don't chase)")
+        reasons.append(
+            f"-8 extended above short-term zone ({dist_10:.1f}% vs 10, {dist_20_ext:.1f}% vs 20)"
+        )
     elif dist_10 and dist_10 < -4:
         score -= 5
         reasons.append(f"-5 too far below 10 SMA ({dist_10:.1f}%)")
@@ -561,11 +564,13 @@ def classify_setup(daily_state: dict, score: int, action_bias: str,
 
     # === PULLBACK TO 10 SMA in strong trend ===
     if (daily_state.get("sma10_above_sma20") and
+        sma20_dir == "rising" and
         sma10_dir == "rising" and
+        dist_from_20 is not None and dist_from_20 > 0 and
         -1.5 <= dist_from_10 <= 0.5):
         return {**base,
             "type": "pullback_to_10sma",
-            "description": f"Shallow pullback to rising 10 SMA. Strong trend — tight entry.",
+            "description": f"Shallow pullback to rising 10 SMA with 20 SMA still supporting. Strong trend — tactical entry.",
             "trigger": f"BUY on intraday hold of {_fmt2(sma10)}",
             "watch_for": f"Price finding support at {_fmt2(sma10)} with session VWAP bounce",
             "invalidation": f"Close below {_fmt2(sma20)}",
@@ -601,19 +606,19 @@ def classify_setup(daily_state: dict, score: int, action_bias: str,
         }
 
     # === ABOVE ZONE: good trend but chasing ===
-    if price and sma10 and price > sma10 and dist_from_10 > 2:
+    if price and sma10 and price > sma10 and dist_from_10 > 2 and dist_from_20 > 1:
         return {**base,
             "type": "above_zone_wait",
-            "description": f"Trend is right but price {dist_from_10:.1f}% above 10 SMA. Don't chase.",
-            "trigger": f"BUY on pullback to {_fmt2(sma10)} - {_fmt2(sma20)} zone",
-            "watch_for": f"Light-volume pullback toward {_fmt2(sma10)}",
+            "description": f"Trend is right but price is above the 10/20 zone ({dist_from_10:.1f}% vs 10, {dist_from_20:.1f}% vs 20). Don't chase.",
+            "trigger": f"BUY on pullback to {_fmt2(sma20)} - {_fmt2(sma10)} zone",
+            "watch_for": f"Light-volume pullback back into the 10/20 support band",
             "invalidation": f"10 SMA rolls over and starts falling",
             "gap_up_plan": "Do NOT buy — further from entry zone",
             "gap_down_plan": f"If gaps to {_fmt2(sma10)}: potential entry, watch for intraday hold",
             "max_chase_pct": 0,
             "time_horizon": "Wait 2-5 days for pullback",
             "upgrade_conditions": [
-                f"Price pulls back to {_fmt2(sma10)} on declining volume",
+                f"Price pulls back into {_fmt2(sma20)} - {_fmt2(sma10)} on declining volume",
                 f"Breakout above {_fmt2(rh_price)} on volume > 1.3x avg",
             ],
         }

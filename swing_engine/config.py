@@ -51,6 +51,7 @@ WATCHLIST = [
 TOP_EXECUTION_COUNT = 5
 TOP_NARRATIVE_COUNT = 7
 TOP_CHART_COUNT = 15
+TOP_EXECUTION_INTRADAY_COUNT = 5
 
 # =============================================================================
 # CORRELATION GROUPS (for position sizing)
