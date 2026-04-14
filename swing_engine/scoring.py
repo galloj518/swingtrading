@@ -50,169 +50,154 @@ def _score_entry_quality(daily_state: dict, weekly_state: dict,
                           rs: dict, confluence: dict,
                           event_risk: dict, earnings: dict) -> dict:
     """
-    Gate 3: Score entry quality (0-100) for names that passed both gates.
-    Now includes MA direction awareness — a stock with falling short-term
-    MAs is losing momentum even if structure is intact.
+    Gate 3: Score institutional-quality swing candidates (0-100).
+
+    The model emphasizes:
+    - weekly and daily trend quality
+    - leadership / relative strength
+    - liquidity / tradability
+    - location versus support, AVWAP, and the 20/50-day area
+    - volume behavior on pullbacks and breakouts
+
+    The 10-day is treated as tactical timing, not the core of the quality score.
     """
     score = 50
     reasons = []
     price = daily_state.get("last_close", 0)
+    if not price:
+        return {"score": 0, "reasons": ["No valid price state"]}
 
-    # --- Weekly alignment (max +15) ---
-    if weekly_state.get("sma5_above_sma10"):
+    sma5 = daily_state.get("sma_5", price)
+    sma10 = daily_state.get("sma_10", price)
+    sma20 = daily_state.get("sma_20", price)
+    sma50 = daily_state.get("sma_50", price)
+    sma200 = daily_state.get("sma_200", price)
+
+    # --- Weekly structure / sponsorship ---
+    if weekly_state.get("ma_stack") == "bullish":
+        score += 12
+        reasons.append("+12 weekly stack bullish")
+    elif weekly_state.get("sma10_above_sma20"):
+        score += 6
+        reasons.append("+6 weekly trend constructive")
+
+    w_sma20_dir = weekly_state.get("sma_20_direction", "unknown")
+    if w_sma20_dir == "rising":
         score += 8
-        reasons.append("+8 weekly 5>10")
-    if weekly_state.get("sma10_above_sma20"):
-        score += 7
-        reasons.append("+7 weekly 10>20")
+        reasons.append("+8 weekly 20 SMA rising")
+    elif w_sma20_dir == "falling":
+        score -= 10
+        reasons.append("-10 weekly 20 SMA falling")
 
-    # --- Daily MA alignment (max +20) ---
-    if daily_state.get("close_above_sma_10"):
-        score += 5
-        reasons.append("+5 above daily 10")
+    # --- Daily trend quality ---
+    if daily_state.get("ma_stack") == "bullish":
+        score += 12
+        reasons.append("+12 daily stack bullish")
+    elif daily_state.get("sma20_above_sma50"):
+        score += 6
+        reasons.append("+6 daily trend constructive")
+
     if daily_state.get("close_above_sma_20"):
-        score += 5
-        reasons.append("+5 above daily 20")
-
-    # Stack bonus — but only if short-term MAs are not falling
-    # Shannon: ordered stack with falling 5/10 means momentum rolling over
-    daily_stack_bullish = (
-        daily_state.get("sma10_above_sma20") and
-        daily_state.get("sma20_above_sma50")
-    )
-    sma5_falling = daily_state.get("sma_5_direction") == "falling"
-    sma10_falling = daily_state.get("sma_10_direction") == "falling"
-
-    if daily_stack_bullish and not sma5_falling and not sma10_falling:
-        score += 10
-        reasons.append("+10 daily MA stack bullish with rising short MAs")
-    elif daily_stack_bullish and (sma5_falling or sma10_falling):
-        score += 3
-        reasons.append("+3 daily MA stack ordered BUT short MAs rolling (momentum fading)")
-    elif not daily_stack_bullish:
-        pass  # no bonus
-
-    # --- Daily 200 SMA (max +5) ---
-    if daily_state.get("close_above_sma_200"):
-        score += 5
-        reasons.append("+5 above 200 SMA")
+        score += 4
+        reasons.append("+4 above daily 20")
     else:
-        score -= 5
-        reasons.append("-5 below 200 SMA")
+        score -= 6
+        reasons.append("-6 below daily 20")
 
-    # =================================================================
-    # MA DIRECTION — this is the timing layer
-    # Structure can be right but timing wrong if MAs are falling
-    # =================================================================
+    if daily_state.get("close_above_sma_50"):
+        score += 5
+        reasons.append("+5 above daily 50")
+    else:
+        score -= 8
+        reasons.append("-8 below daily 50")
 
-    # --- DAILY MA DIRECTIONS ---
+    if daily_state.get("close_above_sma_200"):
+        score += 4
+        reasons.append("+4 above daily 200")
+    else:
+        score -= 6
+        reasons.append("-6 below daily 200")
 
-    # Daily 5 SMA direction (most sensitive to momentum)
+    sma20_dir = daily_state.get("sma_20_direction", "unknown")
+    sma50_dir = daily_state.get("sma_50_direction", "unknown")
+    if sma20_dir == "rising":
+        score += 8
+        reasons.append("+8 daily 20 SMA rising")
+    elif sma20_dir == "falling":
+        score -= 10
+        reasons.append("-10 daily 20 SMA falling")
+
+    if sma50_dir == "rising":
+        score += 5
+        reasons.append("+5 daily 50 SMA rising")
+    elif sma50_dir == "falling":
+        score -= 6
+        reasons.append("-6 daily 50 SMA falling")
+
+    # --- Short-term timing layer (lower weight) ---
     sma5_dir = daily_state.get("sma_5_direction", "unknown")
     if sma5_dir == "falling":
-        score -= 8
-        reasons.append("-8 daily 5 SMA FALLING (momentum fading)")
+        score -= 5
+        reasons.append("-5 daily 5 SMA falling")
     elif sma5_dir == "rising":
-        score += 3
-        reasons.append("+3 daily 5 SMA rising")
+        score += 2
+        reasons.append("+2 daily 5 SMA rising")
 
-    # Daily 10 SMA direction
     sma10_dir = daily_state.get("sma_10_direction", "unknown")
     if sma10_dir == "falling":
-        score -= 6
-        reasons.append("-6 daily 10 SMA FALLING")
+        score -= 4
+        reasons.append("-4 daily 10 SMA falling")
     elif sma10_dir == "rising":
         score += 2
         reasons.append("+2 daily 10 SMA rising")
-
-    # Daily 20 SMA direction (trend health)
-    sma20_dir = daily_state.get("sma_20_direction", "unknown")
-    if sma20_dir == "falling":
-        score -= 10
-        reasons.append("-10 daily 20 SMA FALLING (trend weakening)")
-    elif sma20_dir == "rising":
-        score += 5
-        reasons.append("+5 daily 20 SMA rising (healthy trend)")
-
-    # Daily 50 SMA direction (intermediate trend)
-    sma50_dir = daily_state.get("sma_50_direction", "unknown")
-    if sma50_dir == "falling":
-        score -= 5
-        reasons.append("-5 daily 50 SMA FALLING (intermediate trend weak)")
-    elif sma50_dir == "rising":
-        score += 3
-        reasons.append("+3 daily 50 SMA rising")
-
-    # Daily 200 SMA direction (long-term trend)
-    sma200_dir = daily_state.get("sma_200_direction", "unknown")
-    if sma200_dir == "falling":
-        score -= 5
-        reasons.append("-5 daily 200 SMA FALLING (long-term trend deteriorating)")
-    elif sma200_dir == "rising":
-        score += 3
-        reasons.append("+3 daily 200 SMA rising")
-
-    # --- WEEKLY MA DIRECTIONS ---
-
-    # Weekly 5 SMA direction
-    w_sma5_dir = weekly_state.get("sma_5_direction", "unknown")
-    if w_sma5_dir == "falling":
-        score -= 7
-        reasons.append("-7 WEEKLY 5 SMA FALLING")
-    elif w_sma5_dir == "rising":
-        score += 3
-        reasons.append("+3 weekly 5 SMA rising")
-
-    # Weekly 10 SMA direction
-    w_sma10_dir = weekly_state.get("sma_10_direction", "unknown")
-    if w_sma10_dir == "falling":
-        score -= 7
-        reasons.append("-7 WEEKLY 10 SMA FALLING (weekly momentum weak)")
-    elif w_sma10_dir == "rising":
-        score += 3
-        reasons.append("+3 weekly 10 SMA rising")
-
-    # Weekly 20 SMA direction (the big one — weekly trend direction)
-    w_sma20_dir = weekly_state.get("sma_20_direction", "unknown")
-    if w_sma20_dir == "falling":
-        score -= 10
-        reasons.append("-10 WEEKLY 20 SMA FALLING (primary trend weakening)")
-    elif w_sma20_dir == "rising":
-        score += 5
-        reasons.append("+5 weekly 20 SMA rising (primary trend healthy)")
 
     # --- TOMORROW BIAS ---
     sma5_tmw = daily_state.get("sma_5_tomorrow_bias", "unknown")
     sma10_tmw = daily_state.get("sma_10_tomorrow_bias", "unknown")
     if sma5_tmw == "will_fall" and sma10_tmw == "will_fall":
-        score -= 5
-        reasons.append("-5 both 5+10 SMA will fall tomorrow")
+        score -= 3
+        reasons.append("-3 both 5+10 SMA will fall tomorrow")
     elif sma5_tmw == "will_rise" and sma10_tmw == "will_rise":
-        score += 3
-        reasons.append("+3 both 5+10 SMA will rise tomorrow")
+        score += 2
+        reasons.append("+2 both 5+10 SMA will rise tomorrow")
 
-    # Extended from the short-term zone — don't chase
+    # --- Entry location / support quality ---
     dist_10 = daily_state.get("dist_from_sma_10_pct", 0)
-    dist_20_ext = daily_state.get("dist_from_sma_20_pct", 0)
-    if dist_10 and dist_20_ext and dist_10 > 4 and dist_20_ext > 2:
+    dist_20 = daily_state.get("dist_from_sma_20_pct", 0)
+    dist_50 = daily_state.get("dist_from_sma_50_pct", 0)
+
+    if dist_20 is not None and -2.5 <= dist_20 <= 1.0 and sma20_dir == "rising":
+        score += 10
+        reasons.append("+10 price near rising 20 SMA support")
+    elif dist_20 is not None and 1.0 < dist_20 <= 4.0 and sma20_dir == "rising":
+        score += 4
+        reasons.append("+4 price extended modestly above rising 20 SMA")
+    elif dist_20 is not None and dist_20 > 4:
         score -= 8
         reasons.append(
-            f"-8 extended above short-term zone ({dist_10:.1f}% vs 10, {dist_20_ext:.1f}% vs 20)"
+            f"-8 too extended above 20 SMA ({dist_20:.1f}%)"
         )
-    elif dist_10 and dist_10 < -4:
-        score -= 5
-        reasons.append(f"-5 too far below 10 SMA ({dist_10:.1f}%)")
+    elif dist_20 is not None and dist_20 < -3:
+        score -= 8
+        reasons.append(f"-8 losing 20 SMA support ({dist_20:.1f}%)")
 
-    # --- Intraday alignment (max +10) ---
+    if dist_50 is not None and -2.5 <= dist_50 <= 6 and sma50_dir == "rising":
+        score += 4
+        reasons.append("+4 50 SMA remains supportive")
+
+    if dist_10 is not None and dist_10 > 6 and dist_20 is not None and dist_20 > 3:
+        score -= 4
+        reasons.append(f"-4 overextended above 10-day timing band ({dist_10:.1f}%)")
+
+    # --- Intraday alignment (execution layer) ---
     if intra_state.get("ma_stack") == "bullish":
-        score += 10
-        reasons.append("+10 intraday stack bullish")
+        score += 6
+        reasons.append("+6 intraday stack bullish")
     elif intra_state.get("close_above_sma_50"):
-        score += 5
-        reasons.append("+5 intraday above 50")
+        score += 3
+        reasons.append("+3 intraday above 50")
 
-    # --- AVWAP location (enhanced) ---
-    # Check multiple AVWAPs, not just YTD
+    # --- AVWAP sponsorship ---
     avwap_above = 0
     avwap_below = 0
     for label, data in avwap_map.items():
@@ -224,51 +209,73 @@ def _score_entry_quality(daily_state: dict, weekly_state: dict,
                 avwap_below += 1
 
     if avwap_above > 0 and avwap_below == 0:
-        score += 8
-        reasons.append(f"+8 above ALL {avwap_above} AVWAPs")
+        score += 10
+        reasons.append(f"+10 above all {avwap_above} AVWAPs")
     elif avwap_above > avwap_below:
-        score += 4
-        reasons.append(f"+4 above {avwap_above}/{avwap_above+avwap_below} AVWAPs")
+        score += 5
+        reasons.append(f"+5 above {avwap_above}/{avwap_above+avwap_below} AVWAPs")
     elif avwap_below > avwap_above and avwap_below > 0:
-        score -= 5
-        reasons.append(f"-5 below majority of AVWAPs ({avwap_below}/{avwap_above+avwap_below})")
+        score -= 7
+        reasons.append(f"-7 below majority of AVWAPs ({avwap_below}/{avwap_above+avwap_below})")
 
-    # --- Relative strength (max +10) ---
+    # --- Leadership / relative strength ---
     rs20 = rs.get("rs_20d")
+    rs60 = rs.get("rs_60d")
     if rs20 is not None:
-        if rs20 > 3:
+        if rs20 > 5:
+            score += 12
+            reasons.append(f"+12 elite RS20 ({rs20})")
+        elif rs20 > 2:
             score += 10
             reasons.append(f"+10 strong RS20 ({rs20})")
         elif rs20 > 0:
             score += 5
             reasons.append(f"+5 positive RS20 ({rs20})")
         elif rs20 < -3:
-            score -= 8
-            reasons.append(f"-8 weak RS20 ({rs20})")
+            score -= 10
+            reasons.append(f"-10 weak RS20 ({rs20})")
+    if rs60 is not None:
+        if rs60 > 5:
+            score += 6
+            reasons.append(f"+6 strong RS60 ({rs60})")
+        elif rs60 < -3:
+            score -= 5
+            reasons.append(f"-5 weak RS60 ({rs60})")
+
+    # --- Liquidity / tradability ---
+    adv = daily_state.get("avg_dollar_volume", 0)
+    if adv:
+        if adv >= cfg.PREFERRED_AVG_DOLLAR_VOLUME:
+            score += 8
+            reasons.append(f"+8 liquid institutional ADV ${adv:,.0f}")
+        elif adv >= cfg.MIN_AVG_DOLLAR_VOLUME:
+            score += 3
+            reasons.append(f"+3 acceptable ADV ${adv:,.0f}")
+        else:
+            score -= 12
+            reasons.append(f"-12 thin ADV ${adv:,.0f}")
 
     # --- Relative volume context ---
     rvol = daily_state.get("rvol", 1.0)
-    dist_20 = daily_state.get("dist_from_sma_20_pct", 0)
-    dist_10_vol = daily_state.get("dist_from_sma_10_pct", 0)
     if rvol:
-        # Low volume pullback to MAs = healthy (institutional holding, not selling)
         if rvol < 0.7 and dist_20 and -3 <= dist_20 <= 0:
             score += 8
             reasons.append(f"+8 LOW volume pullback ({rvol}x) = healthy consolidation")
-        # High volume selloff = institutions distributing
         elif rvol > 1.8 and dist_20 and dist_20 < -2:
             score -= 10
             reasons.append(f"-10 HIGH volume selloff ({rvol}x) = distribution")
-        # High volume near highs = demand
-        elif rvol > 1.5 and dist_10_vol and dist_10_vol > 0:
+        elif rvol > 1.5 and dist_20 and dist_20 > 0:
             score += 5
             reasons.append(f"+5 elevated volume near highs ({rvol}x)")
 
-    # --- Confluence bonus (max +5) ---
+    # --- Confluence / level clustering ---
     conf_score = confluence.get("score", 0)
     if conf_score >= 3:
-        score += 5
-        reasons.append(f"+5 high confluence ({conf_score} levels)")
+        score += 6
+        reasons.append(f"+6 high confluence ({conf_score} levels)")
+    elif conf_score == 2:
+        score += 3
+        reasons.append("+3 moderate confluence")
 
     # --- Event risk penalties ---
     if event_risk.get("high_risk_imminent"):
