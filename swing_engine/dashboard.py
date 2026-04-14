@@ -229,6 +229,8 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     rl = pkt.get("recent_low", {})
 
     score = sc.get("score", 0)
+    idea_score = sc.get("idea_quality_score", score)
+    timing_score = sc.get("entry_timing_score", score)
     color, bg = _score_color(score)
     price = d.get("last_close", 0)
     action = _build_actionability(pkt, cl)
@@ -384,6 +386,12 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             <span style="color:{color};font-weight:700;font-size:1.3em;margin-left:8px;">{score}</span>
             <span style="color:#888;">/ 100</span>
             <span style="color:{color};margin-left:8px;">{sc.get('quality', '')}</span>
+            <span style="display:inline-block;margin-left:10px;padding:3px 8px;border-radius:999px;background:#101923;color:#8eb8ff;font-size:0.82em;font-weight:700;">
+              IDEA {idea_score:.1f}
+            </span>
+            <span style="display:inline-block;margin-left:6px;padding:3px 8px;border-radius:999px;background:#1d1603;color:#ffd66b;font-size:0.82em;font-weight:700;">
+              TIMING {timing_score:.1f}
+            </span>
             <span style="display:inline-block;margin-left:10px;padding:3px 8px;border-radius:999px;background:{action_bg};color:{action_color};font-size:0.85em;font-weight:700;">
               {action['label']}
             </span>
@@ -396,6 +404,10 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
         </div>
         <div style="color:{action_color};margin-top:6px;font-size:0.9em;font-weight:700;">
           ACTION: {action['detail']}
+        </div>
+        <div style="color:#8ea2b8;margin-top:5px;font-size:0.86em;">
+          Institutional quality: <span style="color:#fff;">{sc.get('idea_quality', sc.get('quality', '--'))}</span> |
+          Entry timing: <span style="color:#fff;">{sc.get('entry_timing', '--')}</span>
         </div>
         <div style="color:#aaa;margin-top:4px;">
           Setup: <span style="color:#fff;font-weight:700;">{setup.get('type', '--')}</span> --
@@ -594,6 +606,8 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
         wl_candidates,
         key=lambda s: (
             wl_meta[s]["action"]["rank"],
+            -packets[s].get("score", {}).get("idea_quality_score", 0),
+            -packets[s].get("score", {}).get("entry_timing_score", 0),
             -wl_meta[s]["score"],
             s,
         ),
@@ -608,6 +622,8 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
         ez = pkt.get("entry_zone", {})
         setup = pkt.get("setup", {})
         score = sc.get("score", 0)
+        idea_score = sc.get("idea_quality_score", score)
+        timing_score = sc.get("entry_timing_score", score)
         color, bg = _score_color(score)
         action = wl_meta[sym]["action"]
         action_color, action_bg = _action_style(action["label"])
@@ -619,6 +635,8 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
         <tr style="border-bottom:1px solid #222;">
           <td style="color:{color};font-weight:700;">{sym}</td>
           <td style="background:{bg};color:{color};text-align:center;font-weight:700;">{score}</td>
+          <td>{idea_score:.1f}</td>
+          <td>{timing_score:.1f}</td>
           <td><span style="display:inline-block;padding:2px 7px;border-radius:999px;background:{action_bg};color:{action_color};font-weight:700;">{action['label']}</span></td>
           <td>{sc.get('action_bias', '--')}</td>
           <td>{setup.get('type', '--')}</td>
@@ -653,6 +671,8 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
             setup = pkt.get("setup", {})
             price = pkt.get("daily", {}).get("last_close")
             score = pkt.get("score", {}).get("score", 0)
+            idea_score = pkt.get("score", {}).get("idea_quality_score", score)
+            timing_score = pkt.get("score", {}).get("entry_timing_score", score)
             action = wl_meta[sym]["action"]
             body += f"""
             <div style="padding:8px 0;border-top:1px solid #1a1a1a;">
@@ -660,6 +680,8 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
                 <div>
                   <span style="color:#fff;font-weight:700;">{sym}</span>
                   <span style="color:#888;margin-left:8px;">Score {score}</span>
+                  <span style="color:#8eb8ff;margin-left:8px;">Idea {idea_score:.1f}</span>
+                  <span style="color:#ffd66b;margin-left:8px;">Timing {timing_score:.1f}</span>
                   <span style="color:#666;margin-left:8px;">{setup.get('type', '--')}</span>
                 </div>
                 <div style="color:#aaa;">{_fmt(price)}</div>
@@ -962,7 +984,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
   <h2>WATCHLIST SUMMARY</h2>
   <table>
     <tr>
-      <th>Sym</th><th>Score</th><th>Action</th><th>Bias</th><th>Setup</th><th>Price</th>
+      <th>Sym</th><th>Score</th><th>Idea</th><th>Timing</th><th>Action</th><th>Bias</th><th>Setup</th><th>Price</th>
       <th>Entry Zone</th><th>Zone?</th><th>Stop</th><th>Target 1</th><th>R:R</th><th>RS20</th>
     </tr>
     {summary_rows}

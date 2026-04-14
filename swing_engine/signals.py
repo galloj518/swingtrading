@@ -18,7 +18,8 @@ SIGNAL_LOG = cfg.DATA_DIR / "signals.csv"
 JOURNAL_LOG = cfg.DATA_DIR / "journal.csv"
 
 SIGNAL_COLUMNS = [
-    "date", "symbol", "score", "quality", "action_bias", "setup_type",
+    "date", "symbol", "score", "quality", "idea_quality_score", "idea_quality",
+    "entry_timing_score", "entry_timing", "action_bias", "setup_type",
     "weekly_gate", "daily_gate", "entry_low", "entry_high", "stop",
     "target_1", "target_2", "price_at_signal", "atr", "rs_20d",
     "regime", "event_risk", "rvol",
@@ -240,6 +241,10 @@ def log_signal(packet: dict, regime_label: str = "") -> None:
         "symbol": packet["symbol"],
         "score": packet["score"]["score"],
         "quality": packet["score"]["quality"],
+        "idea_quality_score": packet["score"].get("idea_quality_score"),
+        "idea_quality": packet["score"].get("idea_quality"),
+        "entry_timing_score": packet["score"].get("entry_timing_score"),
+        "entry_timing": packet["score"].get("entry_timing"),
         "action_bias": packet["score"]["action_bias"],
         "setup_type": packet["setup"]["type"],
         "weekly_gate": packet["score"]["weekly_gate"]["passed"],

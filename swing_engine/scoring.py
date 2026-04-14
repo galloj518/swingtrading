@@ -9,7 +9,6 @@ Hierarchical, not additive:
 This prevents the system from producing misleading scores on names
 with broken weekly structure.
 """
-from datetime import date, timedelta
 from typing import Optional
 
 import pandas as pd
@@ -45,252 +44,282 @@ def _check_daily_gate(daily_state: dict) -> dict:
     }
 
 
-def _score_entry_quality(daily_state: dict, weekly_state: dict,
-                          intra_state: dict, avwap_map: dict,
-                          rs: dict, confluence: dict,
-                          event_risk: dict, earnings: dict) -> dict:
-    """
-    Gate 3: Score institutional-quality swing candidates (0-100).
+def _clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
+    return max(low, min(high, value))
 
-    The model emphasizes:
-    - weekly and daily trend quality
-    - leadership / relative strength
-    - liquidity / tradability
-    - location versus support, AVWAP, and the 20/50-day area
-    - volume behavior on pullbacks and breakouts
 
-    The 10-day is treated as tactical timing, not the core of the quality score.
-    """
-    score = 50
-    reasons = []
-    price = daily_state.get("last_close", 0)
-    if not price:
-        return {"score": 0, "reasons": ["No valid price state"]}
+def _safe_float(value, default: float = 0.0) -> float:
+    try:
+        if value is None:
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
-    sma5 = daily_state.get("sma_5", price)
-    sma10 = daily_state.get("sma_10", price)
-    sma20 = daily_state.get("sma_20", price)
-    sma50 = daily_state.get("sma_50", price)
-    sma200 = daily_state.get("sma_200", price)
 
-    # --- Weekly structure / sponsorship ---
-    if weekly_state.get("ma_stack") == "bullish":
-        score += 12
-        reasons.append("+12 weekly stack bullish")
-    elif weekly_state.get("sma10_above_sma20"):
-        score += 6
-        reasons.append("+6 weekly trend constructive")
+def _linear_ratio(value: float, low: float, high: float) -> float:
+    if high == low:
+        return 0.0
+    return _clamp((value - low) / (high - low), 0.0, 1.0)
 
-    w_sma20_dir = weekly_state.get("sma_20_direction", "unknown")
-    if w_sma20_dir == "rising":
-        score += 8
-        reasons.append("+8 weekly 20 SMA rising")
-    elif w_sma20_dir == "falling":
-        score -= 10
-        reasons.append("-10 weekly 20 SMA falling")
 
-    # --- Daily trend quality ---
-    if daily_state.get("ma_stack") == "bullish":
-        score += 12
-        reasons.append("+12 daily stack bullish")
-    elif daily_state.get("sma20_above_sma50"):
-        score += 6
-        reasons.append("+6 daily trend constructive")
+def _band_ratio(value: float, outer_low: float, ideal_low: float,
+                ideal_high: float, outer_high: float) -> float:
+    if value <= outer_low or value >= outer_high:
+        return 0.0
+    if ideal_low <= value <= ideal_high:
+        return 1.0
+    if value < ideal_low:
+        return _linear_ratio(value, outer_low, ideal_low)
+    return _linear_ratio(outer_high - value, 0.0, outer_high - ideal_high)
 
-    if daily_state.get("close_above_sma_20"):
-        score += 4
-        reasons.append("+4 above daily 20")
+
+def _avg(values: list[float]) -> float:
+    vals = [v for v in values if v is not None]
+    return sum(vals) / len(vals) if vals else 0.0
+
+
+def _stack_score(stack: str) -> float:
+    return {"bullish": 100.0, "mixed": 55.0, "bearish": 10.0}.get(stack, 50.0)
+
+
+def _direction_score(direction: str) -> float:
+    return {"rising": 100.0, "flat": 55.0, "falling": 0.0}.get(direction, 50.0)
+
+
+def _bool_score(flag) -> float:
+    return 100.0 if bool(flag) else 0.0
+
+
+def _quality_label(score: float) -> str:
+    return (
+        "A - strong" if score >= 80 else
+        "B - good" if score >= 65 else
+        "C - marginal" if score >= 50 else
+        "D - weak" if score >= 35 else
+        "F - avoid"
+    )
+
+
+def _timing_label(score: float) -> str:
+    return (
+        "A - ready" if score >= 80 else
+        "B - close" if score >= 65 else
+        "C - developing" if score >= 50 else
+        "D - early" if score >= 35 else
+        "F - poor"
+    )
+
+
+def _score_trend_quality(state: dict, timeframe: str) -> tuple[float, str]:
+    """Collapse overlapping MA facts into a smaller structural factor."""
+    if timeframe == "weekly":
+        sponsorship = _avg([
+            _bool_score(state.get("close_above_sma_20")),
+            _bool_score(state.get("sma10_above_sma20")),
+        ])
+        slope = _direction_score(state.get("sma_20_direction", "unknown"))
+        stack = _stack_score(state.get("ma_stack", "unknown"))
+        score = 0.45 * stack + 0.35 * sponsorship + 0.20 * slope
     else:
-        score -= 6
-        reasons.append("-6 below daily 20")
+        sponsorship = _avg([
+            _bool_score(state.get("close_above_sma_20")),
+            _bool_score(state.get("close_above_sma_50")),
+            _bool_score(state.get("close_above_sma_200")),
+        ])
+        slope = _avg([
+            _direction_score(state.get("sma_20_direction", "unknown")),
+            _direction_score(state.get("sma_50_direction", "unknown")),
+        ])
+        stack = _stack_score(state.get("ma_stack", "unknown"))
+        score = 0.40 * stack + 0.35 * sponsorship + 0.25 * slope
+    score = round(score, 1)
+    return score, f"{timeframe.capitalize()} trend {score:.0f}/100"
 
-    if daily_state.get("close_above_sma_50"):
-        score += 5
-        reasons.append("+5 above daily 50")
-    else:
-        score -= 8
-        reasons.append("-8 below daily 50")
 
-    if daily_state.get("close_above_sma_200"):
-        score += 4
-        reasons.append("+4 above daily 200")
-    else:
-        score -= 6
-        reasons.append("-6 below daily 200")
+def _score_avwap_sponsorship(price: float, avwap_map: dict) -> tuple[float, str]:
+    levels = []
+    for data in avwap_map.values():
+        avwap = _safe_float(data.get("avwap"), 0.0)
+        if avwap > 0:
+            levels.append(avwap)
+    if not levels or price <= 0:
+        return 50.0, "AVWAP sponsorship unavailable"
 
-    sma20_dir = daily_state.get("sma_20_direction", "unknown")
-    sma50_dir = daily_state.get("sma_50_direction", "unknown")
-    if sma20_dir == "rising":
-        score += 8
-        reasons.append("+8 daily 20 SMA rising")
-    elif sma20_dir == "falling":
-        score -= 10
-        reasons.append("-10 daily 20 SMA falling")
+    above_count = sum(1 for level in levels if price > level)
+    ratio = above_count / len(levels)
+    score = round(15.0 + 85.0 * ratio, 1)
+    return score, f"Above {above_count}/{len(levels)} AVWAPs"
 
-    if sma50_dir == "rising":
-        score += 5
-        reasons.append("+5 daily 50 SMA rising")
-    elif sma50_dir == "falling":
-        score -= 6
-        reasons.append("-6 daily 50 SMA falling")
 
-    # --- Short-term timing layer (lower weight) ---
-    sma5_dir = daily_state.get("sma_5_direction", "unknown")
-    if sma5_dir == "falling":
-        score -= 5
-        reasons.append("-5 daily 5 SMA falling")
-    elif sma5_dir == "rising":
-        score += 2
-        reasons.append("+2 daily 5 SMA rising")
+def _score_relative_strength(rs: dict) -> tuple[float, str]:
+    rs20 = _safe_float(rs.get("rs_20d"), 0.0)
+    rs60 = _safe_float(rs.get("rs_60d"), 0.0)
+    rs20_ratio = _linear_ratio(rs20, -8.0, 10.0)
+    rs60_ratio = _linear_ratio(rs60, -10.0, 12.0)
+    score = round(100.0 * (0.70 * rs20_ratio + 0.30 * rs60_ratio), 1)
+    return score, f"RS20 {rs20:+.1f}, RS60 {rs60:+.1f}"
 
-    sma10_dir = daily_state.get("sma_10_direction", "unknown")
-    if sma10_dir == "falling":
-        score -= 4
-        reasons.append("-4 daily 10 SMA falling")
-    elif sma10_dir == "rising":
-        score += 2
-        reasons.append("+2 daily 10 SMA rising")
 
-    # --- TOMORROW BIAS ---
-    sma5_tmw = daily_state.get("sma_5_tomorrow_bias", "unknown")
-    sma10_tmw = daily_state.get("sma_10_tomorrow_bias", "unknown")
-    if sma5_tmw == "will_fall" and sma10_tmw == "will_fall":
-        score -= 3
-        reasons.append("-3 both 5+10 SMA will fall tomorrow")
-    elif sma5_tmw == "will_rise" and sma10_tmw == "will_rise":
-        score += 2
-        reasons.append("+2 both 5+10 SMA will rise tomorrow")
+def _score_liquidity(daily_state: dict) -> tuple[float, str]:
+    adv = _safe_float(daily_state.get("avg_dollar_volume"), 0.0)
+    avg_volume = _safe_float(daily_state.get("avg_volume"), 0.0)
+    volume_ratio = _linear_ratio(avg_volume, cfg.MIN_AVG_DAILY_VOLUME * 0.5, cfg.MIN_AVG_DAILY_VOLUME * 2.0)
+    dollar_ratio = _linear_ratio(adv, cfg.MIN_AVG_DOLLAR_VOLUME, cfg.PREFERRED_AVG_DOLLAR_VOLUME * 2.0)
+    score = round(100.0 * (0.35 * volume_ratio + 0.65 * dollar_ratio), 1)
+    return score, f"ADV ${adv:,.0f}, volume {avg_volume:,.0f}"
 
-    # --- Entry location / support quality ---
-    dist_10 = daily_state.get("dist_from_sma_10_pct", 0)
-    dist_20 = daily_state.get("dist_from_sma_20_pct", 0)
-    dist_50 = daily_state.get("dist_from_sma_50_pct", 0)
 
-    if dist_20 is not None and -2.5 <= dist_20 <= 1.0 and sma20_dir == "rising":
-        score += 10
-        reasons.append("+10 price near rising 20 SMA support")
-    elif dist_20 is not None and 1.0 < dist_20 <= 4.0 and sma20_dir == "rising":
-        score += 4
-        reasons.append("+4 price extended modestly above rising 20 SMA")
-    elif dist_20 is not None and dist_20 > 4:
-        score -= 8
-        reasons.append(
-            f"-8 too extended above 20 SMA ({dist_20:.1f}%)"
-        )
-    elif dist_20 is not None and dist_20 < -3:
-        score -= 8
-        reasons.append(f"-8 losing 20 SMA support ({dist_20:.1f}%)")
+def _score_support_integrity(daily_state: dict, confluence: dict) -> tuple[float, str]:
+    dist20 = _safe_float(daily_state.get("dist_from_sma_20_pct"), 0.0)
+    dist50 = _safe_float(daily_state.get("dist_from_sma_50_pct"), 0.0)
+    near_20 = _band_ratio(dist20, -8.0, -2.0, 2.5, 8.0)
+    near_50 = _band_ratio(dist50, -12.0, -3.0, 6.0, 16.0)
+    confluence_score = _linear_ratio(_safe_float(confluence.get("score"), 0.0), 0.0, 4.0)
+    score = round(100.0 * (0.50 * near_20 + 0.25 * near_50 + 0.25 * confluence_score), 1)
+    return score, f"Support integrity and {int(_safe_float(confluence.get('score'), 0.0))} clustered levels"
 
-    if dist_50 is not None and -2.5 <= dist_50 <= 6 and sma50_dir == "rising":
-        score += 4
-        reasons.append("+4 50 SMA remains supportive")
 
-    if dist_10 is not None and dist_10 > 6 and dist_20 is not None and dist_20 > 3:
-        score -= 4
-        reasons.append(f"-4 overextended above 10-day timing band ({dist_10:.1f}%)")
-
-    # --- Intraday alignment (execution layer) ---
-    if intra_state.get("ma_stack") == "bullish":
-        score += 6
-        reasons.append("+6 intraday stack bullish")
-    elif intra_state.get("close_above_sma_50"):
-        score += 3
-        reasons.append("+3 intraday above 50")
-
-    # --- AVWAP sponsorship ---
-    avwap_above = 0
-    avwap_below = 0
-    for label, data in avwap_map.items():
-        av = data.get("avwap", 0)
-        if av and price:
-            if price > av:
-                avwap_above += 1
-            else:
-                avwap_below += 1
-
-    if avwap_above > 0 and avwap_below == 0:
-        score += 10
-        reasons.append(f"+10 above all {avwap_above} AVWAPs")
-    elif avwap_above > avwap_below:
-        score += 5
-        reasons.append(f"+5 above {avwap_above}/{avwap_above+avwap_below} AVWAPs")
-    elif avwap_below > avwap_above and avwap_below > 0:
-        score -= 7
-        reasons.append(f"-7 below majority of AVWAPs ({avwap_below}/{avwap_above+avwap_below})")
-
-    # --- Leadership / relative strength ---
-    rs20 = rs.get("rs_20d")
-    rs60 = rs.get("rs_60d")
-    if rs20 is not None:
-        if rs20 > 5:
-            score += 12
-            reasons.append(f"+12 elite RS20 ({rs20})")
-        elif rs20 > 2:
-            score += 10
-            reasons.append(f"+10 strong RS20 ({rs20})")
-        elif rs20 > 0:
-            score += 5
-            reasons.append(f"+5 positive RS20 ({rs20})")
-        elif rs20 < -3:
-            score -= 10
-            reasons.append(f"-10 weak RS20 ({rs20})")
-    if rs60 is not None:
-        if rs60 > 5:
-            score += 6
-            reasons.append(f"+6 strong RS60 ({rs60})")
-        elif rs60 < -3:
-            score -= 5
-            reasons.append(f"-5 weak RS60 ({rs60})")
-
-    # --- Liquidity / tradability ---
-    adv = daily_state.get("avg_dollar_volume", 0)
-    if adv:
-        if adv >= cfg.PREFERRED_AVG_DOLLAR_VOLUME:
-            score += 8
-            reasons.append(f"+8 liquid institutional ADV ${adv:,.0f}")
-        elif adv >= cfg.MIN_AVG_DOLLAR_VOLUME:
-            score += 3
-            reasons.append(f"+3 acceptable ADV ${adv:,.0f}")
-        else:
-            score -= 12
-            reasons.append(f"-12 thin ADV ${adv:,.0f}")
-
-    # --- Relative volume context ---
-    rvol = daily_state.get("rvol", 1.0)
-    if rvol:
-        if rvol < 0.7 and dist_20 and -3 <= dist_20 <= 0:
-            score += 8
-            reasons.append(f"+8 LOW volume pullback ({rvol}x) = healthy consolidation")
-        elif rvol > 1.8 and dist_20 and dist_20 < -2:
-            score -= 10
-            reasons.append(f"-10 HIGH volume selloff ({rvol}x) = distribution")
-        elif rvol > 1.5 and dist_20 and dist_20 > 0:
-            score += 5
-            reasons.append(f"+5 elevated volume near highs ({rvol}x)")
-
-    # --- Confluence / level clustering ---
-    conf_score = confluence.get("score", 0)
-    if conf_score >= 3:
-        score += 6
-        reasons.append(f"+6 high confluence ({conf_score} levels)")
-    elif conf_score == 2:
-        score += 3
-        reasons.append("+3 moderate confluence")
-
-    # --- Event risk penalties ---
+def _event_penalty(event_risk: dict, earnings: dict) -> tuple[float, str]:
+    penalty = 0.0
     if event_risk.get("high_risk_imminent"):
-        score -= 15
-        reasons.append("-15 HIGH event risk")
+        penalty += 22.0
     elif event_risk.get("elevated_risk"):
-        score -= 8
-        reasons.append("-8 elevated event risk")
-
+        penalty += 10.0
     if earnings.get("warning"):
-        score -= 10
-        reasons.append("-10 earnings imminent")
+        penalty += 15.0
+    if penalty <= 0:
+        return 0.0, "No material event penalty"
+    return penalty, f"Event penalty {penalty:.0f} points"
 
-    score = max(0, min(100, score))
-    return {"score": score, "reasons": reasons}
+
+def _score_idea_quality(daily_state: dict, weekly_state: dict,
+                        avwap_map: dict, rs: dict, confluence: dict,
+                        event_risk: dict, earnings: dict) -> dict:
+    """Institutional quality: durable structure, leadership, sponsorship, liquidity."""
+    price = _safe_float(daily_state.get("last_close"), 0.0)
+    if price <= 0:
+        return {"score": 0.0, "label": "F - unavailable", "reasons": ["No valid price state"], "factors": {}}
+
+    weekly_score, weekly_reason = _score_trend_quality(weekly_state, "weekly")
+    daily_score, daily_reason = _score_trend_quality(daily_state, "daily")
+    avwap_score, avwap_reason = _score_avwap_sponsorship(price, avwap_map)
+    rs_score, rs_reason = _score_relative_strength(rs)
+    liquidity_score, liquidity_reason = _score_liquidity(daily_state)
+    support_score, support_reason = _score_support_integrity(daily_state, confluence)
+    penalty, penalty_reason = _event_penalty(event_risk, earnings)
+
+    raw_score = (
+        0.28 * weekly_score +
+        0.28 * daily_score +
+        0.16 * rs_score +
+        0.12 * avwap_score +
+        0.10 * liquidity_score +
+        0.06 * support_score
+    )
+    score = round(_clamp(raw_score - penalty), 1)
+    reasons = [
+        weekly_reason,
+        daily_reason,
+        rs_reason,
+        avwap_reason,
+        liquidity_reason,
+        support_reason,
+    ]
+    if penalty > 0:
+        reasons.append(penalty_reason)
+
+    return {
+        "score": score,
+        "label": _quality_label(score),
+        "reasons": reasons,
+        "factors": {
+            "weekly_trend": weekly_score,
+            "daily_trend": daily_score,
+            "relative_strength": rs_score,
+            "avwap_sponsorship": avwap_score,
+            "liquidity": liquidity_score,
+            "support_integrity": support_score,
+            "event_penalty": penalty,
+        },
+    }
+
+
+def _score_intraday_timing(intra_state: dict) -> tuple[float, str]:
+    stack = _stack_score(intra_state.get("ma_stack", "unknown"))
+    sponsorship = _avg([
+        _bool_score(intra_state.get("close_above_sma_20")),
+        _bool_score(intra_state.get("close_above_sma_50")),
+    ])
+    score = round(0.55 * stack + 0.45 * sponsorship, 1)
+    return score, f"Intraday alignment {score:.0f}/100"
+
+
+def _score_entry_timing(daily_state: dict, intra_state: dict,
+                        event_risk: dict, earnings: dict) -> dict:
+    """Execution timing: location, short-term posture, volume behavior, intraday alignment."""
+    price = _safe_float(daily_state.get("last_close"), 0.0)
+    if price <= 0:
+        return {"score": 0.0, "label": "F - unavailable", "reasons": ["No valid price state"], "factors": {}}
+
+    dist10 = _safe_float(daily_state.get("dist_from_sma_10_pct"), 0.0)
+    dist20 = _safe_float(daily_state.get("dist_from_sma_20_pct"), 0.0)
+    zone_score = 100.0 * (
+        0.65 * _band_ratio(dist20, -7.0, -2.2, 1.0, 7.0) +
+        0.35 * _band_ratio(dist10, -5.0, -1.0, 2.0, 9.0)
+    )
+
+    def _bias_to_direction(bias: str) -> str:
+        return {
+            "will_rise": "rising",
+            "will_fall": "falling",
+            "flat": "flat",
+        }.get(bias, "unknown")
+
+    short_term_score = _avg([
+        _direction_score(daily_state.get("sma_5_direction", "unknown")),
+        _direction_score(daily_state.get("sma_10_direction", "unknown")),
+        _direction_score(_bias_to_direction(daily_state.get("sma_5_tomorrow_bias", "unknown"))),
+        _direction_score(_bias_to_direction(daily_state.get("sma_10_tomorrow_bias", "unknown"))),
+    ])
+
+    rvol = _safe_float(daily_state.get("rvol"), 1.0)
+    low_volume_pullback = _band_ratio(rvol, 0.35, 0.55, 0.95, 1.45) * _band_ratio(dist20, -5.0, -2.5, 0.5, 5.0)
+    breakout_volume = _band_ratio(rvol, 0.8, 1.1, 1.9, 2.8) * _band_ratio(dist20, -0.5, 0.0, 4.5, 8.0)
+    distribution_penalty = _band_ratio(rvol, 1.3, 1.8, 3.2, 4.2) * _band_ratio(-dist20, -1.0, 1.5, 5.5, 8.0)
+    volume_score = _clamp(100.0 * (0.55 * low_volume_pullback + 0.45 * breakout_volume) - 35.0 * distribution_penalty)
+
+    intraday_score, intraday_reason = _score_intraday_timing(intra_state)
+    penalty, penalty_reason = _event_penalty(event_risk, earnings)
+
+    raw_score = (
+        0.42 * zone_score +
+        0.24 * short_term_score +
+        0.16 * volume_score +
+        0.18 * intraday_score
+    )
+    score = round(_clamp(raw_score - 0.35 * penalty), 1)
+    reasons = [
+        f"Entry zone fit {zone_score:.0f}/100 (dist20 {dist20:+.1f}%, dist10 {dist10:+.1f}%)",
+        f"Short-term posture {short_term_score:.0f}/100",
+        f"Volume context {volume_score:.0f}/100 at {rvol:.1f}x RVOL",
+        intraday_reason,
+    ]
+    if penalty > 0:
+        reasons.append(f"Timing trimmed by events: {penalty_reason}")
+
+    return {
+        "score": score,
+        "label": _timing_label(score),
+        "reasons": reasons,
+        "factors": {
+            "zone_fit": round(zone_score, 1),
+            "short_term_posture": round(short_term_score, 1),
+            "volume_context": round(volume_score, 1),
+            "intraday_alignment": intraday_score,
+            "event_penalty": penalty,
+        },
+    }
 
 
 def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
@@ -315,6 +344,16 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     if not wg["passed"]:
         return {
             "score": 20,
+            "composite_score": 20,
+            "composite_quality": "F - weekly trend broken",
+            "idea_quality_score": 20,
+            "idea_quality": "F - weekly trend broken",
+            "entry_timing_score": 20,
+            "entry_timing": "F - poor",
+            "idea_reasons": [wg["detail"]],
+            "timing_reasons": ["Skipped - weekly gate failed"],
+            "idea_factors": {},
+            "timing_factors": {},
             "quality": "F — weekly trend broken",
             "weekly_gate": wg,
             "daily_gate": {"passed": False, "detail": "Skipped — weekly failed"},
@@ -328,6 +367,16 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     if not dg["passed"]:
         return {
             "score": 40,
+            "composite_score": 40,
+            "composite_quality": "D - daily trend broken",
+            "idea_quality_score": 40,
+            "idea_quality": "D - daily trend broken",
+            "entry_timing_score": 35,
+            "entry_timing": "D - early",
+            "idea_reasons": [wg["detail"], dg["detail"]],
+            "timing_reasons": ["Skipped - daily gate failed"],
+            "idea_factors": {},
+            "timing_factors": {},
             "quality": "D — daily trend broken",
             "weekly_gate": wg,
             "daily_gate": dg,
@@ -335,14 +384,18 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
             "action_bias": "wait",
         }
 
-    # Gate 3: Entry quality
-    eq = _score_entry_quality(
-        daily_state, weekly_state, intra_state,
-        avwap_map, rs, confluence, event_risk, earnings,
+    # Gate 3: Separate institutional quality from entry timing.
+    idea = _score_idea_quality(
+        daily_state, weekly_state, avwap_map, rs, confluence, event_risk, earnings,
+    )
+    timing = _score_entry_timing(
+        daily_state, intra_state, event_risk, earnings,
     )
 
-    score = eq["score"]
-    reasons = [wg["detail"], dg["detail"]] + eq["reasons"]
+    idea_score = idea["score"]
+    timing_score = timing["score"]
+    score = round(0.68 * idea_score + 0.32 * timing_score, 1)
+    reasons = [wg["detail"], dg["detail"]] + idea["reasons"] + timing["reasons"]
 
     # =================================================================
     # POST-SCORING ADJUSTMENTS — these are hard constraints
@@ -394,7 +447,8 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         score = 75
         reasons.append(f"CAPPED at 75: regime {regime_label}")
 
-    score = max(0, min(100, score))
+    score = round(_clamp(score), 1)
+    quality = _quality_label(score)
 
     quality = (
         "A — strong"   if score >= 80 else
@@ -404,16 +458,33 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         "F — avoid"
     )
 
+    quality = _quality_label(score)
     action_bias = (
         "buy"      if score >= 75 else
         "lean_buy" if score >= 65 else
         "wait"     if score >= 45 else
         "avoid"
     )
+    action_bias = (
+        "buy" if idea_score >= 75 and timing_score >= 75 and score >= 72 else
+        "lean_buy" if idea_score >= 70 and timing_score >= 58 and score >= 62 else
+        "wait" if idea_score >= 55 else
+        "avoid"
+    )
 
     return {
         "score": score,
         "quality": quality,
+        "composite_score": score,
+        "composite_quality": quality,
+        "idea_quality_score": idea_score,
+        "idea_quality": idea["label"],
+        "entry_timing_score": timing_score,
+        "entry_timing": timing["label"],
+        "idea_reasons": idea["reasons"],
+        "timing_reasons": timing["reasons"],
+        "idea_factors": idea["factors"],
+        "timing_factors": timing["factors"],
         "weekly_gate": wg,
         "daily_gate": dg,
         "reasons": reasons,

@@ -38,6 +38,10 @@ def initialize() -> None:
                 symbol TEXT NOT NULL,
                 score REAL,
                 quality TEXT,
+                idea_quality_score REAL,
+                idea_quality TEXT,
+                entry_timing_score REAL,
+                entry_timing TEXT,
                 action_bias TEXT,
                 setup_type TEXT,
                 weekly_gate INTEGER,
@@ -126,6 +130,10 @@ def _ensure_signal_columns(conn: sqlite3.Connection) -> None:
         for row in conn.execute("PRAGMA table_info(signals)").fetchall()
     }
     desired = {
+        "idea_quality_score": "REAL",
+        "idea_quality": "TEXT",
+        "entry_timing_score": "REAL",
+        "entry_timing": "TEXT",
         "hit_target_1": "INTEGER",
         "hit_target_2": "INTEGER",
         "hit_pivot_r1": "INTEGER",
@@ -187,6 +195,10 @@ def upsert_signal(row: dict, packet: dict = None) -> None:
         "symbol": row.get("symbol"),
         "score": _coerce_float(row.get("score")),
         "quality": row.get("quality"),
+        "idea_quality_score": _coerce_float(row.get("idea_quality_score")),
+        "idea_quality": row.get("idea_quality"),
+        "entry_timing_score": _coerce_float(row.get("entry_timing_score")),
+        "entry_timing": row.get("entry_timing"),
         "action_bias": row.get("action_bias"),
         "setup_type": row.get("setup_type"),
         "weekly_gate": _coerce_bool(row.get("weekly_gate")),

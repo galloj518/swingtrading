@@ -127,8 +127,24 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
 
     checks.append({
         "item": "Score",
-        "value": f"{sc['score']}/100 ({sc['quality']})",
+        "value": (
+            f"Composite {sc['score']}/100 ({sc['quality']}) | "
+            f"Idea {sc.get('idea_quality_score', sc['score'])}/100 ({sc.get('idea_quality', sc['quality'])}) | "
+            f"Timing {sc.get('entry_timing_score', sc['score'])}/100 ({sc.get('entry_timing', sc['quality'])})"
+        ),
         "passed": sc["score"] >= 60,
+    })
+
+    checks.append({
+        "item": "Idea Quality",
+        "value": f"{sc.get('idea_quality_score', sc['score'])}/100 ({sc.get('idea_quality', sc['quality'])})",
+        "passed": sc.get("idea_quality_score", sc["score"]) >= 60,
+    })
+
+    checks.append({
+        "item": "Entry Timing",
+        "value": f"{sc.get('entry_timing_score', sc['score'])}/100 ({sc.get('entry_timing', sc['quality'])})",
+        "passed": sc.get("entry_timing_score", sc["score"]) >= 55,
     })
 
     checks.append({
