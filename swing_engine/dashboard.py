@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Optional
 
 from . import config as cfg
+from . import checklist
 
 
 def _fmt(val, decimals=2):
@@ -159,6 +160,53 @@ def _score_color(score):
         return "#6b7280", "#111"
 
 
+def _as_bool(val) -> bool:
+    """Normalize booleans that may arrive as strings from saved reports."""
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        return val.strip().lower() in ("true", "1", "yes", "y")
+    return bool(val)
+
+
+def _action_style(label: str) -> tuple[str, str]:
+    """Color palette for actionability badges."""
+    if label == "BUY NOW":
+        return "#22c55e", "#052e16"
+    if label.startswith("WATCH"):
+        return "#3b82f6", "#0c1a2b"
+    if label.startswith("WAIT"):
+        return "#eab308", "#241a00"
+    return "#ef4444", "#2b0b0b"
+
+
+def _build_actionability(pkt: dict, cl: dict | None) -> dict:
+    """Build a normalized actionability object for dashboard rendering."""
+    action = (cl or {}).get("actionability")
+    if not action:
+        action = checklist.evaluate_actionability(pkt, (cl or {}).get("checks"))
+    return action
+
+
+def _build_metric_tile(label: str, value: str, tone: str = "neutral", detail: str = "") -> str:
+    """Small KPI tile for the top dashboard strip."""
+    tone_map = {
+        "good": ("#7ef0b8", "#071911"),
+        "warn": ("#ffd66b", "#201706"),
+        "bad": ("#ff7d7d", "#24090c"),
+        "info": ("#8eb8ff", "#091426"),
+        "neutral": ("#cbd5e1", "#0f1722"),
+    }
+    fg, bg = tone_map.get(tone, tone_map["neutral"])
+    detail_html = f'<div class="metric-detail">{detail}</div>' if detail else ""
+    return f"""
+    <div class="metric-tile" style="background:{bg};">
+      <div class="metric-label">{label}</div>
+      <div class="metric-value" style="color:{fg};">{value}</div>
+      {detail_html}
+    </div>"""
+
+
 def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     """Build a detailed card for one symbol."""
     chart_data = chart_data or {}
@@ -183,6 +231,9 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     score = sc.get("score", 0)
     color, bg = _score_color(score)
     price = d.get("last_close", 0)
+    action = _build_actionability(pkt, cl)
+    action_color, action_bg = _action_style(action["label"])
+    in_zone = _as_bool(ez.get("in_zone"))
 
     # --- AVWAP rows ---
     avwap_rows = ""
@@ -313,7 +364,14 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             ic = "#22c55e" if c["passed"] else "#ef4444"
             checklist_html += f'<div class="check-item"><span style="color:{ic};width:35px;">[{icon}]</span><span style="color:#888;width:120px;">{c["item"]}</span><span>{c["value"]}</span></div>'
         verdict = cl.get("verdict", "")
-        vc = "#22c55e" if "PROCEED" in verdict else "#eab308" if "CAUTION" in verdict else "#ef4444"
+        if verdict.startswith("BUY NOW"):
+            vc = "#22c55e"
+        elif verdict.startswith("WATCH"):
+            vc = "#3b82f6"
+        elif verdict.startswith("WAIT") or verdict.startswith("CAUTION"):
+            vc = "#eab308"
+        else:
+            vc = "#ef4444"
         checklist_html += f'<div class="verdict" style="color:{vc};">{verdict}</div>'
 
     # --- Build card ---
@@ -326,12 +384,18 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             <span style="color:{color};font-weight:700;font-size:1.3em;margin-left:8px;">{score}</span>
             <span style="color:#888;">/ 100</span>
             <span style="color:{color};margin-left:8px;">{sc.get('quality', '')}</span>
+            <span style="display:inline-block;margin-left:10px;padding:3px 8px;border-radius:999px;background:{action_bg};color:{action_color};font-size:0.85em;font-weight:700;">
+              {action['label']}
+            </span>
           </div>
           <div style="text-align:right;">
             <span style="font-size:1.2em;color:#fff;">{_fmt(price)}</span>
             <span style="color:#888;margin-left:8px;">ATR: {_fmt(d.get('atr'))}</span>
             <span style="color:#888;margin-left:8px;">RVol: {_fmt(d.get('rvol'), 1)}x</span>
           </div>
+        </div>
+        <div style="color:{action_color};margin-top:6px;font-size:0.9em;font-weight:700;">
+          ACTION: {action['detail']}
         </div>
         <div style="color:#aaa;margin-top:4px;">
           Setup: <span style="color:#fff;font-weight:700;">{setup.get('type', '--')}</span> --
@@ -381,7 +445,7 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             <div class="level-box" style="border-color:#22c55e;">
               <div class="level-label">Entry Zone</div>
               <div class="level-value">{_fmt(ez.get('entry_low'))} - {_fmt(ez.get('entry_high'))}</div>
-              <div class="level-note">{'IN ZONE' if ez.get('in_zone') else 'Outside zone'}</div>
+              <div class="level-note">{'IN ZONE' if in_zone else 'Outside zone'}</div>
             </div>
             <div class="level-box" style="border-color:#ef4444;">
               <div class="level-label">Stop</div>
@@ -505,11 +569,24 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
     output_path = output_path or cfg.BASE_DIR / "dashboard.html"
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    # Sort: watchlist first (by score desc), then benchmarks
+    # Sort watchlist by actionability first, then score.
+    wl_candidates = [s for s in packets if s in cfg.WATCHLIST]
+    wl_meta = {}
+    for sym in wl_candidates:
+        pkt = packets[sym]
+        cl = checklists.get(sym, {})
+        action = _build_actionability(pkt, cl)
+        wl_meta[sym] = {
+            "action": action,
+            "score": pkt.get("score", {}).get("score", 0),
+        }
     wl_syms = sorted(
-        [s for s in packets if s in cfg.WATCHLIST],
-        key=lambda s: packets[s].get("score", {}).get("score", 0),
-        reverse=True,
+        wl_candidates,
+        key=lambda s: (
+            wl_meta[s]["action"]["rank"],
+            -wl_meta[s]["score"],
+            s,
+        ),
     )
     bm_syms = [s for s in cfg.BENCHMARKS if s in packets]
 
@@ -522,13 +599,17 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
         setup = pkt.get("setup", {})
         score = sc.get("score", 0)
         color, bg = _score_color(score)
-        in_zone = "YES" if ez.get("in_zone") else "no"
-        zone_style = f'color:#22c55e;font-weight:700;' if ez.get("in_zone") else ""
+        action = wl_meta[sym]["action"]
+        action_color, action_bg = _action_style(action["label"])
+        in_zone_bool = _as_bool(ez.get("in_zone"))
+        in_zone = "YES" if in_zone_bool else "no"
+        zone_style = 'color:#22c55e;font-weight:700;' if in_zone_bool else ""
 
         summary_rows += f"""
         <tr style="border-bottom:1px solid #222;">
           <td style="color:{color};font-weight:700;">{sym}</td>
           <td style="background:{bg};color:{color};text-align:center;font-weight:700;">{score}</td>
+          <td><span style="display:inline-block;padding:2px 7px;border-radius:999px;background:{action_bg};color:{action_color};font-weight:700;">{action['label']}</span></td>
           <td>{sc.get('action_bias', '--')}</td>
           <td>{setup.get('type', '--')}</td>
           <td>{_fmt(pkt.get('daily',{}).get('last_close'))}</td>
@@ -540,12 +621,75 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
           <td>{pkt.get('relative_strength',{}).get('rs_20d', '--')}</td>
         </tr>"""
 
+    buy_now_syms = [s for s in wl_syms if wl_meta[s]["action"]["label"] == "BUY NOW"]
+    watch_syms = [s for s in wl_syms if wl_meta[s]["action"]["label"].startswith("WATCH")]
+    wait_syms = [s for s in wl_syms if wl_meta[s]["action"]["label"].startswith("WAIT")]
+    block_syms = [s for s in wl_syms if wl_meta[s]["action"]["label"] == "BLOCK"]
+    avg_watchlist_score = round(
+        sum(wl_meta[s]["score"] for s in wl_syms) / len(wl_syms), 1
+    ) if wl_syms else 0
+
+    action_board = ""
+    for title, syms in (
+        ("BUY NOW", buy_now_syms[:6]),
+        ("WATCH BREAKOUT", watch_syms[:6]),
+        ("WAIT", wait_syms[:6]),
+    ):
+        label_color, label_bg = _action_style(title)
+        body = ""
+        for sym in syms:
+            pkt = packets[sym]
+            ez = pkt.get("entry_zone", {})
+            setup = pkt.get("setup", {})
+            price = pkt.get("daily", {}).get("last_close")
+            score = pkt.get("score", {}).get("score", 0)
+            action = wl_meta[sym]["action"]
+            body += f"""
+            <div style="padding:8px 0;border-top:1px solid #1a1a1a;">
+              <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <div>
+                  <span style="color:#fff;font-weight:700;">{sym}</span>
+                  <span style="color:#888;margin-left:8px;">Score {score}</span>
+                  <span style="color:#666;margin-left:8px;">{setup.get('type', '--')}</span>
+                </div>
+                <div style="color:#aaa;">{_fmt(price)}</div>
+              </div>
+              <div style="color:#ccc;font-size:0.9em;margin-top:4px;">{action['detail']}</div>
+              <div style="color:#888;font-size:0.82em;margin-top:2px;">
+                Zone {_fmt(ez.get('entry_low'))}-{_fmt(ez.get('entry_high'))} |
+                Stop {_fmt(ez.get('stop'))} |
+                T1 {_fmt(ez.get('target_1'))}
+              </div>
+            </div>"""
+        if not body:
+            body = '<div style="color:#666;padding-top:8px;">None today</div>'
+        action_board += f"""
+        <div class="action-col">
+          <div style="display:inline-block;padding:4px 9px;border-radius:999px;background:{label_bg};color:{label_color};font-weight:700;margin-bottom:8px;">
+            {title}
+          </div>
+          {body}
+        </div>"""
+
     # --- Regime ---
     r = regime.get("regime", "?").upper().replace("_", " ")
     r_color = {"BULLISH": "#22c55e", "LEAN BULLISH": "#86efac", "NEUTRAL": "#eab308",
                "LEAN BEARISH": "#f97316", "BEARISH": "#ef4444"}.get(r, "#6b7280")
 
     flags_html = "".join(f'<span class="flag">{f}</span>' for f in regime.get("caution_flags", []))
+    regime_tone = (
+        "good" if regime.get("swing_bias") == "long"
+        else "warn" if regime.get("swing_bias") == "neutral"
+        else "bad"
+    )
+    kpi_html = "".join([
+        _build_metric_tile("Desk Regime", r, regime_tone, f"Bias {regime.get('swing_bias', '?')}"),
+        _build_metric_tile("Actionable", str(len(buy_now_syms)), "good" if buy_now_syms else "warn", "Ready right now"),
+        _build_metric_tile("Watchlist Avg", str(avg_watchlist_score), "info", f"{len(wl_syms)} names tracked"),
+        _build_metric_tile("Watch Breakouts", str(len(watch_syms)), "info", "Needs trigger"),
+        _build_metric_tile("Wait / Pullback", str(len(wait_syms)), "warn", "Timing not there yet"),
+        _build_metric_tile("Risk Flags", str(len(regime.get('caution_flags', []))), "bad" if regime.get("caution_flags") else "neutral", "Macro and breadth"),
+    ])
 
     # --- Events ---
     from .events import get_event_context
@@ -604,11 +748,11 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
         score = sc.get("score", 0)
         color, _ = _score_color(score)
         bench_html += f"""
-        <div style="display:inline-block;margin-right:16px;margin-bottom:8px;">
-          <span style="color:{color};font-weight:700;">{sym}</span>
-          <span style="color:#ccc;">{_fmt(d.get('last_close'))}</span>
-          <span style="color:#888;">({d.get('ma_stack', '--')})</span>
-          <span style="color:{color};">{score}</span>
+        <div class="bench-chip">
+          <span class="bench-sym" style="color:{color};">{sym}</span>
+          <span class="bench-price">{_fmt(d.get('last_close'))}</span>
+          <span class="bench-stack">{d.get('ma_stack', '--')}</span>
+          <span class="bench-score" style="color:{color};">{score}</span>
         </div>"""
 
     html = f"""<!DOCTYPE html>
@@ -618,51 +762,125 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Swing Engine -- {now}</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
   * {{ margin:0; padding:0; box-sizing:border-box; }}
   body {{
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    background: #0a0a0a; color: #e0e0e0;
-    padding: 16px; max-width: 1400px; margin: 0 auto;
+    font-family: 'IBM Plex Sans', sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(36, 76, 118, 0.22), transparent 28%),
+      radial-gradient(circle at top right, rgba(21, 104, 72, 0.18), transparent 24%),
+      linear-gradient(180deg, #07111b 0%, #091019 38%, #05080d 100%);
+    color: #d8e1ec;
+    padding: 20px; max-width: 1480px; margin: 0 auto;
     font-size: 12px; line-height: 1.5;
+    min-height: 100vh;
   }}
-  h1 {{ font-size: 1.4em; color: #fff; margin-bottom: 4px; }}
-  h2 {{ font-size: 1.05em; color: #aaa; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; }}
+  body, .detail-row, th, td, .event, .level-note, .metric-detail, .bench-stack {{ font-variant-numeric: tabular-nums; }}
+  h1 {{ font-size: 2.2em; color: #f8fbff; margin-bottom: 6px; letter-spacing: -0.03em; }}
+  h2 {{ font-size: 1em; color: #98a7b8; margin-bottom: 12px; border-bottom: 1px solid #213140; padding-bottom: 8px; letter-spacing: 0.12em; text-transform: uppercase; }}
   h3 {{ font-size: 0.95em; color: #fff; margin-bottom: 6px; }}
-  h4 {{ font-size: 0.85em; color: #666; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }}
-  .timestamp {{ color: #555; font-size: 0.85em; margin-bottom: 14px; }}
-  .section {{ background: #111; border: 1px solid #222; border-radius: 6px; padding: 12px; margin-bottom: 12px; }}
+  h4 {{ font-size: 0.78em; color: #7f92a7; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.12em; }}
+  .shell {{
+    border: 1px solid rgba(112, 144, 178, 0.16);
+    background: rgba(4, 10, 18, 0.72);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
+    backdrop-filter: blur(8px);
+    border-radius: 18px;
+    padding: 18px;
+  }}
+  .hero {{
+    display:grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }}
+  .hero-main, .hero-side, .section {{
+    background: linear-gradient(180deg, rgba(13, 21, 31, 0.96), rgba(8, 13, 21, 0.96));
+    border: 1px solid rgba(76, 96, 118, 0.28);
+    border-radius: 14px;
+    padding: 14px;
+  }}
+  .hero-kicker {{ color:#7ea5d6; font-size:0.78em; letter-spacing:0.16em; text-transform:uppercase; margin-bottom:8px; }}
+  .hero-sub {{ color:#8ea2b8; font-size:0.95em; max-width: 72ch; }}
+  .desk-strip {{
+    display:grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap:10px;
+    margin-bottom: 14px;
+  }}
+  .metric-tile {{
+    border: 1px solid rgba(111, 134, 156, 0.18);
+    border-radius: 12px;
+    padding: 12px;
+    min-height: 86px;
+  }}
+  .metric-label {{
+    color:#7e93aa;
+    font-size:0.74em;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    margin-bottom:8px;
+  }}
+  .metric-value {{
+    font-size:1.55em;
+    font-weight:700;
+    line-height:1.1;
+  }}
+  .metric-detail {{
+    margin-top:8px;
+    color:#94a5b7;
+    font-size:0.82em;
+  }}
+  .timestamp {{ color: #6f849a; font-size: 0.82em; margin-top: 10px; }}
   .regime-bar {{
-    background: #111; border: 1px solid #333; border-radius: 6px;
-    padding: 10px 14px; margin-bottom: 12px;
+    background: linear-gradient(90deg, rgba(10,17,26,0.95), rgba(11,18,28,0.72)); border: 1px solid rgba(84, 110, 137, 0.24); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 14px;
     display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
   }}
-  .regime-label {{ font-size: 1.2em; font-weight: 700; }}
-  .regime-detail {{ color: #aaa; font-size: 0.9em; }}
-  .flag {{ background: #1a0000; border: 1px solid #ef4444; border-radius: 3px; padding: 2px 6px; font-size: 0.8em; color: #ef4444; }}
-  table {{ width: 100%; border-collapse: collapse; font-size: 0.9em; }}
-  th {{ text-align: left; color: #555; font-weight: 400; padding: 4px 6px; border-bottom: 1px solid #333; }}
-  td {{ padding: 4px 6px; }}
+  .regime-label {{ font-size: 1.15em; font-weight: 700; letter-spacing: 0.04em; }}
+  .regime-detail {{ color: #9eb0c2; font-size: 0.92em; }}
+  .flag {{ background: rgba(94, 20, 28, 0.42); border: 1px solid rgba(233, 93, 105, 0.5); border-radius: 999px; padding: 4px 9px; font-size: 0.74em; color: #ff8f98; letter-spacing: 0.06em; text-transform: uppercase; }}
+  .action-grid {{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }}
+  .action-col {{ background:linear-gradient(180deg, rgba(10,16,24,0.98), rgba(8,12,18,0.98)); border:1px solid rgba(86, 109, 132, 0.22); border-radius:12px; padding:12px; min-width:0; }}
+  table {{ width: 100%; border-collapse: collapse; font-size: 0.88em; }}
+  th {{ text-align: left; color: #72859a; font-weight: 500; padding: 8px 8px; border-bottom: 1px solid #243546; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.76em; }}
+  td {{ padding: 8px 8px; color:#dbe5f0; }}
+  tr:hover td {{ background: rgba(142, 184, 255, 0.04); }}
   .inner-table {{ font-size: 0.9em; }}
-  .inner-table th {{ font-size: 0.85em; color: #555; padding: 2px 5px; }}
+  .inner-table th {{ font-size: 0.78em; color: #72859a; padding: 5px 5px; }}
   .inner-table td {{ padding: 2px 5px; }}
-  .event {{ padding: 5px 10px; margin-bottom: 4px; font-size: 0.9em; }}
-  .symbol-card {{ background: #111; border: 1px solid #222; border-radius: 6px; margin-bottom: 12px; overflow: hidden; }}
-  .card-header {{ padding: 10px 12px; background: #0d0d0d; }}
-  .card-body {{ padding: 0 12px 10px; }}
-  .card-section {{ padding: 8px 0; border-bottom: 1px solid #1a1a1a; }}
+  .event {{ padding: 8px 12px; margin-bottom: 6px; font-size: 0.9em; background: rgba(255,255,255,0.02); border-radius: 8px; }}
+  .bench-chip {{
+    display:inline-flex; align-items:center; gap:10px;
+    margin-right:10px; margin-bottom:10px; padding:10px 12px;
+    border-radius:999px; background:rgba(255,255,255,0.03); border:1px solid rgba(88,110,132,0.22);
+  }}
+  .bench-sym {{ font-weight:700; letter-spacing:0.05em; }}
+  .bench-price {{ color:#dbe5f0; }}
+  .bench-stack {{ color:#8294a8; text-transform:uppercase; font-size:0.78em; letter-spacing:0.08em; }}
+  .bench-score {{ font-weight:700; }}
+  .symbol-card {{ background: linear-gradient(180deg, rgba(10,16,24,0.97), rgba(7,11,17,0.97)); border: 1px solid rgba(84, 104, 126, 0.24); border-radius: 16px; margin-bottom: 14px; overflow: hidden; box-shadow: 0 20px 45px rgba(0,0,0,0.22); }}
+  .card-header {{ padding: 14px 16px; background: linear-gradient(180deg, rgba(11,17,26,0.96), rgba(9,14,22,0.92)); }}
+  .card-body {{ padding: 0 16px 14px; }}
+  .card-section {{ padding: 10px 0; border-bottom: 1px solid rgba(34, 49, 64, 0.86); }}
   .card-section:last-child {{ border-bottom: none; }}
-  .sym-name {{ font-size: 1.3em; font-weight: 700; color: #fff; }}
-  .levels-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }}
-  .level-box {{ border: 1px solid #333; border-radius: 4px; padding: 6px 8px; text-align: center; border-top-width: 2px; }}
-  .level-label {{ font-size: 0.75em; color: #888; text-transform: uppercase; }}
-  .level-value {{ font-size: 1.1em; color: #fff; font-weight: 700; margin: 2px 0; }}
-  .level-note {{ font-size: 0.8em; color: #666; }}
+  .sym-name {{ font-size: 1.35em; font-weight: 700; color: #f5f8fb; letter-spacing: -0.02em; }}
+  .levels-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }}
+  .level-box {{ border: 1px solid rgba(90,110,132,0.22); border-radius: 10px; padding: 9px 10px; text-align: center; border-top-width: 3px; background: rgba(255,255,255,0.02); }}
+  .level-label {{ font-size: 0.72em; color: #8195aa; text-transform: uppercase; letter-spacing: 0.11em; }}
+  .level-value {{ font-size: 1.15em; color: #f3f7fb; font-weight: 700; margin: 4px 0; font-family: 'IBM Plex Mono', monospace; }}
+  .level-note {{ font-size: 0.8em; color: #73879c; }}
   .detail-row {{ display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 2px 0; font-size: 0.9em; }}
-  .detail-label {{ color: #666; min-width: 80px; }}
-  .check-item {{ display: flex; gap: 6px; padding: 2px 0; font-size: 0.85em; }}
-  .verdict {{ margin-top: 6px; font-weight: 700; font-size: 0.9em; }}
+  .detail-label {{ color: #7e93a8; min-width: 80px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.78em; }}
+  .check-item {{ display: flex; gap: 6px; padding: 3px 0; font-size: 0.84em; }}
+  .verdict {{ margin-top: 10px; font-weight: 700; font-size: 0.92em; padding-top:10px; border-top:1px solid rgba(41,58,76,0.9); }}
+  .mono {{ font-family: 'IBM Plex Mono', monospace; }}
   @media (max-width: 768px) {{
-    body {{ font-size: 10px; padding: 8px; }}
+    body {{ font-size: 10px; padding: 10px; }}
+    .shell {{ padding: 12px; border-radius: 14px; }}
+    .hero {{ grid-template-columns: 1fr; }}
+    .desk-strip {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+    .action-grid {{ grid-template-columns: 1fr; }}
     .levels-grid {{ grid-template-columns: repeat(2, 1fr); }}
     .detail-row {{ font-size: 0.85em; }}
   }}
@@ -670,8 +888,29 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
 </head>
 <body>
 
-<h1>SWING ENGINE</h1>
-<div class="timestamp">{now}</div>
+<div class="shell">
+<div class="hero">
+  <div class="hero-main">
+    <div class="hero-kicker">Point72-Style Swing Desk</div>
+    <h1>SWING ENGINE</h1>
+    <div class="hero-sub">
+      Institutional-style overnight dashboard for regime, timing, and risk-adjusted swing execution.
+      Built to answer one question fast: what is actionable now, what needs confirmation, and what deserves patience.
+    </div>
+    <div class="timestamp">Last build {now}</div>
+  </div>
+  <div class="hero-side">
+    <h2>Desk Snapshot</h2>
+    <div class="regime-detail">
+      Regime {r} | Bias {regime.get('swing_bias', '?')} | Risk {regime.get('risk_appetite', '?')}<br>
+      VIX {regime.get('vix_context', '?')} ({regime.get('vix_level', '?')}) | Breadth {regime.get('bull_signals', '?')}/{regime.get('total_signals', '?')}
+    </div>
+  </div>
+</div>
+
+<div class="desk-strip">
+  {kpi_html}
+</div>
 
 <div class="regime-bar">
   <span class="regime-label" style="color:{r_color};">{r}</span>
@@ -699,10 +938,20 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
 {_build_leveraged_html(leveraged)}
 
 <div class="section">
+  <h2>ACTION BOARD</h2>
+  <div style="color:#888;margin-bottom:10px;">
+    Buy now: {len(buy_now_syms)} | Watch breakout: {len(watch_syms)} | Wait: {len(wait_syms)} | Blocked: {len(block_syms)}
+  </div>
+  <div class="action-grid">
+    {action_board}
+  </div>
+</div>
+
+<div class="section">
   <h2>WATCHLIST SUMMARY</h2>
   <table>
     <tr>
-      <th>Sym</th><th>Score</th><th>Bias</th><th>Setup</th><th>Price</th>
+      <th>Sym</th><th>Score</th><th>Action</th><th>Bias</th><th>Setup</th><th>Price</th>
       <th>Entry Zone</th><th>Zone?</th><th>Stop</th><th>Target 1</th><th>R:R</th><th>RS20</th>
     </tr>
     {summary_rows}
@@ -712,6 +961,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
 <h2 style="color:#aaa;margin:16px 0 8px;border-bottom:1px solid #333;padding-bottom:4px;">SYMBOL DETAIL CARDS</h2>
 {cards_html}
 
+</div>
 </body>
 </html>"""
 

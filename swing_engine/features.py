@@ -33,10 +33,14 @@ def add_atr(df: pd.DataFrame, period: int = None) -> pd.DataFrame:
     return df
 
 
-def add_relative_volume(df: pd.DataFrame, period: int = 20) -> pd.DataFrame:
-    """Add relative volume (today's volume / 20-day avg volume)."""
+def add_relative_volume(df: pd.DataFrame, period: int = None) -> pd.DataFrame:
+    """Add relative volume plus average share and dollar-volume context."""
+    period = period or cfg.RVOL_PERIOD
     df = df.copy()
     avg_vol = df["volume"].rolling(period).mean()
+    avg_dollar_vol = (df["close"] * df["volume"]).rolling(period).mean()
+    df["avg_volume"] = avg_vol.round(0)
+    df["avg_dollar_volume"] = avg_dollar_vol.round(0)
     df["rvol"] = (df["volume"] / avg_vol).round(2)
     return df
 
@@ -247,6 +251,14 @@ def extract_ma_state(df: pd.DataFrame, sma_periods: list, label: str) -> dict:
     last = df.iloc[-1]
     price = last["close"]
     state = {"last_close": round(price, 2)}
+    if "volume" in df.columns:
+        state["volume"] = round(float(last["volume"]), 0)
+    if "avg_volume" in df.columns and pd.notna(last.get("avg_volume")):
+        state["avg_volume"] = round(float(last["avg_volume"]), 0)
+    if "avg_dollar_volume" in df.columns and pd.notna(last.get("avg_dollar_volume")):
+        state["avg_dollar_volume"] = round(float(last["avg_dollar_volume"]), 0)
+    if "rvol" in df.columns and pd.notna(last.get("rvol")):
+        state["rvol"] = round(float(last["rvol"]), 2)
 
     for p in sma_periods:
         col = f"sma_{p}"

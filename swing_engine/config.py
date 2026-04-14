@@ -34,20 +34,44 @@ VIX_SYMBOL = "^VIX"
 BENCHMARK_SET = frozenset({"SPY", "QQQ", "SOXX", "DIA", "VIX", "^VIX", "IWM"})
 
 WATCHLIST = [
-    "NVDA", "AVGO", "TSM", "AAPL", "MSFT", "GOOGL", "META", "AMZN",
-    "ANET", "ASML", "PLTR", "VRT", "CEG", "ETN", "PWR", "CRS",
+    # User priority swing names
+    "AAOI", "ALAB", "AVGO", "ABBV", "BE", "BW", "CIEN", "CLS", "COHR", "CRDO",
+    "DOCN", "EOSE", "ETN", "EYPT", "EZPW", "GEV", "GNRC", "HROW", "KOD", "LITE",
+    "NVDA", "NVT", "OCUL", "PWR", "REGN", "VRT", "WMB",
+    # Broader scan universe
+    "AAPL", "ABT", "ACN", "ADP", "AMZN", "APD", "AXP", "BDX", "BLK", "BP",
+    "BRK.B", "CBZ", "CMCSA", "CNXC", "CTSH", "EME", "ERIE", "EXAS", "FDS", "GOOG",
+    "GOOGL", "HD", "IBM", "IBP", "ICLR", "IFNNY", "IQV", "IVZ", "JNJ", "KR",
+    "KVUE", "LHX", "LZB", "MDT", "MLM", "MMM", "MSFT", "MU", "MUA", "NDAQ",
+    "NFLX", "ORLY", "PEP", "PHR", "PKG", "PLD", "PNC", "PPG", "PRGS", "PYPL",
+    "ROL", "SE", "SGI", "SMA", "T", "TSCO", "TROW", "TTD", "TXN", "VIAV",
+    "VICI", "VRSN", "WAT", "WDAY", "WFC", "XNGSY", "ZTS",
 ]
+
+TOP_EXECUTION_COUNT = 5
+TOP_NARRATIVE_COUNT = 7
+TOP_CHART_COUNT = 15
 
 # =============================================================================
 # CORRELATION GROUPS (for position sizing)
 # =============================================================================
 CORRELATION_GROUPS = {
-    "mega_tech":    ["AAPL", "MSFT", "GOOGL", "META", "AMZN"],
-    "semis":        ["NVDA", "AVGO", "TSM", "ASML", "SOXX", "SOXL"],
-    "ai_infra":     ["ANET", "VRT", "PLTR"],
-    "power_infra":  ["CEG", "ETN", "PWR", "GEV"],
-    "industrial":   ["CRS", "RTX", "AVAV"],
+    "mega_tech":    ["AAPL", "AMZN", "GOOG", "GOOGL", "MSFT", "NFLX"],
+    "semis":        ["NVDA", "AVGO", "MU", "TXN", "COHR", "LITE", "CLS", "CRDO", "SOXX", "SOXL"],
+    "network_ai":   ["AAOI", "ALAB", "CIEN", "DOCN", "VRT", "VIAV"],
+    "software":     ["ACN", "ADP", "CTSH", "PRGS", "SE", "WDAY", "TTD", "VRSN", "PHR"],
+    "healthcare":   ["ABBV", "ABT", "BDX", "EYPT", "EXAS", "HROW", "ICLR", "IQV", "JNJ", "KVUE", "MDT", "OCUL", "REGN", "WAT", "ZTS"],
+    "power_infra":  ["BE", "ETN", "GEV", "GNRC", "NVT", "PWR", "WMB"],
+    "industrial":   ["BW", "EME", "HD", "IBP", "MLM", "MMM", "ORLY", "PKG", "PPG", "ROL", "TSCO"],
+    "financials":   ["AXP", "BLK", "BRK.B", "ERIE", "EZPW", "FDS", "IVZ", "NDAQ", "PNC", "TROW", "WFC"],
+    "defensive_value": ["APD", "BP", "CMCSA", "KR", "MUA", "PEP", "PLD", "T", "VICI", "XNGSY"],
+    "special_situations": ["CBZ", "CNXC", "IFNNY", "KOD", "LHX", "LZB", "PYPL", "SGI", "SMA"],
     "broad_market": ["SPY", "QQQ", "DIA", "IWM"],
+}
+
+# Some symbols need provider-specific formatting for market data downloads.
+DOWNLOAD_SYMBOL_OVERRIDES = {
+    "BRK.B": "BRK-B",
 }
 
 # =============================================================================
@@ -57,6 +81,13 @@ DAILY_SMA_PERIODS = [5, 10, 20, 50, 200]
 WEEKLY_SMA_PERIODS = [5, 10, 20]
 INTRA_SMA_PERIODS = [10, 20, 50]
 ATR_PERIOD = 14
+RVOL_PERIOD = 20
+AVG_DOLLAR_VOL_PERIOD = 20
+
+MIN_AVG_DAILY_VOLUME = 750_000
+MIN_AVG_DOLLAR_VOLUME = 25_000_000
+PREFERRED_AVG_DOLLAR_VOLUME = 100_000_000
+MAX_DAILY_VOLUME_PARTICIPATION_PCT = 0.01
 
 DAILY_LOOKBACK_DAYS = 400   # ~1.5 years for 200 SMA stability
 INTRADAY_LOOKBACK_DAYS = 5

@@ -132,6 +132,29 @@ def run_daily(force: bool = False):
         if sc_val >= 60:
             checklist.print_checklist(cl)
 
+    ranked_watchlist = sorted(
+        cfg.WATCHLIST,
+        key=lambda sym: (
+            all_checklists[sym].get("actionability", {}).get("rank", 99),
+            -all_packets[sym].get("score", {}).get("score", 0),
+            sym,
+        ),
+    )
+
+    top_execution = ranked_watchlist[:cfg.TOP_EXECUTION_COUNT]
+    narrative_candidates = [
+        sym for sym in ranked_watchlist
+        if all_packets[sym].get("score", {}).get("score", 0) >= 60
+        and all_checklists[sym].get("actionability", {}).get("label")
+        in ("BUY NOW", "WATCH BREAKOUT", "WAIT PULLBACK", "WAIT ZONE")
+    ][:cfg.TOP_NARRATIVE_COUNT]
+    top_chart_symbols = ranked_watchlist[:cfg.TOP_CHART_COUNT]
+
+    print("\n  PRIORITY LISTS:")
+    print(f"    Top execution: {', '.join(top_execution) if top_execution else 'None'}")
+    print(f"    Narrative set: {', '.join(narrative_candidates) if narrative_candidates else 'None'}")
+    print(f"    Chart set: {', '.join(top_chart_symbols) if top_chart_symbols else 'None'}")
+
     # --- SOXX tactical ---
     soxx_dec = None
     try:
@@ -149,12 +172,18 @@ def run_daily(force: bool = False):
         print(f"  Leveraged tactical error: {e}")
 
     # --- LLM Narratives (optional, only if OPENAI_API_KEY set) ---
-    narratives = narrative.generate_narratives(all_packets, regime_result)
+    narratives = narrative.generate_narratives(
+        all_packets,
+        regime_result,
+        min_score=60,
+        selected_symbols=narrative_candidates,
+        max_count=cfg.TOP_NARRATIVE_COUNT,
+    )
 
     # --- Charts ---
     print("\n[7/8] Generating charts...")
     from . import charts
-    all_symbols = list(set(cfg.BENCHMARKS + cfg.WATCHLIST))
+    all_symbols = list(dict.fromkeys(cfg.BENCHMARKS + top_chart_symbols))
     chart_data = charts.generate_all_charts(all_symbols, data_store, all_packets)
 
     # --- Dashboard ---
@@ -197,6 +226,9 @@ def run_daily(force: bool = False):
         "regime": regime_result,
         "score_deltas": score_deltas,
         "narratives": narratives,
+        "top_execution": top_execution,
+        "top_narratives": narrative_candidates,
+        "top_charts": top_chart_symbols,
         "leveraged_tactical": {s: {
             "long_signal": r["long"]["signal"],
             "long_vehicle": r["long"]["vehicle"],
@@ -217,6 +249,7 @@ def run_daily(force: bool = False):
             "score": p["score"],
             "setup": p["setup"],
             "entry_zone": p["entry_zone"],
+            "checklist": all_checklists.get(s, {}),
             "avwap_map": p.get("avwap_map", {}),
             "reference_levels": p.get("reference_levels", {}),
             "session_vwaps": p.get("session_vwaps", {}),

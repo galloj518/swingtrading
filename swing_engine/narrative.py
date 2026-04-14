@@ -136,7 +136,9 @@ def generate_narrative(packet: dict, regime: dict) -> Optional[str]:
 
 
 def generate_narratives(packets: dict, regime: dict,
-                        min_score: int = 50) -> dict:
+                        min_score: int = 50,
+                        selected_symbols: list[str] | None = None,
+                        max_count: int | None = None) -> dict:
     """
     Generate narratives for all qualifying symbols.
     Returns dict of symbol -> narrative string.
@@ -147,9 +149,27 @@ def generate_narratives(packets: dict, regime: dict,
         return {}
 
     narratives = {}
-    qualifying = {s: p for s, p in packets.items()
-                  if p.get("score", {}).get("score", 0) >= min_score
-                  and s not in ("SPY", "QQQ", "SOXX", "DIA")}
+    selected_set = set(selected_symbols or [])
+    qualifying_items = [
+        (s, p) for s, p in packets.items()
+        if p.get("score", {}).get("score", 0) >= min_score
+        and s not in ("SPY", "QQQ", "SOXX", "DIA")
+        and (not selected_set or s in selected_set)
+    ]
+
+    if selected_symbols:
+        order_map = {sym: i for i, sym in enumerate(selected_symbols)}
+        qualifying_items.sort(key=lambda item: order_map.get(item[0], 9999))
+    else:
+        qualifying_items.sort(
+            key=lambda item: item[1].get("score", {}).get("score", 0),
+            reverse=True,
+        )
+
+    if max_count is not None:
+        qualifying_items = qualifying_items[:max_count]
+
+    qualifying = dict(qualifying_items)
 
     if not qualifying:
         print("  No symbols qualify for narrative (score >= 50)")

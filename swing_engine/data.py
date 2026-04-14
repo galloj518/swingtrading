@@ -11,6 +11,11 @@ from typing import Optional
 from . import config as cfg
 
 
+def _provider_symbol(symbol: str) -> str:
+    """Map display symbols to provider-specific tickers when needed."""
+    return cfg.DOWNLOAD_SYMBOL_OVERRIDES.get(symbol, symbol)
+
+
 def _cache_path(symbol: str, timeframe: str) -> Path:
     """Generate dated cache path for a symbol/timeframe."""
     today = date.today().isoformat()
@@ -92,7 +97,7 @@ def load_daily(symbol: str, force: bool = False) -> pd.DataFrame:
     start = end - timedelta(days=cfg.DAILY_LOOKBACK_DAYS)
 
     try:
-        raw = yf.download(symbol, start=start.isoformat(), end=end.isoformat(),
+        raw = yf.download(_provider_symbol(symbol), start=start.isoformat(), end=end.isoformat(),
                           interval="1d", auto_adjust=True, progress=False)
     except Exception as e:
         print(f"  WARNING: Failed to fetch daily data for {symbol}: {e}")
@@ -119,7 +124,7 @@ def load_intraday(symbol: str, force: bool = False) -> pd.DataFrame:
         return df
 
     try:
-        raw = yf.download(symbol, period=f"{cfg.INTRADAY_LOOKBACK_DAYS}d",
+        raw = yf.download(_provider_symbol(symbol), period=f"{cfg.INTRADAY_LOOKBACK_DAYS}d",
                           interval="5m", auto_adjust=True, progress=False)
     except Exception as e:
         print(f"  WARNING: Failed to fetch intraday data for {symbol}: {e}")

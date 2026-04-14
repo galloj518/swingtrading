@@ -126,6 +126,9 @@ def build_packet(symbol: str, data: dict,
         pos_size = sizing.calc_position_size(
             entry_zone["price"], entry_zone["stop"],
             symbol=symbol, existing_group_risk=existing_group_risk,
+            avg_volume=daily_state.get("avg_volume", 0),
+            avg_dollar_volume=daily_state.get("avg_dollar_volume", 0),
+            rvol=daily_state.get("rvol", 1.0),
         )
 
     return {
