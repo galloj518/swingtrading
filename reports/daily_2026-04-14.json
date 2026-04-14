@@ -1,0 +1,3378 @@
+{
+  "date": "2026-04-14",
+  "regime": {
+    "regime": "lean_bullish",
+    "bull_signals": 8,
+    "total_signals": 11,
+    "vix_context": "normal",
+    "vix_level": 19.1,
+    "tech_leading": false,
+    "semi_leading": false,
+    "industrial_confirm": true,
+    "risk_appetite": "moderate",
+    "swing_bias": "long",
+    "caution_flags": [
+      "Tech not leading"
+    ],
+    "signals_detail": {
+      "spy_above_200": true,
+      "spy_above_50": true,
+      "spy_20_above_50": false,
+      "spy_stack": false,
+      "qqq_above_50": true,
+      "qqq_leading": true,
+      "soxx_above_50": true,
+      "soxx_stack": false,
+      "dia_above_50": true,
+      "vix_below_20": "True",
+      "vix_below_30": "True"
+    }
+  },
+  "score_deltas": {
+    "NVDA": 3,
+    "AVGO": 0,
+    "TSM": 0,
+    "AAPL": 0,
+    "MSFT": 0,
+    "GOOGL": 20,
+    "META": 0,
+    "AMZN": 0,
+    "ANET": 0,
+    "ASML": 0,
+    "PLTR": 0,
+    "VRT": 0,
+    "CEG": 0,
+    "ETN": 0,
+    "PWR": 0,
+    "CRS": 0
+  },
+  "narratives": {},
+  "leveraged_tactical": {
+    "SPY": {
+      "long_signal": "YELLOW",
+      "long_vehicle": "SPXL",
+      "short_signal": "RED",
+      "short_vehicle": "SPXS",
+      "price": 686.1,
+      "score": 80
+    },
+    "QQQ": {
+      "long_signal": "YELLOW",
+      "long_vehicle": "TQQQ",
+      "short_signal": "RED",
+      "short_vehicle": "SQQQ",
+      "price": 617.39,
+      "score": 68
+    },
+    "SOXX": {
+      "long_signal": "YELLOW",
+      "long_vehicle": "SOXL",
+      "short_signal": "RED",
+      "short_vehicle": "SOXS",
+      "price": 393.34,
+      "score": 80
+    }
+  },
+  "soxx_tactical": {
+    "decision": {
+      "signal": "YELLOW",
+      "action": "WAIT",
+      "reason": "Price 393.34 not in zone 345.07-353.74",
+      "soxx_price": 393.34,
+      "watch_for": {
+        "entry_zone": "345.07 \u2014 353.74",
+        "would_turn_green": "Price enters zone + score 65+ + no event risk"
+      }
+    },
+    "soxx_score": {
+      "score": 80,
+      "quality": "A \u2014 strong",
+      "weekly_gate": {
+        "passed": true,
+        "check": "close_above_sma_20",
+        "detail": "Weekly close above 20 SMA"
+      },
+      "daily_gate": {
+        "passed": true,
+        "check": "close_above_sma_50",
+        "detail": "Daily close above 50 SMA"
+      },
+      "reasons": [
+        "Weekly close above 20 SMA",
+        "Daily close above 50 SMA",
+        "+8 weekly 5>10",
+        "+7 weekly 10>20",
+        "+5 above daily 10",
+        "+5 above daily 20",
+        "+5 above 200 SMA",
+        "+3 daily 5 SMA rising",
+        "+2 daily 10 SMA rising",
+        "+5 daily 20 SMA rising (healthy trend)",
+        "+3 daily 50 SMA rising",
+        "+3 daily 200 SMA rising",
+        "+3 weekly 5 SMA rising",
+        "+3 weekly 10 SMA rising",
+        "+5 weekly 20 SMA rising (primary trend healthy)",
+        "+3 both 5+10 SMA will rise tomorrow",
+        "-8 extended 11.2% above 10 SMA (don't chase)",
+        "+10 intraday stack bullish",
+        "+8 above ALL 13 AVWAPs",
+        "+10 strong RS20 (13.67)",
+        "+5 high confluence (7 levels)",
+        "-20 CHASING: price 11.2% above entry zone"
+      ],
+      "action_bias": "buy"
+    },
+    "soxx_daily": {
+      "last_close": 393.34,
+      "sma_5": 375.35,
+      "close_above_sma_5": true,
+      "dist_from_sma_5_pct": 4.79,
+      "sma_5_direction": "rising",
+      "sma_5_change": 9.85,
+      "sma_5_dropping_off": 347.76,
+      "sma_5_need_tomorrow": 347.76,
+      "sma_5_tomorrow_bias": "will_rise",
+      "sma_10": 353.74,
+      "close_above_sma_10": true,
+      "dist_from_sma_10_pct": 11.19,
+      "sma_10_direction": "rising",
+      "sma_10_change": 6.98,
+      "sma_10_dropping_off": 309.79,
+      "sma_10_need_tomorrow": 309.79,
+      "sma_10_tomorrow_bias": "will_rise",
+      "sma_20": 345.07,
+      "close_above_sma_20": true,
+      "dist_from_sma_20_pct": 13.99,
+      "sma_20_direction": "rising",
+      "sma_20_change": 3.11,
+      "sma_20_dropping_off": 337.62,
+      "sma_20_need_tomorrow": 337.62,
+      "sma_20_tomorrow_bias": "will_rise",
+      "sma_50": 346.23,
+      "close_above_sma_50": true,
+      "dist_from_sma_50_pct": 13.61,
+      "sma_50_direction": "rising",
+      "sma_50_change": 0.65,
+      "sma_50_dropping_off": 346.09,
+      "sma_50_need_tomorrow": 346.09,
+      "sma_50_tomorrow_bias": "will_rise",
+      "sma_200": 295.82,
+      "close_above_sma_200": true,
+      "dist_from_sma_200_pct": 32.97,
+      "sma_200_direction": "rising",
+      "sma_200_change": 0.79,
+      "sma_200_dropping_off": 238.07,
+      "sma_200_need_tomorrow": 238.07,
+      "sma_200_tomorrow_bias": "will_rise",
+      "sma5_above_sma10": true,
+      "sma10_above_sma20": true,
+      "sma20_above_sma50": false,
+      "sma50_above_sma200": true,
+      "atr": 12.69,
+      "rvol": 0.59,
+      "ma_stack": "mixed"
+    },
+    "soxx_weekly": {
+      "last_close": 393.34,
+      "sma_5": 355.11,
+      "close_above_sma_5": true,
+      "dist_from_sma_5_pct": 10.77,
+      "sma_5_direction": "rising",
+      "sma_5_change": 12.45,
+      "sma_5_dropping_off": 332.51,
+      "sma_5_need_tomorrow": 332.51,
+      "sma_5_tomorrow_bias": "will_rise",
+      "sma_10": 349.57,
+      "close_above_sma_10": true,
+      "dist_from_sma_10_pct": 12.52,
+      "sma_10_direction": "rising",
+      "sma_10_change": 4.51,
+      "sma_10_dropping_off": 354.44,
+      "sma_10_need_tomorrow": 354.44,
+      "sma_10_tomorrow_bias": "will_rise",
+      "sma_20": 336.6,
+      "close_above_sma_20": true,
+      "dist_from_sma_20_pct": 16.86,
+      "sma_20_direction": "rising",
+      "sma_20_change": 4.86,
+      "sma_20_dropping_off": 308.76,
+      "sma_20_need_tomorrow": 308.76,
+      "sma_20_tomorrow_bias": "will_rise",
+      "sma5_above_sma10": true,
+      "sma10_above_sma20": true,
+      "ma_stack": "bullish"
+    },
+    "soxx_avwaps": {
+      "ytd": {
+        "anchor_date": "2026-01-02",
+        "avwap": 341.68
+      },
+      "covid_low": {
+        "anchor_date": "2020-03-23",
+        "avwap": 270.64
+      },
+      "liberation_day": {
+        "anchor_date": "2025-04-07",
+        "avwap": 274.33
+      },
+      "iran_war_start": {
+        "anchor_date": "2026-03-10",
+        "avwap": 340.26
+      },
+      "recent_high": {
+        "anchor_date": "2026-02-25",
+        "avwap": 340.81
+      },
+      "recent_low": {
+        "anchor_date": "2026-03-09",
+        "avwap": 339.71
+      },
+      "liberation_day_low": {
+        "anchor_date": "2025-04-07",
+        "avwap": 274.33
+      },
+      "iran_war_low": {
+        "anchor_date": "2026-03-10",
+        "avwap": 340.26
+      },
+      "wtd": {
+        "anchor_date": "2026-04-13",
+        "avwap": 390.43
+      },
+      "mtd": {
+        "anchor_date": "2026-04-01",
+        "avwap": 359.1
+      },
+      "recent_high_60d": {
+        "anchor_date": "2026-04-13",
+        "avwap": 390.43
+      },
+      "recent_low_60d": {
+        "anchor_date": "2026-03-30",
+        "avwap": 345.15
+      },
+      "52wk_low": {
+        "anchor_date": "2025-04-21",
+        "avwap": 280.92
+      }
+    },
+    "soxx_pivots": {
+      "pivot": 390.43,
+      "r1": 396.48,
+      "r2": 399.63,
+      "r3": 405.68,
+      "s1": 387.28,
+      "s2": 381.23,
+      "s3": 378.08
+    }
+  },
+  "symbols": {
+    "NVDA": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "-5 daily 50 SMA FALLING (intermediate trend weak)",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 5.6% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 11 AVWAPs",
+          "+5 positive RS20 (0.49)",
+          "+5 high confluence (7 levels)",
+          "-20 CHASING: price 5.6% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 179.24 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 179.24 - 177.87 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 5.6% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 181.78",
+        "watch_for": "Price pulling back toward 179.24 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 189.31,
+        "entry_low": 176.02,
+        "entry_high": 181.09,
+        "entry_mid": 178.56,
+        "in_zone": "False",
+        "stop": 168.42,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 198.84,
+        "target_1_ref": "2x risk",
+        "target_2": 214.05,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 10.14,
+        "atr": 5.07,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 4.5%",
+        "pivots_used": {
+          "r1": 190.73,
+          "r2": 192.16,
+          "r3": 194.65,
+          "s1": 186.81,
+          "s2": 184.32
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 183.17
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 159.67
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 164.86
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 178.5
+        },
+        "earnings_gap_may25": {
+          "anchor_date": "2025-05-29",
+          "avwap": 177.14
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 188.24
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 180.85
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-02-25",
+          "avwap": 180.15
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 177.76
+        },
+        "52wk_high": {
+          "anchor_date": "2025-10-29",
+          "avwap": 184.37
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 169.7
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 189.66,
+        "prior_day_low": 185.74,
+        "prior_day_close": 189.31,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 188.13,
+        "two_day_vwap": 188.1
+      },
+      "pivots": {
+        "pivot": 188.24,
+        "r1": 190.73,
+        "r2": 192.16,
+        "r3": 194.65,
+        "s1": 186.81,
+        "s2": 184.32,
+        "s3": 182.89
+      },
+      "relative_strength": {
+        "rs_20d": 0.49,
+        "rs_60d": 1.83
+      },
+      "recent_high": {
+        "price": 197.62,
+        "date": "2026-02-25"
+      },
+      "recent_low": {
+        "price": 164.27,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    },
+    "AVGO": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+8 weekly 5>10",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "+3 daily 50 SMA rising",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "-10 WEEKLY 20 SMA FALLING (primary trend weakening)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 13.8% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 10 AVWAPs",
+          "+10 strong RS20 (14.29)",
+          "+5 high confluence (7 levels)",
+          "-20 CHASING: price 13.8% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 333.62 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 333.62 - 324.75 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 13.8% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 339.88",
+        "watch_for": "Price pulling back toward 333.62 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 379.75,
+        "entry_low": 324.75,
+        "entry_high": 333.62,
+        "entry_mid": 329.18,
+        "in_zone": "False",
+        "stop": 305.96,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 383.91,
+        "target_1_ref": "R1 pivot",
+        "target_2": 388.08,
+        "target_2_ref": "R2 pivot",
+        "risk_per_share": 23.22,
+        "atr": 12.53,
+        "rr_t1": 2.4,
+        "rr_t2": 2.5,
+        "price_vs_zone": "ABOVE by 13.8%",
+        "pivots_used": {
+          "r1": 383.91,
+          "r2": 388.08,
+          "r3": 395.29,
+          "s1": 372.53,
+          "s2": 365.32
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 329.45
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 294.99
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 306.45
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 326.93
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 376.7
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 344.26
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-04-13",
+          "avwap": 376.7
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 333.97
+        },
+        "52wk_high": {
+          "anchor_date": "2025-12-10",
+          "avwap": 335.08
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 315.21
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 380.86,
+        "prior_day_low": 369.48,
+        "prior_day_close": 379.75,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 375.45,
+        "two_day_vwap": 373.63
+      },
+      "pivots": {
+        "pivot": 376.7,
+        "r1": 383.91,
+        "r2": 388.08,
+        "r3": 395.29,
+        "s1": 372.53,
+        "s2": 365.32,
+        "s3": 361.15
+      },
+      "relative_strength": {
+        "rs_20d": 14.29,
+        "rs_60d": 11.56
+      },
+      "recent_high": {
+        "price": 380.86,
+        "date": "2026-04-13"
+      },
+      "recent_low": {
+        "price": 289.96,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "mixed"
+    },
+    "TSM": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+7 weekly 10>20",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "+3 daily 50 SMA rising",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 5.8% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 9 AVWAPs",
+          "+10 strong RS20 (6.1)",
+          "+5 high confluence (9 levels)",
+          "-20 CHASING: price 5.8% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 349.36 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 349.36 - 343.44 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 5.8% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 355.83",
+        "watch_for": "Price pulling back toward 349.36 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 369.57,
+        "entry_low": 339.93,
+        "entry_high": 352.87,
+        "entry_mid": 346.4,
+        "in_zone": "False",
+        "stop": 320.52,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 398.16,
+        "target_1_ref": "2x risk",
+        "target_2": 436.98,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 25.88,
+        "atr": 12.94,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 4.7%",
+        "pivots_used": {
+          "r1": 372.0,
+          "r2": 374.44,
+          "r3": 377.41,
+          "s1": 366.59,
+          "s2": 363.62
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 343.27
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 258.57
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 266.39
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 342.28
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 369.03
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 356.56
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-02-25",
+          "avwap": 346.88
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 348.0
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 275.86
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 371.46,
+        "prior_day_low": 366.05,
+        "prior_day_close": 369.57,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 369.69,
+        "two_day_vwap": 372.37
+      },
+      "pivots": {
+        "pivot": 369.03,
+        "r1": 372.0,
+        "r2": 374.44,
+        "r3": 377.41,
+        "s1": 366.59,
+        "s2": 363.62,
+        "s3": 361.18
+      },
+      "relative_strength": {
+        "rs_20d": 6.1,
+        "rs_60d": 9.1
+      },
+      "recent_high": {
+        "price": 389.11,
+        "date": "2026-02-25"
+      },
+      "recent_low": {
+        "price": 313.8,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "mixed"
+    },
+    "AAPL": {
+      "score": {
+        "score": 20,
+        "quality": "F \u2014 weekly trend broken",
+        "weekly_gate": {
+          "passed": false,
+          "check": "close_above_sma_20",
+          "detail": "FAILED: below weekly 20 SMA"
+        },
+        "daily_gate": {
+          "passed": false,
+          "detail": "Skipped \u2014 weekly failed"
+        },
+        "reasons": [
+          "FAILED: below weekly 20 SMA",
+          "Score capped at 30"
+        ],
+        "action_bias": "avoid"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "N/A",
+        "gap_up_plan": "N/A",
+        "gap_down_plan": "N/A",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Weekly close back above weekly 20 SMA",
+          "Daily close above 260.87 (50 SMA)"
+        ],
+        "type": "no_setup",
+        "description": "Conditions not met \u2014 weekly or daily structure broken",
+        "trigger": null,
+        "watch_for": null,
+        "invalidation": null
+      },
+      "entry_zone": {
+        "price": 259.2,
+        "entry_low": 252.09,
+        "entry_high": 257.99,
+        "entry_mid": 255.04,
+        "in_zone": "False",
+        "stop": 243.24,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 278.64,
+        "target_1_ref": "2x risk",
+        "target_2": 296.34,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 11.8,
+        "atr": 5.9,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 0.5%",
+        "pivots_used": {
+          "r1": 260.7,
+          "r2": 262.2,
+          "r3": 264.22,
+          "s1": 257.18,
+          "s2": 255.16
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 260.07
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 234.19
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 235.98
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 253.54
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 258.68
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 256.55
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-02-06",
+          "avwap": 259.96
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-01-20",
+          "avwap": 259.9
+        },
+        "52wk_high": {
+          "anchor_date": "2025-12-03",
+          "avwap": 263.16
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-10",
+          "avwap": 237.88
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 260.18,
+        "prior_day_low": 256.66,
+        "prior_day_close": 259.2,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 257.96,
+        "two_day_vwap": 259.08
+      },
+      "pivots": {
+        "pivot": 258.68,
+        "r1": 260.7,
+        "r2": 262.2,
+        "r3": 264.22,
+        "s1": 257.18,
+        "s2": 255.16,
+        "s3": 253.66
+      },
+      "relative_strength": {
+        "rs_20d": -0.31,
+        "rs_60d": 1.09
+      },
+      "recent_high": {
+        "price": 280.65,
+        "date": "2026-02-06"
+      },
+      "recent_low": {
+        "price": 243.19,
+        "date": "2026-01-20"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    },
+    "MSFT": {
+      "score": {
+        "score": 20,
+        "quality": "F \u2014 weekly trend broken",
+        "weekly_gate": {
+          "passed": false,
+          "check": "close_above_sma_20",
+          "detail": "FAILED: below weekly 20 SMA"
+        },
+        "daily_gate": {
+          "passed": false,
+          "detail": "Skipped \u2014 weekly failed"
+        },
+        "reasons": [
+          "FAILED: below weekly 20 SMA",
+          "Score capped at 30"
+        ],
+        "action_bias": "avoid"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "N/A",
+        "gap_up_plan": "N/A",
+        "gap_down_plan": "N/A",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Weekly close back above weekly 20 SMA",
+          "Daily close above 392.66 (50 SMA)"
+        ],
+        "type": "no_setup",
+        "description": "Conditions not met \u2014 weekly or daily structure broken",
+        "trigger": null,
+        "watch_for": null,
+        "invalidation": null
+      },
+      "entry_zone": {
+        "price": 384.37,
+        "entry_low": 371.98,
+        "entry_high": 376.57,
+        "entry_mid": 374.28,
+        "in_zone": "False",
+        "stop": 358.42,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 406.0,
+        "target_1_ref": "2x risk",
+        "target_2": 429.79,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 15.86,
+        "atr": 9.04,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 2.1%",
+        "pivots_used": {
+          "r1": 388.93,
+          "r2": 393.5,
+          "r3": 402.45,
+          "s1": 375.41,
+          "s2": 366.46
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 410.98
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 448.74
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 453.61
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 380.04
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 379.98
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 373.43
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-01-28",
+          "avwap": 398.37
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 370.82
+        },
+        "52wk_high": {
+          "anchor_date": "2025-07-31",
+          "avwap": 456.62
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 457.34
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 384.54,
+        "prior_day_low": 371.02,
+        "prior_day_close": 384.37,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 379.17,
+        "two_day_vwap": 375.99
+      },
+      "pivots": {
+        "pivot": 379.98,
+        "r1": 388.93,
+        "r2": 393.5,
+        "r3": 402.45,
+        "s1": 375.41,
+        "s2": 366.46,
+        "s3": 361.89
+      },
+      "relative_strength": {
+        "rs_20d": -6.73,
+        "rs_60d": -15.02
+      },
+      "recent_high": {
+        "price": 482.64,
+        "date": "2026-01-28"
+      },
+      "recent_low": {
+        "price": 356.28,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    },
+    "GOOGL": {
+      "score": {
+        "score": 77,
+        "quality": "B \u2014 good",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "-5 daily 50 SMA FALLING (intermediate trend weak)",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "-7 WEEKLY 10 SMA FALLING (weekly momentum weak)",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 5.9% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 9 AVWAPs",
+          "+5 positive RS20 (2.32)",
+          "+5 high confluence (8 levels)",
+          "-20 CHASING: price 5.9% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 303.40 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 303.40 - 300.25 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 5.9% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 308.02",
+        "watch_for": "Price pulling back toward 303.40 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 321.31,
+        "entry_low": 297.21,
+        "entry_high": 306.44,
+        "entry_mid": 301.82,
+        "in_zone": "False",
+        "stop": 283.36,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 338.74,
+        "target_1_ref": "2x risk",
+        "target_2": 366.43,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 18.46,
+        "atr": 9.23,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 4.9%",
+        "pivots_used": {
+          "r1": 323.47,
+          "r2": 325.63,
+          "r3": 329.63,
+          "s1": 317.31,
+          "s2": 313.31
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 313.67
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 236.45
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 242.08
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 298.91
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 319.47
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 307.67
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-02-03",
+          "avwap": 307.58
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 299.63
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 246.13
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 321.63,
+        "prior_day_low": 315.47,
+        "prior_day_close": 321.31,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 319.03,
+        "two_day_vwap": 318.65
+      },
+      "pivots": {
+        "pivot": 319.47,
+        "r1": 323.47,
+        "r2": 325.63,
+        "r3": 329.63,
+        "s1": 317.31,
+        "s2": 313.31,
+        "s3": 311.15
+      },
+      "relative_strength": {
+        "rs_20d": 2.32,
+        "rs_60d": -2.76
+      },
+      "recent_high": {
+        "price": 348.75,
+        "date": "2026-02-03"
+      },
+      "recent_low": {
+        "price": 272.11,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    },
+    "META": {
+      "score": {
+        "score": 20,
+        "quality": "F \u2014 weekly trend broken",
+        "weekly_gate": {
+          "passed": false,
+          "check": "close_above_sma_20",
+          "detail": "FAILED: below weekly 20 SMA"
+        },
+        "daily_gate": {
+          "passed": false,
+          "detail": "Skipped \u2014 weekly failed"
+        },
+        "reasons": [
+          "FAILED: below weekly 20 SMA",
+          "Score capped at 30"
+        ],
+        "action_bias": "avoid"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "N/A",
+        "gap_up_plan": "N/A",
+        "gap_down_plan": "N/A",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Weekly close back above weekly 20 SMA",
+          "Daily close above 631.19 (50 SMA)"
+        ],
+        "type": "no_setup",
+        "description": "Conditions not met \u2014 weekly or daily structure broken",
+        "trigger": null,
+        "watch_for": null,
+        "invalidation": null
+      },
+      "entry_zone": {
+        "price": 634.53,
+        "entry_low": 580.52,
+        "entry_high": 603.36,
+        "entry_mid": 591.94,
+        "in_zone": "False",
+        "stop": 546.26,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 683.3,
+        "target_1_ref": "2x risk",
+        "target_2": 751.82,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 45.68,
+        "atr": 22.84,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 5.2%",
+        "pivots_used": {
+          "r1": 638.22,
+          "r2": 641.91,
+          "r3": 648.82,
+          "s1": 627.62,
+          "s2": 620.71
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 635.16
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 649.34
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 655.8
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 592.02
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 631.31
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 602.42
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-01-29",
+          "avwap": 632.24
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-27",
+          "avwap": 579.33
+        },
+        "52wk_high": {
+          "anchor_date": "2025-08-15",
+          "avwap": 661.48
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 663.1
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 635.0,
+        "prior_day_low": 624.4,
+        "prior_day_close": 634.53,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 629.65,
+        "two_day_vwap": 629.95
+      },
+      "pivots": {
+        "pivot": 631.31,
+        "r1": 638.22,
+        "r2": 641.91,
+        "r3": 648.82,
+        "s1": 627.62,
+        "s2": 620.71,
+        "s3": 617.02
+      },
+      "relative_strength": {
+        "rs_20d": -1.7,
+        "rs_60d": 2.92
+      },
+      "recent_high": {
+        "price": 743.36,
+        "date": "2026-01-29"
+      },
+      "recent_low": {
+        "price": 520.26,
+        "date": "2026-03-27"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    },
+    "AMZN": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+8 weekly 5>10",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+10 daily MA stack bullish with rising short MAs",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "-5 daily 50 SMA FALLING (intermediate trend weak)",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 9.6% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 10 AVWAPs",
+          "+10 strong RS20 (10.46)",
+          "+5 high confluence (8 levels)",
+          "-20 CHASING: price 9.6% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 218.93 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 218.93 - 213.81 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 9.6% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 222.30",
+        "watch_for": "Price pulling back toward 218.93 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 239.89,
+        "entry_low": 213.81,
+        "entry_high": 218.93,
+        "entry_mid": 216.37,
+        "in_zone": "False",
+        "stop": 203.72,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 241.34,
+        "target_1_ref": "R1 pivot",
+        "target_2": 242.8,
+        "target_2_ref": "R2 pivot",
+        "risk_per_share": 12.65,
+        "atr": 6.73,
+        "rr_t1": 2.0,
+        "rr_t2": 2.1,
+        "price_vs_zone": "ABOVE by 9.6%",
+        "pivots_used": {
+          "r1": 241.34,
+          "r2": 242.8,
+          "r3": 245.59,
+          "s1": 237.09,
+          "s2": 234.3
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 218.61
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 215.82
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 217.82
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 213.8
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 238.55
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 224.04
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-01-28",
+          "avwap": 213.66
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-02-17",
+          "avwap": 211.63
+        },
+        "52wk_high": {
+          "anchor_date": "2025-11-03",
+          "avwap": 223.28
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 219.98
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 240.0,
+        "prior_day_low": 235.75,
+        "prior_day_close": 239.89,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 238.08,
+        "two_day_vwap": 238.2
+      },
+      "pivots": {
+        "pivot": 238.55,
+        "r1": 241.34,
+        "r2": 242.8,
+        "r3": 245.59,
+        "s1": 237.09,
+        "s2": 234.3,
+        "s3": 232.84
+      },
+      "relative_strength": {
+        "rs_20d": 10.46,
+        "rs_60d": 1.33
+      },
+      "recent_high": {
+        "price": 247.78,
+        "date": "2026-01-28"
+      },
+      "recent_low": {
+        "price": 196.0,
+        "date": "2026-02-17"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "mixed"
+    },
+    "ANET": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+8 weekly 5>10",
+          "+7 weekly 10>20",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "+3 daily 50 SMA rising",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 13.4% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 10 AVWAPs",
+          "+10 strong RS20 (9.48)",
+          "+5 high confluence (3 levels)",
+          "-20 CHASING: price 13.4% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 134.08 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 134.08 - 132.89 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 13.4% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 137.42",
+        "watch_for": "Price pulling back toward 134.08 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 152.02,
+        "entry_low": 130.15,
+        "entry_high": 136.82,
+        "entry_mid": 133.49,
+        "in_zone": "False",
+        "stop": 120.15,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 154.51,
+        "target_1_ref": "R1 pivot",
+        "target_2": 157.0,
+        "target_2_ref": "R2 pivot",
+        "risk_per_share": 13.34,
+        "atr": 6.67,
+        "rr_t1": 1.6,
+        "rr_t2": 1.8,
+        "price_vs_zone": "ABOVE by 11.1%",
+        "pivots_used": {
+          "r1": 154.51,
+          "r2": 157.0,
+          "r3": 161.85,
+          "s1": 147.16,
+          "s2": 142.31
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 134.78
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 116.92
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 120.36
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 133.79
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 149.65
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 139.3
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-04-13",
+          "avwap": 149.65
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 134.89
+        },
+        "52wk_high": {
+          "anchor_date": "2025-10-30",
+          "avwap": 133.6
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 123.2
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 152.14,
+        "prior_day_low": 144.8,
+        "prior_day_close": 152.02,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 149.93,
+        "two_day_vwap": 148.71
+      },
+      "pivots": {
+        "pivot": 149.65,
+        "r1": 154.51,
+        "r2": 157.0,
+        "r3": 161.85,
+        "s1": 147.16,
+        "s2": 142.31,
+        "s3": 139.82
+      },
+      "relative_strength": {
+        "rs_20d": 9.48,
+        "rs_60d": 17.03
+      },
+      "recent_high": {
+        "price": 152.14,
+        "date": "2026-04-13"
+      },
+      "recent_low": {
+        "price": 115.42,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bullish"
+    },
+    "ASML": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+7 weekly 10>20",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "+3 daily 50 SMA rising",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 9.4% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 9 AVWAPs",
+          "+10 strong RS20 (6.23)",
+          "+5 high confluence (6 levels)",
+          "-20 CHASING: price 9.4% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 1371.04 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 1371.04 - 1365.44 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 9.4% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 1399.97",
+        "watch_for": "Price pulling back toward 1371.04 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 1500.2,
+        "entry_low": 1339.31,
+        "entry_high": 1397.17,
+        "entry_mid": 1368.24,
+        "in_zone": "False",
+        "stop": 1252.52,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 1599.68,
+        "target_1_ref": "2x risk",
+        "target_2": 1773.26,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 115.72,
+        "atr": 57.86,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 7.4%",
+        "pivots_used": {
+          "r1": 1513.66,
+          "r2": 1527.11,
+          "r3": 1553.43,
+          "s1": 1473.89,
+          "s2": 1447.57
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 1366.72
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 972.98
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 993.63
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 1364.06
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 1487.34
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 1391.74
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-02-25",
+          "avwap": 1373.3
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 1368.87
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 1015.84
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 1500.8,
+        "prior_day_low": 1461.03,
+        "prior_day_close": 1500.2,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 1478.83,
+        "two_day_vwap": 1482.48
+      },
+      "pivots": {
+        "pivot": 1487.34,
+        "r1": 1513.66,
+        "r2": 1527.11,
+        "r3": 1553.43,
+        "s1": 1473.89,
+        "s2": 1447.57,
+        "s3": 1434.12
+      },
+      "relative_strength": {
+        "rs_20d": 6.23,
+        "rs_60d": 13.43
+      },
+      "recent_high": {
+        "price": 1547.22,
+        "date": "2026-02-25"
+      },
+      "recent_low": {
+        "price": 1248.11,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "mixed"
+    },
+    "PLTR": {
+      "score": {
+        "score": 20,
+        "quality": "F \u2014 weekly trend broken",
+        "weekly_gate": {
+          "passed": false,
+          "check": "close_above_sma_20",
+          "detail": "FAILED: below weekly 20 SMA"
+        },
+        "daily_gate": {
+          "passed": false,
+          "detail": "Skipped \u2014 weekly failed"
+        },
+        "reasons": [
+          "FAILED: below weekly 20 SMA",
+          "Score capped at 30"
+        ],
+        "action_bias": "avoid"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "N/A",
+        "gap_up_plan": "N/A",
+        "gap_down_plan": "N/A",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Weekly close back above weekly 20 SMA",
+          "Daily close above 143.94 (50 SMA)"
+        ],
+        "type": "no_setup",
+        "description": "Conditions not met \u2014 weekly or daily structure broken",
+        "trigger": null,
+        "watch_for": null,
+        "invalidation": null
+      },
+      "entry_zone": {
+        "price": 132.37,
+        "entry_low": 129.89,
+        "entry_high": 136.5,
+        "entry_mid": 133.2,
+        "in_zone": "True",
+        "stop": 128.71,
+        "stop_ref": "Below S1 (0.3% below zone)",
+        "target_1": 142.18,
+        "target_1_ref": "2x risk",
+        "target_2": 148.92,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 4.49,
+        "atr": 8.27,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "IN ZONE",
+        "pivots_used": {
+          "r1": 134.81,
+          "r2": 137.25,
+          "r3": 140.08,
+          "s1": 129.54,
+          "s2": 126.71
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 149.11
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 140.44
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 146.81
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 145.64
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 131.98
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 136.56
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-01-16",
+          "avwap": 145.61
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-04-10",
+          "avwap": 128.56
+        },
+        "52wk_high": {
+          "anchor_date": "2025-11-03",
+          "avwap": 160.13
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-10",
+          "avwap": 148.82
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 134.42,
+        "prior_day_low": 129.15,
+        "prior_day_close": 132.37,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 132.24,
+        "two_day_vwap": 128.71
+      },
+      "pivots": {
+        "pivot": 131.98,
+        "r1": 134.81,
+        "r2": 137.25,
+        "r3": 140.08,
+        "s1": 129.54,
+        "s2": 126.71,
+        "s3": 124.27
+      },
+      "relative_strength": {
+        "rs_20d": -16.16,
+        "rs_60d": -24.63
+      },
+      "recent_high": {
+        "price": 182.43,
+        "date": "2026-01-16"
+      },
+      "recent_low": {
+        "price": 122.68,
+        "date": "2026-04-10"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    },
+    "VRT": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+8 weekly 5>10",
+          "+7 weekly 10>20",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+10 daily MA stack bullish with rising short MAs",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "+3 daily 50 SMA rising",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 11.5% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 9 AVWAPs",
+          "+10 strong RS20 (10.5)",
+          "+5 high confluence (9 levels)",
+          "-20 CHASING: price 11.5% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 269.02 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 269.02 - 265.98 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 11.5% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 276.38",
+        "watch_for": "Price pulling back toward 269.02 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 299.96,
+        "entry_low": 260.14,
+        "entry_high": 274.86,
+        "entry_mid": 267.5,
+        "in_zone": "False",
+        "stop": 238.04,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 326.42,
+        "target_1_ref": "2x risk",
+        "target_2": 370.61,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 29.46,
+        "atr": 14.73,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 9.1%",
+        "pivots_used": {
+          "r1": 302.1,
+          "r2": 304.24,
+          "r3": 307.8,
+          "s1": 296.4,
+          "s2": 292.84
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 236.29
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 152.53
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 160.38
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 264.21
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 298.54
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 276.6
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-04-13",
+          "avwap": 298.54
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-01-20",
+          "avwap": 244.86
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-11",
+          "avwap": 163.83
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 300.68,
+        "prior_day_low": 294.98,
+        "prior_day_close": 299.96,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 298.71,
+        "two_day_vwap": 296.79
+      },
+      "pivots": {
+        "pivot": 298.54,
+        "r1": 302.1,
+        "r2": 304.24,
+        "r3": 307.8,
+        "s1": 296.4,
+        "s2": 292.84,
+        "s3": 290.7
+      },
+      "relative_strength": {
+        "rs_20d": 10.5,
+        "rs_60d": 74.51
+      },
+      "recent_high": {
+        "price": 300.68,
+        "date": "2026-04-13"
+      },
+      "recent_low": {
+        "price": 169.97,
+        "date": "2026-01-20"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "bullish",
+      "weekly_ma_stack": "bullish"
+    },
+    "CEG": {
+      "score": {
+        "score": 20,
+        "quality": "F \u2014 weekly trend broken",
+        "weekly_gate": {
+          "passed": false,
+          "check": "close_above_sma_20",
+          "detail": "FAILED: below weekly 20 SMA"
+        },
+        "daily_gate": {
+          "passed": false,
+          "detail": "Skipped \u2014 weekly failed"
+        },
+        "reasons": [
+          "FAILED: below weekly 20 SMA",
+          "Score capped at 30"
+        ],
+        "action_bias": "avoid"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "N/A",
+        "gap_up_plan": "N/A",
+        "gap_down_plan": "N/A",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Weekly close back above weekly 20 SMA",
+          "Daily close above 294.55 (50 SMA)"
+        ],
+        "type": "no_setup",
+        "description": "Conditions not met \u2014 weekly or daily structure broken",
+        "trigger": null,
+        "watch_for": null,
+        "invalidation": null
+      },
+      "entry_zone": {
+        "price": 291.72,
+        "entry_low": 282.06,
+        "entry_high": 291.71,
+        "entry_mid": 286.88,
+        "in_zone": "False",
+        "stop": 261.72,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 337.2,
+        "target_1_ref": "2x risk",
+        "target_2": 374.94,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 25.16,
+        "atr": 13.56,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 0.0%",
+        "pivots_used": {
+          "r1": 295.78,
+          "r2": 299.84,
+          "r3": 306.98,
+          "s1": 284.58,
+          "s2": 277.44
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 298.55
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 299.02
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 308.75
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 293.07
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 288.64
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 280.28
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-01-15",
+          "avwap": 293.07
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-02-05",
+          "avwap": 294.6
+        },
+        "52wk_high": {
+          "anchor_date": "2025-10-15",
+          "avwap": 321.15
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 314.85
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 292.7,
+        "prior_day_low": 281.5,
+        "prior_day_close": 291.72,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 288.18,
+        "two_day_vwap": 287.84
+      },
+      "pivots": {
+        "pivot": 288.64,
+        "r1": 295.78,
+        "r2": 299.84,
+        "r3": 306.98,
+        "s1": 284.58,
+        "s2": 277.44,
+        "s3": 273.38
+      },
+      "relative_strength": {
+        "rs_20d": -7.37,
+        "rs_60d": -13.77
+      },
+      "recent_high": {
+        "price": 346.35,
+        "date": "2026-01-15"
+      },
+      "recent_low": {
+        "price": 242.97,
+        "date": "2026-02-05"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    },
+    "ETN": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+8 weekly 5>10",
+          "+7 weekly 10>20",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+10 daily MA stack bullish with rising short MAs",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "+3 daily 50 SMA rising",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 7.5% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 9 AVWAPs",
+          "+10 strong RS20 (8.89)",
+          "+5 high confluence (7 levels)",
+          "-20 CHASING: price 7.5% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 375.30 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 375.30 - 368.94 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 7.5% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 381.95",
+        "watch_for": "Price pulling back toward 375.30 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 403.36,
+        "entry_low": 365.47,
+        "entry_high": 378.77,
+        "entry_mid": 372.12,
+        "in_zone": "False",
+        "stop": 345.52,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 425.32,
+        "target_1_ref": "2x risk",
+        "target_2": 465.22,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 26.6,
+        "atr": 13.3,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 6.5%",
+        "pivots_used": {
+          "r1": 407.01,
+          "r2": 410.67,
+          "r3": 416.58,
+          "s1": 397.44,
+          "s2": 391.53
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 356.78
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 337.56
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 343.91
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 365.46
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 401.1
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 381.55
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-02-12",
+          "avwap": 367.0
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-01-26",
+          "avwap": 364.56
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 348.53
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 404.75,
+        "prior_day_low": 395.18,
+        "prior_day_close": 403.36,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 400.37,
+        "two_day_vwap": 402.97
+      },
+      "pivots": {
+        "pivot": 401.1,
+        "r1": 407.01,
+        "r2": 410.67,
+        "r3": 416.58,
+        "s1": 397.44,
+        "s2": 391.53,
+        "s3": 387.87
+      },
+      "relative_strength": {
+        "rs_20d": 8.89,
+        "rs_60d": 21.96
+      },
+      "recent_high": {
+        "price": 407.18,
+        "date": "2026-02-12"
+      },
+      "recent_low": {
+        "price": 326.48,
+        "date": "2026-01-26"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "bullish",
+      "weekly_ma_stack": "bullish"
+    },
+    "PWR": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+8 weekly 5>10",
+          "+7 weekly 10>20",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "+3 daily 50 SMA rising",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 5.4% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 9 AVWAPs",
+          "+5 positive RS20 (0.99)",
+          "+5 high confluence (7 levels)",
+          "-20 CHASING: price 5.3% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 565.27 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 565.27 - 565.88 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 5.4% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 575.52",
+        "watch_for": "Price pulling back toward 565.27 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 595.84,
+        "entry_low": 555.33,
+        "entry_high": 575.82,
+        "entry_mid": 565.58,
+        "in_zone": "False",
+        "stop": 524.6,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 647.54,
+        "target_1_ref": "2x risk",
+        "target_2": 709.01,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 40.98,
+        "atr": 20.49,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 3.5%",
+        "pivots_used": {
+          "r1": 600.76,
+          "r2": 605.67,
+          "r3": 614.93,
+          "s1": 586.59,
+          "s2": 577.33
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 521.95
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 404.32
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 419.61
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 565.0
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 591.5
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 571.82
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-04-13",
+          "avwap": 591.5
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-01-15",
+          "avwap": 533.19
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 427.14
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 596.42,
+        "prior_day_low": 582.25,
+        "prior_day_close": 595.84,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 591.73,
+        "two_day_vwap": 589.65
+      },
+      "pivots": {
+        "pivot": 591.5,
+        "r1": 600.76,
+        "r2": 605.67,
+        "r3": 614.93,
+        "s1": 586.59,
+        "s2": 577.33,
+        "s3": 572.42
+      },
+      "relative_strength": {
+        "rs_20d": 0.99,
+        "rs_60d": 33.75
+      },
+      "recent_high": {
+        "price": 596.42,
+        "date": "2026-04-13"
+      },
+      "recent_low": {
+        "price": 444.23,
+        "date": "2026-01-15"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bullish"
+    },
+    "CRS": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+8 weekly 5>10",
+          "+7 weekly 10>20",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+10 daily MA stack bullish with rising short MAs",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "+3 daily 50 SMA rising",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 8.5% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 9 AVWAPs",
+          "+10 strong RS20 (15.77)",
+          "+5 high confluence (8 levels)",
+          "-20 CHASING: price 8.5% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 408.75 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 408.75 - 395.95 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 8.5% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 418.92",
+        "watch_for": "Price pulling back toward 408.75 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 443.67,
+        "entry_low": 395.95,
+        "entry_high": 408.75,
+        "entry_mid": 402.35,
+        "in_zone": "False",
+        "stop": 365.46,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 476.13,
+        "target_1_ref": "2x risk",
+        "target_2": 531.46,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 36.89,
+        "atr": 20.33,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 8.5%",
+        "pivots_used": {
+          "r1": 447.8,
+          "r2": 451.92,
+          "r3": 458.55,
+          "s1": 437.05,
+          "s2": 430.42
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 364.59
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 279.55
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 285.47
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 393.52
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 441.17
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 416.2
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-04-13",
+          "avwap": 441.17
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-01-29",
+          "avwap": 375.58
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-11",
+          "avwap": 288.36
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 445.3,
+        "prior_day_low": 434.55,
+        "prior_day_close": 443.67,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 439.61,
+        "two_day_vwap": 435.47
+      },
+      "pivots": {
+        "pivot": 441.17,
+        "r1": 447.8,
+        "r2": 451.92,
+        "r3": 458.55,
+        "s1": 437.05,
+        "s2": 430.42,
+        "s3": 426.3
+      },
+      "relative_strength": {
+        "rs_20d": 15.77,
+        "rs_60d": 31.14
+      },
+      "recent_high": {
+        "price": 445.3,
+        "date": "2026-04-13"
+      },
+      "recent_low": {
+        "price": 284.16,
+        "date": "2026-01-29"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "No known date"
+      },
+      "daily_ma_stack": "bullish",
+      "weekly_ma_stack": "bullish"
+    },
+    "SPY": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "-5 daily 50 SMA FALLING (intermediate trend weak)",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "-7 WEEKLY 10 SMA FALLING (weekly momentum weak)",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "+10 intraday stack bullish",
+          "+8 above ALL 11 AVWAPs",
+          "+5 high confluence (10 levels)",
+          "-20 CHASING: price 3.4% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0.7,
+        "time_horizon": "1-3 days for breakout confirmation, hold 5-10 days",
+        "gap_up_plan": "If gaps above 696.96: buy half size on open, add on first pullback to hold breakout level",
+        "gap_down_plan": "If gaps down: no action, setup is not triggered",
+        "partial_take_plan": "Take 1/3 at R1 (689.41), 1/3 at R2 (692.71), trail last 1/3 with 10 SMA",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [],
+        "type": "breakout",
+        "description": "Testing recent high 695.94",
+        "trigger": "BUY on close above 696.96",
+        "watch_for": "Volume expansion above 695.94 (need RVol > 1.3). Weak volume = false breakout.",
+        "invalidation": "Rejection and close back below 663.30"
+      },
+      "entry_zone": {
+        "price": 686.1,
+        "entry_low": 656.08,
+        "entry_high": 666.22,
+        "entry_mid": 661.15,
+        "in_zone": "False",
+        "stop": 640.86,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 701.73,
+        "target_1_ref": "2x risk",
+        "target_2": 732.16,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 20.29,
+        "atr": 10.15,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 3.0%",
+        "pivots_used": {
+          "r1": 689.41,
+          "r2": 692.71,
+          "r3": 699.13,
+          "s1": 679.69,
+          "s2": 673.27
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 675.32
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 632.77
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 639.02
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 658.61
+        },
+        "2022_bear_low": {
+          "anchor_date": "2022-10-13",
+          "avwap": 632.77
+        },
+        "2024_aug_low": {
+          "anchor_date": "2024-08-05",
+          "avwap": 632.77
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 682.99
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 666.32
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-01-28",
+          "avwap": 671.87
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 658.28
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 646.95
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 686.3,
+        "prior_day_low": 676.58,
+        "prior_day_close": 686.1,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 681.75,
+        "two_day_vwap": 680.95
+      },
+      "pivots": {
+        "pivot": 682.99,
+        "r1": 689.41,
+        "r2": 692.71,
+        "r3": 699.13,
+        "s1": 679.69,
+        "s2": 673.27,
+        "s3": 669.97
+      },
+      "relative_strength": {
+        "rs_20d": 0.0,
+        "rs_60d": 0.0
+      },
+      "recent_high": {
+        "price": 695.94,
+        "date": "2026-01-28"
+      },
+      "recent_low": {
+        "price": 629.28,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "Benchmark \u2014 skip"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    },
+    "QQQ": {
+      "score": {
+        "score": 68,
+        "quality": "B \u2014 good",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "-5 daily 50 SMA FALLING (intermediate trend weak)",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "-10 WEEKLY 20 SMA FALLING (primary trend weakening)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 4.2% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+4 above 9/10 AVWAPs",
+          "+5 positive RS20 (0.13)",
+          "+5 high confluence (4 levels)",
+          "-20 CHASING: price 4.2% above entry zone"
+        ],
+        "action_bias": "lean_buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Do NOT buy \u2014 further from entry zone",
+        "gap_down_plan": "If gaps to 592.66: potential entry, watch for intraday hold",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 592.66 on declining volume",
+          "Breakout above 635.80 on volume > 1.3x avg"
+        ],
+        "type": "above_zone_wait",
+        "description": "Trend is right but price 4.2% above 10 SMA. Don't chase.",
+        "trigger": "BUY on pullback to 592.66 - 589.63 zone",
+        "watch_for": "Light-volume pullback toward 592.66",
+        "invalidation": "10 SMA rolls over and starts falling"
+      },
+      "entry_zone": {
+        "price": 617.39,
+        "entry_low": 585.23,
+        "entry_high": 597.06,
+        "entry_mid": 591.14,
+        "in_zone": "False",
+        "stop": 567.48,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 626.72,
+        "target_1_ref": "R1 pivot",
+        "target_2": 636.04,
+        "target_2_ref": "R2 pivot",
+        "risk_per_share": 23.66,
+        "atr": 11.83,
+        "rr_t1": 1.5,
+        "rr_t2": 1.9,
+        "price_vs_zone": "ABOVE by 3.4%",
+        "pivots_used": {
+          "r1": 626.72,
+          "r2": 636.04,
+          "r3": 645.35,
+          "s1": 608.09,
+          "s2": 598.78
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 603.99
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 567.86
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 574.46
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 589.37
+        },
+        "2022_bear_low": {
+          "anchor_date": "2022-10-13",
+          "avwap": 567.86
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 617.41
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 595.45
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-01-28",
+          "avwap": 600.0
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 587.12
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 582.06
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 626.74,
+        "prior_day_low": 608.11,
+        "prior_day_close": 617.39,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 613.0,
+        "two_day_vwap": 612.2
+      },
+      "pivots": {
+        "pivot": 617.41,
+        "r1": 626.72,
+        "r2": 636.04,
+        "r3": 645.35,
+        "s1": 608.09,
+        "s2": 598.78,
+        "s3": 589.46
+      },
+      "relative_strength": {
+        "rs_20d": 0.13,
+        "rs_60d": 0.04
+      },
+      "recent_high": {
+        "price": 635.8,
+        "date": "2026-01-28"
+      },
+      "recent_low": {
+        "price": 555.6,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "Benchmark \u2014 skip"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    },
+    "SOXX": {
+      "score": {
+        "score": 80,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+8 weekly 5>10",
+          "+7 weekly 10>20",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "+3 daily 50 SMA rising",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "+3 weekly 10 SMA rising",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "-8 extended 11.2% above 10 SMA (don't chase)",
+          "+10 intraday stack bullish",
+          "+8 above ALL 13 AVWAPs",
+          "+10 strong RS20 (13.67)",
+          "+5 high confluence (7 levels)",
+          "-20 CHASING: price 11.2% above entry zone"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
+        "gap_down_plan": "If gaps to 353.74 area, watch for intraday hold \u2014 could become entry",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 353.74 - 345.07 zone on light volume",
+          "5 SMA catches up to price (distance narrows to < 2%)"
+        ],
+        "type": "extended_wait",
+        "description": "Extended 11.2% above 10 SMA. Do NOT chase.",
+        "trigger": "Wait for pullback to 360.08",
+        "watch_for": "Price pulling back toward 353.74 on declining volume (RVol < 0.8)",
+        "invalidation": "10 SMA starts falling"
+      },
+      "entry_zone": {
+        "price": 393.34,
+        "entry_low": 345.07,
+        "entry_high": 353.74,
+        "entry_mid": 349.4,
+        "in_zone": "False",
+        "stop": 326.03,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 396.48,
+        "target_1_ref": "R1 pivot",
+        "target_2": 399.63,
+        "target_2_ref": "R2 pivot",
+        "risk_per_share": 23.37,
+        "atr": 12.69,
+        "rr_t1": 2.0,
+        "rr_t2": 2.1,
+        "price_vs_zone": "ABOVE by 11.2%",
+        "pivots_used": {
+          "r1": 396.48,
+          "r2": 399.63,
+          "r3": 405.68,
+          "s1": 387.28,
+          "s2": 381.23
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 341.68
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 270.64
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 274.33
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 340.26
+        },
+        "recent_high": {
+          "anchor_date": "2026-02-25",
+          "avwap": 340.81
+        },
+        "recent_low": {
+          "anchor_date": "2026-03-09",
+          "avwap": 339.71
+        },
+        "liberation_day_low": {
+          "anchor_date": "2025-04-07",
+          "avwap": 274.33
+        },
+        "iran_war_low": {
+          "anchor_date": "2026-03-10",
+          "avwap": 340.26
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 390.43
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 359.1
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-04-13",
+          "avwap": 390.43
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 345.15
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 280.92
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 393.57,
+        "prior_day_low": 384.37,
+        "prior_day_close": 393.34,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 388.89,
+        "two_day_vwap": 387.85
+      },
+      "pivots": {
+        "pivot": 390.43,
+        "r1": 396.48,
+        "r2": 399.63,
+        "r3": 405.68,
+        "s1": 387.28,
+        "s2": 381.23,
+        "s3": 378.08
+      },
+      "relative_strength": {
+        "rs_20d": 13.67,
+        "rs_60d": 17.33
+      },
+      "recent_high": {
+        "price": 393.57,
+        "date": "2026-04-13"
+      },
+      "recent_low": {
+        "price": 307.26,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "Benchmark \u2014 skip"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bullish"
+    },
+    "DIA": {
+      "score": {
+        "score": 90,
+        "quality": "A \u2014 strong",
+        "weekly_gate": {
+          "passed": true,
+          "check": "close_above_sma_20",
+          "detail": "Weekly close above 20 SMA"
+        },
+        "daily_gate": {
+          "passed": true,
+          "check": "close_above_sma_50",
+          "detail": "Daily close above 50 SMA"
+        },
+        "reasons": [
+          "Weekly close above 20 SMA",
+          "Daily close above 50 SMA",
+          "+5 above daily 10",
+          "+5 above daily 20",
+          "+5 above 200 SMA",
+          "+3 daily 5 SMA rising",
+          "+2 daily 10 SMA rising",
+          "+5 daily 20 SMA rising (healthy trend)",
+          "-5 daily 50 SMA FALLING (intermediate trend weak)",
+          "+3 daily 200 SMA rising",
+          "+3 weekly 5 SMA rising",
+          "-7 WEEKLY 10 SMA FALLING (weekly momentum weak)",
+          "+5 weekly 20 SMA rising (primary trend healthy)",
+          "+3 both 5+10 SMA will rise tomorrow",
+          "+10 intraday stack bullish",
+          "+8 above ALL 9 AVWAPs",
+          "+5 high confluence (13 levels)",
+          "-10 above entry zone by 2.6%"
+        ],
+        "action_bias": "buy"
+      },
+      "setup": {
+        "max_chase_pct": 0,
+        "time_horizon": "Wait 2-5 days for pullback",
+        "gap_up_plan": "Do NOT buy \u2014 further from entry zone",
+        "gap_down_plan": "If gaps to 470.09: potential entry, watch for intraday hold",
+        "partial_take_plan": "N/A",
+        "position_size_guidance": "standard",
+        "upgrade_conditions": [
+          "Price pulls back to 470.09 on declining volume",
+          "Breakout above 503.59 on volume > 1.3x avg"
+        ],
+        "type": "above_zone_wait",
+        "description": "Trend is right but price 2.6% above 10 SMA. Don't chase.",
+        "trigger": "BUY on pullback to 470.09 - 465.80 zone",
+        "watch_for": "Light-volume pullback toward 470.09",
+        "invalidation": "10 SMA rolls over and starts falling"
+      },
+      "entry_zone": {
+        "price": 482.13,
+        "entry_low": 465.8,
+        "entry_high": 470.09,
+        "entry_mid": 467.94,
+        "in_zone": "False",
+        "stop": 455.26,
+        "stop_ref": "1.5 ATR below entry zone",
+        "target_1": 493.3,
+        "target_1_ref": "2x risk",
+        "target_2": 512.32,
+        "target_2_ref": "3.5x risk",
+        "risk_per_share": 12.68,
+        "atr": 7.03,
+        "rr_t1": 2.0,
+        "rr_t2": 3.5,
+        "price_vs_zone": "ABOVE by 2.6%",
+        "pivots_used": {
+          "r1": 484.56,
+          "r2": 486.98,
+          "r3": 491.69,
+          "s1": 477.43,
+          "s2": 472.72
+        }
+      },
+      "avwap_map": {
+        "ytd": {
+          "anchor_date": "2026-01-02",
+          "avwap": 481.09
+        },
+        "covid_low": {
+          "anchor_date": "2020-03-23",
+          "avwap": 457.29
+        },
+        "liberation_day": {
+          "anchor_date": "2025-04-07",
+          "avwap": 459.5
+        },
+        "iran_war_start": {
+          "anchor_date": "2026-03-10",
+          "avwap": 465.06
+        },
+        "wtd": {
+          "anchor_date": "2026-04-13",
+          "avwap": 479.85
+        },
+        "mtd": {
+          "anchor_date": "2026-04-01",
+          "avwap": 471.75
+        },
+        "recent_high_60d": {
+          "anchor_date": "2026-02-10",
+          "avwap": 475.86
+        },
+        "recent_low_60d": {
+          "anchor_date": "2026-03-30",
+          "avwap": 466.2
+        },
+        "52wk_low": {
+          "anchor_date": "2025-04-21",
+          "avwap": 462.53
+        }
+      },
+      "reference_levels": {
+        "prior_day_high": 482.28,
+        "prior_day_low": 475.15,
+        "prior_day_close": 482.13,
+        "prior_day_date": "2026-04-13"
+      },
+      "session_vwaps": {
+        "daily_vwap": 478.11,
+        "two_day_vwap": 478.83
+      },
+      "pivots": {
+        "pivot": 479.85,
+        "r1": 484.56,
+        "r2": 486.98,
+        "r3": 491.69,
+        "s1": 477.43,
+        "s2": 472.72,
+        "s3": 470.3
+      },
+      "relative_strength": {
+        "rs_20d": -0.09,
+        "rs_60d": -1.51
+      },
+      "recent_high": {
+        "price": 503.59,
+        "date": "2026-02-10"
+      },
+      "recent_low": {
+        "price": 450.44,
+        "date": "2026-03-30"
+      },
+      "earnings": {
+        "has_earnings": false,
+        "note": "Benchmark \u2014 skip"
+      },
+      "daily_ma_stack": "mixed",
+      "weekly_ma_stack": "bearish"
+    }
+  }
+}
