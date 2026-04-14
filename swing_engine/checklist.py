@@ -35,12 +35,22 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
     critical_failed = bool(
         {"Regime", "Weekly Gate", "Daily Gate", "Stop", "Event Risk"} & failed_items
     )
+    idea_failed = "Idea Quality" in failed_items
+    timing_failed = "Entry Timing" in failed_items
 
-    if critical_failed or action_bias == "avoid" or setup_type == "no_setup":
+    if critical_failed or idea_failed or action_bias == "avoid" or setup_type == "no_setup":
         return {
             "label": "BLOCK",
-            "detail": "Trend or risk gates failed",
+            "detail": "Idea quality, trend, or risk gates failed",
             "rank": 5,
+            "actionable_now": False,
+        }
+
+    if timing_failed:
+        return {
+            "label": "WAIT SETUP",
+            "detail": "Entry timing is not ready yet",
+            "rank": 3,
             "actionable_now": False,
         }
 
@@ -231,7 +241,7 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
 
     if actionability["label"] == "BLOCK":
         verdict = "BLOCK - critical check failed"
-    elif actionability["actionable_now"] and total_pass >= total - 1:
+    elif actionability["actionable_now"] and total_pass == total:
         verdict = f"BUY NOW - {sc['quality']} setup in {regime.get('regime', '?')} regime"
     elif actionability["label"].startswith("WATCH"):
         verdict = f"{actionability['label']} - {actionability['detail']}"

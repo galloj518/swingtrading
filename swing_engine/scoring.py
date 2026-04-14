@@ -492,6 +492,137 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     }
 
 
+# Override the earlier implementation with a cleaner, fully adjusted version.
+def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
+                 avwap_map: dict, rs: dict, confluence: dict,
+                 event_risk: dict, earnings: dict,
+                 regime: dict = None) -> dict:
+    regime = regime or {}
+    regime_label = regime.get("regime", "neutral")
+    risk_appetite = regime.get("risk_appetite", "full")
+
+    wg = _check_weekly_gate(weekly_state)
+    if not wg["passed"]:
+        return {
+            "score": 20,
+            "quality": "F - weekly trend broken",
+            "composite_score": 20,
+            "composite_quality": "F - weekly trend broken",
+            "idea_quality_score": 20,
+            "idea_quality": "F - weekly trend broken",
+            "entry_timing_score": 20,
+            "entry_timing": "F - poor",
+            "idea_reasons": [wg["detail"]],
+            "timing_reasons": ["Skipped - weekly gate failed"],
+            "idea_factors": {},
+            "timing_factors": {},
+            "weekly_gate": wg,
+            "daily_gate": {"passed": False, "detail": "Skipped - weekly failed"},
+            "reasons": [wg["detail"], "Score capped at 30"],
+            "action_bias": "avoid",
+        }
+
+    dg = _check_daily_gate(daily_state)
+    if not dg["passed"]:
+        return {
+            "score": 40,
+            "quality": "D - daily trend broken",
+            "composite_score": 40,
+            "composite_quality": "D - daily trend broken",
+            "idea_quality_score": 40,
+            "idea_quality": "D - daily trend broken",
+            "entry_timing_score": 35,
+            "entry_timing": "D - early",
+            "idea_reasons": [wg["detail"], dg["detail"]],
+            "timing_reasons": ["Skipped - daily gate failed"],
+            "idea_factors": {},
+            "timing_factors": {},
+            "weekly_gate": wg,
+            "daily_gate": dg,
+            "reasons": [wg["detail"], dg["detail"], "Score capped at 50"],
+            "action_bias": "wait",
+        }
+
+    idea = _score_idea_quality(
+        daily_state, weekly_state, avwap_map, rs, confluence, event_risk, earnings,
+    )
+    timing = _score_entry_timing(
+        daily_state, intra_state, event_risk, earnings,
+    )
+
+    idea_score = idea["score"]
+    timing_score = timing["score"]
+    adjustment_notes = []
+
+    sma5_dir = daily_state.get("sma_5_direction", "unknown")
+    sma10_dir = daily_state.get("sma_10_direction", "unknown")
+    sma20_dir = daily_state.get("sma_20_direction", "unknown")
+
+    if sma5_dir == "falling":
+        timing_score = min(timing_score, 75)
+        adjustment_notes.append("Timing capped at 75: daily 5 SMA falling")
+
+    if sma5_dir == "falling" and sma10_dir == "falling":
+        timing_score = min(timing_score, 60)
+        adjustment_notes.append("Timing capped at 60: daily 5+10 SMA both falling")
+
+    if sma20_dir == "falling":
+        idea_score = min(idea_score, 65)
+        timing_score = min(timing_score, 65)
+        adjustment_notes.append("Idea/timing capped at 65: daily 20 SMA falling")
+
+    price = daily_state.get("last_close", 0)
+    sma10 = daily_state.get("sma_10", price)
+    sma20 = daily_state.get("sma_20", price)
+    entry_high = max(sma10, sma20) if sma10 and sma20 else price
+    if price and entry_high and price > entry_high:
+        chase_pct = (price / entry_high - 1) * 100
+        penalty = 20 if chase_pct > 3 else 10 if chase_pct > 1 else 5
+        timing_score = max(0.0, timing_score - penalty)
+        adjustment_notes.append(f"Timing -{penalty}: price {chase_pct:.1f}% above entry zone")
+
+    if regime_label in ("bearish", "lean_bearish") and risk_appetite in ("defensive", "minimal"):
+        idea_score = min(idea_score, 60)
+        timing_score = min(timing_score, 60)
+        adjustment_notes.append(f"Idea/timing capped at 60: regime {regime_label}, risk appetite {risk_appetite}")
+    elif regime_label == "lean_bearish":
+        idea_score = min(idea_score, 75)
+        timing_score = min(timing_score, 75)
+        adjustment_notes.append(f"Idea/timing capped at 75: regime {regime_label}")
+
+    idea_score = round(_clamp(idea_score), 1)
+    timing_score = round(_clamp(timing_score), 1)
+    score = round(_clamp(0.68 * idea_score + 0.32 * timing_score), 1)
+
+    quality = _quality_label(score)
+    reasons = [wg["detail"], dg["detail"]] + idea["reasons"] + timing["reasons"] + adjustment_notes
+    action_bias = (
+        "buy" if idea_score >= 75 and timing_score >= 75 and score >= 72 else
+        "lean_buy" if idea_score >= 70 and timing_score >= 58 and score >= 62 else
+        "wait" if idea_score >= 55 else
+        "avoid"
+    )
+
+    return {
+        "score": score,
+        "quality": quality,
+        "composite_score": score,
+        "composite_quality": quality,
+        "idea_quality_score": idea_score,
+        "idea_quality": _quality_label(idea_score),
+        "entry_timing_score": timing_score,
+        "entry_timing": _timing_label(timing_score),
+        "idea_reasons": idea["reasons"],
+        "timing_reasons": timing["reasons"] + adjustment_notes,
+        "idea_factors": {**idea["factors"], "adjustments_applied": adjustment_notes},
+        "timing_factors": {**timing["factors"], "adjustments_applied": adjustment_notes},
+        "weekly_gate": wg,
+        "daily_gate": dg,
+        "reasons": reasons,
+        "action_bias": action_bias,
+    }
+
+
 # =============================================================================
 # FULL TRADE PLAN GENERATOR
 # Merges the best of deterministic analysis with the notebook's rich fields:

@@ -591,8 +591,14 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
     output_path = output_path or cfg.BASE_DIR / "dashboard.html"
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    # Sort watchlist by actionability first, then score.
-    wl_candidates = [s for s in packets if s in cfg.WATCHLIST]
+    min_report_score = 50
+    # Sort watchlist by actionability first, then score, but trim low-score names
+    # from the published page so the dashboard stays focused and lightweight.
+    all_watchlist_candidates = [s for s in packets if s in cfg.WATCHLIST]
+    wl_candidates = [
+        s for s in all_watchlist_candidates
+        if packets[s].get("score", {}).get("score", 0) >= min_report_score
+    ]
     wl_meta = {}
     for sym in wl_candidates:
         pkt = packets[sym]
@@ -656,6 +662,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
     avg_watchlist_score = round(
         sum(wl_meta[s]["score"] for s in wl_syms) / len(wl_syms), 1
     ) if wl_syms else 0
+    hidden_low_score_count = len(all_watchlist_candidates) - len(wl_syms)
 
     action_board = ""
     for title, syms in (
@@ -718,6 +725,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
         _build_metric_tile("Desk Regime", r, regime_tone, f"Bias {regime.get('swing_bias', '?')}"),
         _build_metric_tile("Actionable", str(len(buy_now_syms)), "good" if buy_now_syms else "warn", "Ready right now"),
         _build_metric_tile("Watchlist Avg", str(avg_watchlist_score), "info", f"{len(wl_syms)} names tracked"),
+        _build_metric_tile("Hidden <50", str(hidden_low_score_count), "neutral", "Trimmed from web report"),
         _build_metric_tile("Watch Breakouts", str(len(watch_syms)), "info", "Needs trigger"),
         _build_metric_tile("Wait / Pullback", str(len(wait_syms)), "warn", "Timing not there yet"),
         _build_metric_tile("Risk Flags", str(len(regime.get('caution_flags', []))), "bad" if regime.get("caution_flags") else "neutral", "Macro and breadth"),
@@ -973,7 +981,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
 <div class="section">
   <h2>ACTION BOARD</h2>
   <div style="color:#888;margin-bottom:10px;">
-    Buy now: {len(buy_now_syms)} | Watch breakout: {len(watch_syms)} | Wait: {len(wait_syms)} | Blocked: {len(block_syms)}
+    Buy now: {len(buy_now_syms)} | Watch breakout: {len(watch_syms)} | Wait: {len(wait_syms)} | Blocked: {len(block_syms)} | Hidden below 50: {hidden_low_score_count}
   </div>
   <div class="action-grid">
     {action_board}
