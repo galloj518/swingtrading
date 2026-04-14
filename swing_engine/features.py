@@ -219,6 +219,229 @@ def find_recent_low(daily_df: pd.DataFrame, lookback: int = 60) -> dict:
     return {"price": round(row["low"], 2), "date": row["date"].strftime("%Y-%m-%d")}
 
 
+def calc_trend_efficiency(series: pd.Series, lookback: int = 40) -> Optional[float]:
+    """
+    Efficiency ratio: net move divided by total path length over a lookback window.
+    Higher values imply cleaner directional movement and less chop.
+    """
+    if series is None or len(series) < lookback + 1:
+        return None
+
+    sub = series.iloc[-(lookback + 1):].dropna()
+    if len(sub) < lookback + 1:
+        return None
+
+    net_move = abs(float(sub.iloc[-1]) - float(sub.iloc[0]))
+    path_length = float(sub.diff().abs().sum())
+    if path_length <= 0:
+        return 0.0
+
+    return round(100.0 * (net_move / path_length), 1)
+
+
+def assess_chart_quality(daily_df: pd.DataFrame) -> dict:
+    """
+    Score chart cleanliness for swing trading.
+    Rewards directional efficiency and orderly pullbacks, penalizes chop.
+    """
+    if daily_df.empty or len(daily_df) < 30:
+        return {
+            "score": 50.0,
+            "efficiency_20": None,
+            "efficiency_60": None,
+            "tightness": None,
+            "chop_ratio": None,
+            "detail": "Chart quality unavailable",
+        }
+
+    closes = daily_df["close"]
+    eff20 = calc_trend_efficiency(closes, 20)
+    eff60 = calc_trend_efficiency(closes, min(60, len(closes) - 1))
+
+    recent = daily_df.iloc[-20:].copy()
+    atr = recent["atr"] if "atr" in recent.columns else pd.Series(dtype=float)
+    sma20 = recent["sma_20"] if "sma_20" in recent.columns else pd.Series(dtype=float)
+
+    if not atr.empty and not sma20.empty:
+        scale = atr.replace(0, np.nan)
+        normalized = ((recent["close"] - sma20).abs() / scale).replace([np.inf, -np.inf], np.nan).dropna()
+        tightness = float(round(100.0 * max(0.0, 1.0 - min(normalized.median() / 3.0, 1.0)), 1)) if not normalized.empty else 50.0
+    else:
+        tightness = 50.0
+
+    if len(recent) >= 2:
+        chop_threshold = recent["close"].pct_change().abs().median()
+        chop_threshold = max(float(chop_threshold) * 1.35, 0.012)
+        chop_ratio = float((recent["close"].pct_change().abs() > chop_threshold).mean())
+    else:
+        chop_ratio = 0.5
+
+    chop_penalty = min(max(chop_ratio, 0.0), 1.0)
+    score = float(round(
+        max(
+            0.0,
+            min(
+                100.0,
+                0.40 * (eff20 if eff20 is not None else 50.0) +
+                0.35 * (eff60 if eff60 is not None else 50.0) +
+                0.25 * tightness -
+                20.0 * chop_penalty,
+            ),
+        ),
+        1,
+    ))
+
+    return {
+        "score": score,
+        "efficiency_20": eff20,
+        "efficiency_60": eff60,
+        "tightness": tightness,
+        "chop_ratio": float(round(chop_ratio, 2)),
+        "detail": (
+            f"Efficiency 20/60: {eff20 if eff20 is not None else '--'}/"
+            f"{eff60 if eff60 is not None else '--'}, tightness {tightness:.0f}, chop {chop_ratio:.2f}"
+        ),
+    }
+
+
+def assess_overhead_supply(price: float, daily_df: pd.DataFrame, pivots: dict,
+                           avwap_map: dict, reference_levels: dict = None) -> dict:
+    """
+    Estimate how much nearby overhead resistance exists above current price.
+    Lower scores mean nearby stacked resistance or recent highs overhead.
+    """
+    if not price or daily_df.empty:
+        return {
+            "score": 50.0,
+            "nearest_pct": None,
+            "levels_within_3pct": 0,
+            "levels_within_8pct": 0,
+            "detail": "Overhead supply unavailable",
+        }
+
+    reference_levels = reference_levels or {}
+    levels: list[tuple[str, float]] = []
+
+    windows = (20, 60, 120, min(252, len(daily_df)))
+    for lookback in windows:
+        if lookback and len(daily_df) >= lookback:
+            high_val = float(daily_df["high"].iloc[-lookback:].max())
+            levels.append((f"high_{lookback}d", high_val))
+
+    for label in ("r1", "r2", "r3"):
+        val = pivots.get(label)
+        if val:
+            levels.append((label, float(val)))
+
+    for label, data in avwap_map.items():
+        avwap = data.get("avwap")
+        if avwap:
+            levels.append((f"avwap_{label}", float(avwap)))
+
+    for label in ("prior_day_high",):
+        val = reference_levels.get(label)
+        if val:
+            levels.append((label, float(val)))
+
+    above = []
+    for name, level in levels:
+        if level > price:
+            above.append((name, level, ((level / price) - 1.0) * 100.0))
+
+    if not above:
+        return {
+            "score": 96.0,
+            "nearest_pct": None,
+            "levels_within_3pct": 0,
+            "levels_within_8pct": 0,
+            "detail": "No meaningful overhead levels within range",
+        }
+
+    nearest = min(above, key=lambda item: item[2])
+    within_3 = [item for item in above if item[2] <= 3.0]
+    within_8 = [item for item in above if item[2] <= 8.0]
+
+    nearest_ratio = min(max((nearest[2] - 0.5) / 7.5, 0.0), 1.0)
+    density_ratio = 1.0 - min(len(within_8) / 6.0, 1.0)
+    crowd_penalty = 0.10 if len(within_3) >= 2 else 0.0
+    score = float(round(100.0 * max(0.0, min(1.0, 0.60 * nearest_ratio + 0.40 * density_ratio - crowd_penalty)), 1))
+
+    return {
+        "score": score,
+        "nearest_level": nearest[0],
+        "nearest_pct": float(round(nearest[2], 2)),
+        "levels_within_3pct": len(within_3),
+        "levels_within_8pct": len(within_8),
+        "detail": (
+            f"Nearest overhead {nearest[0]} at +{nearest[2]:.1f}%; "
+            f"{len(within_3)} levels within 3%, {len(within_8)} within 8%"
+        ),
+    }
+
+
+def assess_breakout_integrity(daily_df: pd.DataFrame) -> dict:
+    """
+    Evaluate whether recent breakouts are holding or failing.
+    This catches sloppier charts that MAs alone can overrate.
+    """
+    if daily_df.empty or len(daily_df) < 30:
+        return {
+            "score": 55.0,
+            "recent_breakout": False,
+            "failed_breakout": False,
+            "detail": "Breakout integrity unavailable",
+        }
+
+    df = daily_df.copy()
+    df["prior_20d_high"] = df["high"].rolling(20).max().shift(1)
+    recent = df.iloc[-20:].copy()
+    breakout_rows = recent[
+        (recent["prior_20d_high"].notna()) &
+        (recent["close"] > recent["prior_20d_high"] * 1.002)
+    ]
+
+    if breakout_rows.empty:
+        return {
+            "score": 68.0,
+            "recent_breakout": False,
+            "failed_breakout": False,
+            "detail": "No recent breakout attempt to evaluate",
+        }
+
+    breakout = breakout_rows.iloc[-1]
+    breakout_level = float(breakout["prior_20d_high"])
+    breakout_close = float(breakout["close"])
+    current_close = float(df["close"].iloc[-1])
+    current_low = float(df["low"].iloc[-1])
+
+    failed = current_close < breakout_level * 0.99
+    hard_fail = current_close < breakout_close * 0.96 or current_low < breakout_level * 0.985
+    holding = current_close >= breakout_level
+
+    if hard_fail:
+        score = 20.0
+        detail = f"Recent breakout failed hard below {breakout_level:.2f}"
+    elif failed:
+        score = 38.0
+        detail = f"Recent breakout lost {breakout_level:.2f} support"
+    elif holding:
+        score = 82.0
+        detail = f"Recent breakout still holding above {breakout_level:.2f}"
+    else:
+        score = 62.0
+        detail = f"Recent breakout retested {breakout_level:.2f} but is still constructive"
+
+    return {
+        "score": score,
+        "recent_breakout": True,
+        "failed_breakout": bool(failed),
+        "hard_failed_breakout": bool(hard_fail),
+        "breakout_level": round(breakout_level, 2),
+        "breakout_close": round(breakout_close, 2),
+        "detail": detail,
+    }
+
+
 # =============================================================================
 # SMA5 TOMORROW LOGIC
 # =============================================================================

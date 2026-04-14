@@ -180,6 +180,21 @@ def _score_support_integrity(daily_state: dict, confluence: dict) -> tuple[float
     return score, f"Support integrity and {int(_safe_float(confluence.get('score'), 0.0))} clustered levels"
 
 
+def _score_chart_quality(chart_quality: dict) -> tuple[float, str]:
+    score = _safe_float(chart_quality.get("score"), 50.0)
+    return score, chart_quality.get("detail", f"Chart quality {score:.0f}/100")
+
+
+def _score_overhead_supply(overhead_supply: dict) -> tuple[float, str]:
+    score = _safe_float(overhead_supply.get("score"), 50.0)
+    return score, overhead_supply.get("detail", f"Overhead supply {score:.0f}/100")
+
+
+def _score_breakout_integrity(breakout_integrity: dict) -> tuple[float, str]:
+    score = _safe_float(breakout_integrity.get("score"), 55.0)
+    return score, breakout_integrity.get("detail", f"Breakout integrity {score:.0f}/100")
+
+
 def _event_penalty(event_risk: dict, earnings: dict) -> tuple[float, str]:
     penalty = 0.0
     if event_risk.get("high_risk_imminent"):
@@ -195,11 +210,18 @@ def _event_penalty(event_risk: dict, earnings: dict) -> tuple[float, str]:
 
 def _score_idea_quality(daily_state: dict, weekly_state: dict,
                         avwap_map: dict, rs: dict, confluence: dict,
-                        event_risk: dict, earnings: dict) -> dict:
+                        event_risk: dict, earnings: dict,
+                        chart_quality: dict | None = None,
+                        overhead_supply: dict | None = None,
+                        breakout_integrity: dict | None = None) -> dict:
     """Institutional quality: durable structure, leadership, sponsorship, liquidity."""
     price = _safe_float(daily_state.get("last_close"), 0.0)
     if price <= 0:
         return {"score": 0.0, "label": "F - unavailable", "reasons": ["No valid price state"], "factors": {}}
+
+    chart_quality = chart_quality or {}
+    overhead_supply = overhead_supply or {}
+    breakout_integrity = breakout_integrity or {}
 
     weekly_score, weekly_reason = _score_trend_quality(weekly_state, "weekly")
     daily_score, daily_reason = _score_trend_quality(daily_state, "daily")
@@ -207,15 +229,21 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     rs_score, rs_reason = _score_relative_strength(rs)
     liquidity_score, liquidity_reason = _score_liquidity(daily_state)
     support_score, support_reason = _score_support_integrity(daily_state, confluence)
+    chart_score, chart_reason = _score_chart_quality(chart_quality)
+    overhead_score, overhead_reason = _score_overhead_supply(overhead_supply)
+    breakout_score, breakout_reason = _score_breakout_integrity(breakout_integrity)
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
 
     raw_score = (
-        0.28 * weekly_score +
-        0.28 * daily_score +
-        0.16 * rs_score +
-        0.12 * avwap_score +
-        0.10 * liquidity_score +
-        0.06 * support_score
+        0.22 * weekly_score +
+        0.18 * daily_score +
+        0.15 * rs_score +
+        0.10 * avwap_score +
+        0.09 * liquidity_score +
+        0.08 * support_score +
+        0.10 * chart_score +
+        0.04 * overhead_score +
+        0.04 * breakout_score
     )
     score = round(_clamp(raw_score - penalty), 1)
     reasons = [
@@ -225,6 +253,9 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
         avwap_reason,
         liquidity_reason,
         support_reason,
+        chart_reason,
+        overhead_reason,
+        breakout_reason,
     ]
     if penalty > 0:
         reasons.append(penalty_reason)
@@ -240,6 +271,9 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
             "avwap_sponsorship": avwap_score,
             "liquidity": liquidity_score,
             "support_integrity": support_score,
+            "chart_quality": chart_score,
+            "overhead_supply": overhead_score,
+            "breakout_integrity": breakout_score,
             "event_penalty": penalty,
         },
     }
@@ -325,7 +359,10 @@ def _score_entry_timing(daily_state: dict, intra_state: dict,
 def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  avwap_map: dict, rs: dict, confluence: dict,
                  event_risk: dict, earnings: dict,
-                 regime: dict = None) -> dict:
+                 regime: dict = None,
+                 chart_quality: dict | None = None,
+                 overhead_supply: dict | None = None,
+                 breakout_integrity: dict | None = None) -> dict:
     """
     Full gated scoring pipeline for a symbol.
     Includes post-scoring adjustments for:
@@ -387,6 +424,9 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     # Gate 3: Separate institutional quality from entry timing.
     idea = _score_idea_quality(
         daily_state, weekly_state, avwap_map, rs, confluence, event_risk, earnings,
+        chart_quality=chart_quality,
+        overhead_supply=overhead_supply,
+        breakout_integrity=breakout_integrity,
     )
     timing = _score_entry_timing(
         daily_state, intra_state, event_risk, earnings,
@@ -496,7 +536,10 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
 def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  avwap_map: dict, rs: dict, confluence: dict,
                  event_risk: dict, earnings: dict,
-                 regime: dict = None) -> dict:
+                 regime: dict = None,
+                 chart_quality: dict | None = None,
+                 overhead_supply: dict | None = None,
+                 breakout_integrity: dict | None = None) -> dict:
     regime = regime or {}
     regime_label = regime.get("regime", "neutral")
     risk_appetite = regime.get("risk_appetite", "full")
@@ -545,6 +588,9 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
 
     idea = _score_idea_quality(
         daily_state, weekly_state, avwap_map, rs, confluence, event_risk, earnings,
+        chart_quality=chart_quality,
+        overhead_supply=overhead_supply,
+        breakout_integrity=breakout_integrity,
     )
     timing = _score_entry_timing(
         daily_state, intra_state, event_risk, earnings,
@@ -557,6 +603,34 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     sma5_dir = daily_state.get("sma_5_direction", "unknown")
     sma10_dir = daily_state.get("sma_10_direction", "unknown")
     sma20_dir = daily_state.get("sma_20_direction", "unknown")
+    chart_score = _safe_float(idea["factors"].get("chart_quality"), 50.0)
+    overhead_score = _safe_float(idea["factors"].get("overhead_supply"), 50.0)
+    breakout_score = _safe_float(idea["factors"].get("breakout_integrity"), 55.0)
+
+    if chart_score < 35:
+        idea_score = min(idea_score, 52)
+        timing_score = min(timing_score, 50)
+        adjustment_notes.append("Idea/timing capped: chart is too choppy for premium swing quality")
+    elif chart_score < 50:
+        idea_score = min(idea_score, 62)
+        adjustment_notes.append("Idea capped at 62: chart quality is mediocre")
+
+    if overhead_score < 35:
+        idea_score = min(idea_score, 58)
+        timing_score = min(timing_score, 55)
+        adjustment_notes.append("Idea/timing capped: heavy overhead supply nearby")
+    elif overhead_score < 50:
+        timing_score = min(timing_score, 62)
+        adjustment_notes.append("Timing capped at 62: nearby overhead supply")
+
+    if breakout_score < 30:
+        idea_score = min(idea_score, 45)
+        timing_score = min(timing_score, 42)
+        adjustment_notes.append("Idea/timing capped: recent breakout failure")
+    elif breakout_score < 50:
+        idea_score = min(idea_score, 58)
+        timing_score = min(timing_score, 55)
+        adjustment_notes.append("Idea/timing trimmed: breakout integrity is weak")
 
     if sma5_dir == "falling":
         timing_score = min(timing_score, 75)

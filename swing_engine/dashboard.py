@@ -227,6 +227,9 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     sma5_tmw = pkt.get("sma5_tomorrow")
     rh = pkt.get("recent_high", {})
     rl = pkt.get("recent_low", {})
+    chart_quality = pkt.get("chart_quality", {})
+    overhead_supply = pkt.get("overhead_supply", {})
+    breakout_integrity = pkt.get("breakout_integrity", {})
 
     score = sc.get("score", 0)
     idea_score = sc.get("idea_quality_score", score)
@@ -408,6 +411,23 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
         <div style="color:#8ea2b8;margin-top:5px;font-size:0.86em;">
           Institutional quality: <span style="color:#fff;">{sc.get('idea_quality', sc.get('quality', '--'))}</span> |
           Entry timing: <span style="color:#fff;">{sc.get('entry_timing', '--')}</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#7dd3fc;font-size:0.74em;letter-spacing:0.08em;">CHART QUALITY</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(chart_quality.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{chart_quality.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#fda4af;font-size:0.74em;letter-spacing:0.08em;">OVERHEAD SUPPLY</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(overhead_supply.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{overhead_supply.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#c4b5fd;font-size:0.74em;letter-spacing:0.08em;">BREAKOUT INTEGRITY</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(breakout_integrity.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{breakout_integrity.get('detail', '--')}</div>
+          </div>
         </div>
         <div style="color:#aaa;margin-top:4px;">
           Setup: <span style="color:#fff;font-weight:700;">{setup.get('type', '--')}</span> --

@@ -101,12 +101,20 @@ def build_packet(symbol: str, data: dict,
     confluence = feat.calc_confluence(
         price, daily_state, pivots, avwap_map, reference_levels=reference_levels
     )
+    chart_quality = feat.assess_chart_quality(daily)
+    overhead_supply = feat.assess_overhead_supply(
+        price, daily, pivots, avwap_map, reference_levels=reference_levels
+    )
+    breakout_integrity = feat.assess_breakout_integrity(daily)
 
     # --- Gated scoring ---
     score_result = scoring.score_symbol(
         daily_state, weekly_state, intra_state,
         avwap_map, rs, confluence, event_ctx, earnings,
         regime=regime,
+        chart_quality=chart_quality,
+        overhead_supply=overhead_supply,
+        breakout_integrity=breakout_integrity,
     )
 
     # --- Entry zone (with pivot-based targets) --- must be before classify_setup
@@ -148,6 +156,9 @@ def build_packet(symbol: str, data: dict,
         "events": event_ctx,
         "earnings": earnings,
         "confluence": confluence,
+        "chart_quality": chart_quality,
+        "overhead_supply": overhead_supply,
+        "breakout_integrity": breakout_integrity,
         "score": score_result,
         "setup": setup,
         "entry_zone": entry_zone,
