@@ -48,11 +48,13 @@ def generate_narrative(packet: dict, regime: dict) -> Optional[str]:
     """
     api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key:
+        print(f"  Narrative skipped for {packet.get('symbol', '?')}: OPENAI_API_KEY not set")
         return None
 
     try:
         from openai import OpenAI
     except ImportError:
+        print(f"  Narrative skipped for {packet.get('symbol', '?')}: openai package not installed")
         return None
 
     # Build compact context for the LLM (token-efficient)
@@ -131,7 +133,7 @@ def generate_narrative(packet: dict, regime: dict) -> Optional[str]:
         )
         return resp.choices[0].message.content.strip()
     except Exception as e:
-        print(f"  Narrative failed for {sym}: {e}")
+        print(f"  Narrative failed for {sym}: {type(e).__name__}: {e}")
         return None
 
 
