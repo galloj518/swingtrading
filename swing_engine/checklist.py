@@ -47,17 +47,17 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
     failed_items = {
         c["item"] for c in (checks or []) if not c.get("passed", False)
     }
-    if tradeability_score < 60:
+    if tradeability_score < 55:
         failed_items.add("Score")
     if idea_score < 55:
         failed_items.add("Idea Quality")
-    if timing_score < 60 or short_term_posture < 60:
+    if timing_score < 55 or short_term_posture < 55:
         failed_items.add("Entry Timing")
-    if data_quality_score < 60:
+    if data_quality_score < 35:
         failed_items.add("Data Quality")
     if liquidity_status == "blocked":
         failed_items.add("Liquidity")
-    if rs_score < 45:
+    if rs_score < 35:
         failed_items.add("Relative Strength")
 
     score_failed = "Score" in failed_items
@@ -86,10 +86,9 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
         }
 
     institutional_ready = (
-        confidence_score >= 55 and
-        data_quality_score >= 60 and
-        group_score >= 45 and
-        rs_score >= 45 and
+        confidence_score >= 40 and
+        data_quality_score >= 40 and
+        rs_score >= 35 and
         liquidity_status != "blocked"
     )
 
@@ -102,6 +101,7 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             continuation_score >= 70 and
             sponsorship_score >= 62 and
             in_zone and
+            (group_score >= 35 or rs_score >= 55) and
             institutional_ready
         ):
             return {
@@ -133,6 +133,7 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             short_term_posture >= 72 and
             continuation_score >= 65 and
             sponsorship_score >= 60 and
+            (group_score >= 30 or rs_score >= 55) and
             not (score_failed or rs_failed or liquidity_failed or data_failed) and
             institutional_ready
         ):
@@ -157,6 +158,7 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             idea_score >= 62 and
             timing_score >= 65 and
             short_term_posture >= 68 and
+            (group_score >= 30 or rs_score >= 55) and
             not (score_failed or rs_failed or liquidity_failed or data_failed) and
             institutional_ready
         ):
@@ -217,6 +219,7 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
         idea_score >= 62 and
         timing_score >= 65 and
         short_term_posture >= 65 and
+        (group_score >= 25 or rs_score >= 55) and
         not (score_failed or rs_failed or liquidity_failed or data_failed)
     ):
         return {

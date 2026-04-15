@@ -233,12 +233,12 @@ def _build_confidence_context(idea_score: float, timing_score: float,
         idea_score,
         timing_score,
         _safe_float(idea_factors.get("chart_quality"), 50.0),
-        _safe_float(idea_factors.get("base_quality"), 55.0),
-        _safe_float(idea_factors.get("group_strength"), 55.0),
-        _safe_float(idea_factors.get("clean_air"), 50.0),
         _safe_float(idea_factors.get("historical_evidence"), 50.0),
         _safe_float(idea_factors.get("breakout_integrity"), 55.0),
+        _safe_float(idea_factors.get("continuation_pattern"), 55.0),
+        _safe_float(idea_factors.get("institutional_sponsorship"), 55.0),
         _safe_float(timing_factors.get("zone_fit"), 50.0),
+        _safe_float(timing_factors.get("short_term_posture"), timing_score),
     ]
     core = [float(v) for v in core if v is not None]
     spread = (max(core) - min(core)) if core else 50.0
@@ -248,18 +248,18 @@ def _build_confidence_context(idea_score: float, timing_score: float,
     if evidence_samples >= 30:
         evidence_conf = 100.0
     elif evidence_samples >= 20:
-        evidence_conf = 85.0
+        evidence_conf = 80.0
     elif evidence_samples >= 12:
-        evidence_conf = 70.0
+        evidence_conf = 68.0
     elif evidence_samples >= 6:
-        evidence_conf = 55.0
+        evidence_conf = 60.0
     elif evidence_samples > 0:
-        evidence_conf = 40.0
+        evidence_conf = 55.0
     else:
-        evidence_conf = 25.0
+        evidence_conf = 55.0
 
     confidence = round(0.70 * consensus + 0.30 * evidence_conf, 1)
-    confidence_penalty = max(0.0, min(18.0, (65.0 - confidence) * 0.35))
+    confidence_penalty = max(0.0, min(10.0, (55.0 - confidence) * 0.20))
     confidence_adjusted_score = round(_clamp((0.68 * idea_score + 0.32 * timing_score) - confidence_penalty), 1)
 
     if confidence >= 80:
@@ -538,25 +538,25 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
 
     raw_score = (
-        0.12 * weekly_score +
+        0.10 * weekly_score +
         0.10 * daily_score +
         0.10 * rs_score +
-        0.07 * avwap_score +
+        0.06 * avwap_score +
         0.06 * liquidity_score +
-        0.06 * support_score +
-        0.07 * chart_score +
-        0.07 * base_score +
-        0.05 * continuation_score +
-        0.05 * sponsorship_score +
+        0.05 * support_score +
+        0.08 * chart_score +
+        0.05 * base_score +
+        0.10 * continuation_score +
+        0.09 * sponsorship_score +
         0.04 * overhead_score +
-        0.04 * breakout_score +
-        0.06 * group_score +
-        0.04 * clean_air_score +
-        0.03 * weekly_close_score +
-        0.02 * catalyst_score +
+        0.07 * breakout_score +
+        0.03 * group_score +
+        0.02 * clean_air_score +
+        0.01 * weekly_close_score +
+        0.01 * catalyst_score +
         0.02 * failed_memory_score +
-        0.03 * data_quality_score +
-        0.02 * evidence_score
+        0.02 * data_quality_score +
+        0.01 * evidence_score
     )
     score = round(_clamp(raw_score - penalty), 1)
     reasons = [
@@ -1480,13 +1480,13 @@ def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_qu
         }
 
     base_score = (
-        0.32 * timing_score +
+        0.34 * timing_score +
         0.22 * confidence_adj +
         0.16 * idea_score +
-        0.12 * short_term_posture +
+        0.14 * short_term_posture +
         0.08 * continuation_score +
-        0.05 * sponsorship_score +
-        0.05 * group_score
+        0.04 * sponsorship_score +
+        0.02 * group_score
     )
     detail_parts = []
 
@@ -1543,23 +1543,23 @@ def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_qu
     elif action_bias == "wait":
         base_score -= 4.0
 
-    if confidence_score < 55:
-        penalty = _linear_penalty(confidence_score, 55.0, 0.45, 14.0)
+    if confidence_score < 42:
+        penalty = _linear_penalty(confidence_score, 42.0, 0.30, 8.0)
         base_score -= penalty
         detail_parts.append("Confidence is too low for aggressive action")
 
-    if data_quality_score < 60:
-        penalty = _linear_penalty(data_quality_score, 60.0, 0.45, 12.0)
+    if data_quality_score < 40:
+        penalty = _linear_penalty(data_quality_score, 40.0, 0.25, 8.0)
         base_score -= penalty
         detail_parts.append("Data quality reduces trust")
 
-    if group_score < 45:
-        penalty = _linear_penalty(group_score, 45.0, 0.40, 10.0)
+    if group_score < 20 and rs_score < 55:
+        penalty = _linear_penalty(group_score, 20.0, 0.20, 4.0)
         base_score -= penalty
         detail_parts.append("Peer group is not confirming")
 
-    if rs_score < 45:
-        penalty = _linear_penalty(rs_score, 45.0, 0.25, 9.0)
+    if rs_score < 35:
+        penalty = _linear_penalty(rs_score, 35.0, 0.20, 6.0)
         base_score -= penalty
         detail_parts.append("Relative strength is too soft")
 
