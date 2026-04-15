@@ -7,6 +7,22 @@ No LLM involved — same inputs always produce same output.
 from typing import Optional
 
 
+def _leadership_score(state: dict) -> float:
+    """Approximate benchmark leadership using structure and distance above key MAs."""
+    score = 0.0
+    if state.get("close_above_sma_50"):
+        score += 30.0
+    if state.get("close_above_sma_200"):
+        score += 25.0
+    if state.get("sma20_above_sma50"):
+        score += 15.0
+    if state.get("ma_stack") == "bullish":
+        score += 15.0
+    score += max(-10.0, min(15.0, float(state.get("dist_from_sma_50_pct", 0.0) or 0.0)))
+    score += max(-8.0, min(10.0, float(state.get("dist_from_sma_200_pct", 0.0) or 0.0) / 2.0))
+    return score
+
+
 def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
                 vix_close: Optional[float] = None,
                 event_risk: dict = None) -> dict:
@@ -21,6 +37,10 @@ def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
     Returns:
         Regime classification with actionable fields.
     """
+    spy_leadership = _leadership_score(spy)
+    qqq_leadership = _leadership_score(qqq)
+    soxx_leadership = _leadership_score(soxx)
+
     # Build signal checklist
     signals = {
         "spy_above_200":   spy.get("close_above_sma_200", False),
@@ -28,9 +48,9 @@ def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
         "spy_20_above_50": spy.get("sma20_above_sma50", False),
         "spy_stack":       spy.get("ma_stack") == "bullish",
         "qqq_above_50":    qqq.get("close_above_sma_50", False),
-        "qqq_leading":     True,  # placeholder — needs RS data
+        "qqq_leading":     qqq_leadership >= spy_leadership + 3.0,
         "soxx_above_50":   soxx.get("close_above_sma_50", False),
-        "soxx_stack":      soxx.get("ma_stack") == "bullish",
+        "soxx_stack":      soxx.get("ma_stack") == "bullish" and soxx_leadership >= qqq_leadership - 4.0,
         "dia_above_50":    dia.get("close_above_sma_50", False),
         "vix_below_20":    (vix_close or 25) < 20,
         "vix_below_30":    (vix_close or 25) < 30,
@@ -65,9 +85,9 @@ def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
         vix_ctx = "extreme_fear"
 
     # Leadership signals
-    tech_leading = qqq.get("close_above_sma_50", False) and qqq.get("ma_stack") == "bullish"
-    semi_leading = soxx.get("close_above_sma_50", False) and soxx.get("ma_stack") == "bullish"
-    industrial_confirm = dia.get("close_above_sma_50", False)
+    tech_leading = signals["qqq_leading"]
+    semi_leading = soxx_leadership >= qqq_leadership - 2.0 and soxx.get("close_above_sma_50", False)
+    industrial_confirm = dia.get("close_above_sma_50", False) and _leadership_score(dia) >= 35.0
 
     # Risk appetite
     er = event_risk or {}
@@ -118,6 +138,12 @@ def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
         "swing_bias": swing_bias,
         "caution_flags": flags,
         "signals_detail": signals,
+        "leadership": {
+            "spy": round(spy_leadership, 1),
+            "qqq": round(qqq_leadership, 1),
+            "soxx": round(soxx_leadership, 1),
+            "dia": round(_leadership_score(dia), 1),
+        },
     }
 
 

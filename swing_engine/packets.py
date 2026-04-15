@@ -22,6 +22,59 @@ def _find_group_name(symbol: str) -> str | None:
     return None
 
 
+def _data_quality(data: dict) -> dict:
+    """Assess whether the loaded market data is fresh and sufficiently complete."""
+    daily = data.get("daily", pd.DataFrame())
+    weekly = data.get("weekly", pd.DataFrame())
+    intra = data.get("intraday", pd.DataFrame())
+    today = pd.Timestamp(date.today())
+
+    daily_last = pd.Timestamp(daily["date"].iloc[-1]).normalize() if not daily.empty else None
+    intra_last = pd.Timestamp(intra["date"].iloc[-1]).normalize() if not intra.empty else None
+    daily_age = int((today - daily_last).days) if daily_last is not None else None
+    intra_age = int((today - intra_last).days) if intra_last is not None else None
+
+    score = 100.0
+    reasons = []
+    if daily.empty or len(daily) < 220:
+        score -= 30.0
+        reasons.append("daily history thin")
+    if weekly.empty or len(weekly) < 35:
+        score -= 15.0
+        reasons.append("weekly history thin")
+    if intra.empty or len(intra) < 100:
+        score -= 20.0
+        reasons.append("intraday coverage thin")
+    if daily_age is None or daily_age > 1:
+        score -= 20.0
+        reasons.append("daily data stale")
+    if intra_age is None or intra_age > 1:
+        score -= 15.0
+        reasons.append("intraday data stale")
+
+    score = max(0.0, min(100.0, score))
+    if score >= 85:
+        label = "Institutional"
+    elif score >= 70:
+        label = "Usable"
+    elif score >= 55:
+        label = "Caution"
+    else:
+        label = "Weak"
+
+    detail = ", ".join(reasons) if reasons else "Fresh daily and intraday coverage available"
+    return {
+        "score": round(score, 1),
+        "label": label,
+        "daily_bars": len(daily),
+        "weekly_bars": len(weekly),
+        "intraday_bars": len(intra),
+        "daily_age_days": daily_age,
+        "intraday_age_days": intra_age,
+        "detail": detail,
+    }
+
+
 def build_packet(symbol: str, data: dict,
                  spy_daily: pd.DataFrame = None,
                  existing_group_risk: float = 0.0,
@@ -38,6 +91,7 @@ def build_packet(symbol: str, data: dict,
     daily = data.get("daily", pd.DataFrame()).copy()
     weekly = data.get("weekly", pd.DataFrame()).copy()
     intra = data.get("intraday", pd.DataFrame()).copy()
+    data_quality = _data_quality(data)
 
     # --- Add indicators ---
     if not daily.empty:
@@ -115,6 +169,7 @@ def build_packet(symbol: str, data: dict,
         failed_breakout_memory=failed_breakout_memory,
         catalyst_context=catalyst_context,
         clean_air=clean_air,
+        data_quality=data_quality,
     )
 
     # --- Entry zone (with pivot-based targets) --- must be before classify_setup
@@ -167,6 +222,7 @@ def build_packet(symbol: str, data: dict,
         "clean_air": clean_air,
         "group_name": _find_group_name(symbol),
         "group_strength": {},
+        "data_quality": data_quality,
         "score": score_result,
         "setup": setup,
         "entry_zone": entry_zone,
@@ -256,6 +312,7 @@ def enrich_group_strength(packets: dict, regime: dict | None = None) -> None:
             failed_breakout_memory=packet.get("failed_breakout_memory"),
             catalyst_context=packet.get("catalyst_context"),
             clean_air=packet.get("clean_air"),
+            data_quality=packet.get("data_quality"),
             group_strength=packet.get("group_strength"),
         )
 
@@ -296,6 +353,7 @@ def enrich_calibration(packets: dict, calibration_profile: dict, regime: dict | 
             failed_breakout_memory=packet.get("failed_breakout_memory"),
             catalyst_context=packet.get("catalyst_context"),
             clean_air=packet.get("clean_air"),
+            data_quality=packet.get("data_quality"),
             group_strength=packet.get("group_strength"),
             calibration_context=packet.get("calibration"),
         )

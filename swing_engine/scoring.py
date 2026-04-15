@@ -355,6 +355,11 @@ def _score_group_strength(group_strength: dict) -> tuple[float, str]:
     return score, group_strength.get("detail", f"Group strength {score:.0f}/100")
 
 
+def _score_data_quality(data_quality: dict) -> tuple[float, str]:
+    score = _safe_float(data_quality.get("score"), 70.0)
+    return score, data_quality.get("detail", f"Data quality {score:.0f}/100")
+
+
 def _score_evidence(calibration_context: dict) -> tuple[float, str]:
     score = _safe_float(calibration_context.get("score"), 50.0)
     return score, calibration_context.get("detail", f"Historical evidence {score:.0f}/100")
@@ -384,6 +389,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
                         failed_breakout_memory: dict | None = None,
                         catalyst_context: dict | None = None,
                         clean_air: dict | None = None,
+                        data_quality: dict | None = None,
                         group_strength: dict | None = None,
                         calibration_context: dict | None = None) -> dict:
     """Institutional quality: durable structure, leadership, sponsorship, liquidity."""
@@ -399,6 +405,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     failed_breakout_memory = failed_breakout_memory or {}
     catalyst_context = catalyst_context or {}
     clean_air = clean_air or {}
+    data_quality = data_quality or {}
     group_strength = group_strength or {}
     calibration_context = calibration_context or {}
 
@@ -416,6 +423,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     failed_memory_score, failed_memory_reason = _score_failed_breakout_memory(failed_breakout_memory)
     catalyst_score, catalyst_reason = _score_catalyst_context(catalyst_context)
     clean_air_score, clean_air_reason = _score_clean_air(clean_air)
+    data_quality_score, data_quality_reason = _score_data_quality(data_quality)
     group_score, group_reason = _score_group_strength(group_strength)
     evidence_score, evidence_reason = _score_evidence(calibration_context)
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
@@ -436,6 +444,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
         0.03 * weekly_close_score +
         0.02 * catalyst_score +
         0.02 * failed_memory_score +
+        0.04 * data_quality_score +
         0.06 * evidence_score
     )
     score = round(_clamp(raw_score - penalty), 1)
@@ -451,6 +460,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
         overhead_reason,
         breakout_reason,
         group_reason,
+        data_quality_reason,
         evidence_reason,
         clean_air_reason,
         weekly_close_reason,
@@ -476,6 +486,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
             "overhead_supply": overhead_score,
             "breakout_integrity": breakout_score,
             "group_strength": group_score,
+            "data_quality": data_quality_score,
             "historical_evidence": evidence_score,
             "clean_air": clean_air_score,
             "weekly_close_quality": weekly_close_score,
@@ -577,6 +588,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  failed_breakout_memory: dict | None = None,
                  catalyst_context: dict | None = None,
                  clean_air: dict | None = None,
+                 data_quality: dict | None = None,
                  group_strength: dict | None = None,
                  calibration_context: dict | None = None) -> dict:
     """
@@ -648,6 +660,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         failed_breakout_memory=failed_breakout_memory,
         catalyst_context=catalyst_context,
         clean_air=clean_air,
+        data_quality=data_quality,
         group_strength=group_strength,
         calibration_context=calibration_context,
     )
@@ -768,6 +781,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  failed_breakout_memory: dict | None = None,
                  catalyst_context: dict | None = None,
                  clean_air: dict | None = None,
+                 data_quality: dict | None = None,
                  group_strength: dict | None = None,
                  calibration_context: dict | None = None) -> dict:
     regime = regime or {}
@@ -838,6 +852,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         failed_breakout_memory=failed_breakout_memory,
         catalyst_context=catalyst_context,
         clean_air=clean_air,
+        data_quality=data_quality,
         group_strength=group_strength,
         calibration_context=calibration_context,
     )
@@ -857,6 +872,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     overhead_score = _safe_float(idea["factors"].get("overhead_supply"), 50.0)
     breakout_score = _safe_float(idea["factors"].get("breakout_integrity"), 55.0)
     group_score = _safe_float(idea["factors"].get("group_strength"), 55.0)
+    data_quality_score = _safe_float(idea["factors"].get("data_quality"), 70.0)
     evidence_score = _safe_float(idea["factors"].get("historical_evidence"), 50.0)
     evidence_samples = int(idea["factors"].get("historical_evidence_samples", 0) or 0)
     clean_air_score = _safe_float(idea["factors"].get("clean_air"), 50.0)
@@ -897,6 +913,15 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     if group_score < 40:
         idea_score = min(idea_score, 60)
         adjustment_notes.append("Idea capped at 60: peer group is not confirming")
+
+    if data_quality_score < 45:
+        idea_score = min(idea_score, 50)
+        timing_score = min(timing_score, 50)
+        adjustment_notes.append("Idea/timing capped: data quality is too weak to trust")
+    elif data_quality_score < 60:
+        idea_score = min(idea_score, 62)
+        timing_score = min(timing_score, 60)
+        adjustment_notes.append("Idea/timing trimmed: data freshness/coverage is mediocre")
 
     if evidence_samples >= 8 and evidence_score < 45:
         idea_score = min(idea_score, 58)

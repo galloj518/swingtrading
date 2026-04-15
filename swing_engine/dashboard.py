@@ -236,6 +236,7 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     failed_breakout_memory = pkt.get("failed_breakout_memory", {})
     catalyst_context = pkt.get("catalyst_context", {})
     clean_air = pkt.get("clean_air", {})
+    data_quality = pkt.get("data_quality", {})
     group_strength = pkt.get("group_strength", {})
     calibration = pkt.get("calibration", {})
 
@@ -460,6 +461,11 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             <div style="color:#fcd34d;font-size:0.74em;letter-spacing:0.08em;">GROUP STRENGTH</div>
             <div style="color:#fff;font-weight:700;">{_fmt(group_strength.get('score'), 1)}/100</div>
             <div style="color:#7f8ea3;font-size:0.76em;">{group_strength.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#a7f3d0;font-size:0.74em;letter-spacing:0.08em;">DATA QUALITY</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(data_quality.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{data_quality.get('detail', '--')}</div>
           </div>
           <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
             <div style="color:#93c5fd;font-size:0.74em;letter-spacing:0.08em;">CLEAN AIR</div>

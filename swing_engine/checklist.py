@@ -211,6 +211,13 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
         "passed": liquidity_status != "blocked",
     })
 
+    dq = packet.get("data_quality", {})
+    checks.append({
+        "item": "Data Quality",
+        "value": f"{dq.get('score', '--')}/100 ({dq.get('label', '--')}) - {dq.get('detail', '--')}",
+        "passed": float(dq.get("score", 0) or 0) >= 60,
+    })
+
     checks.append({
         "item": "Event Risk",
         "value": ev.get("recommendation", "?"),
@@ -232,7 +239,7 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
 
     critical_checks = [
         c for c in checks
-        if c["item"] in ("Regime", "Weekly Gate", "Daily Gate", "Stop", "Event Risk", "Entry Zone", "Liquidity")
+        if c["item"] in ("Regime", "Weekly Gate", "Daily Gate", "Stop", "Event Risk", "Entry Zone", "Liquidity", "Data Quality")
     ]
     all_critical_pass = all(c["passed"] for c in critical_checks)
     total_pass = sum(1 for c in checks if c["passed"])
