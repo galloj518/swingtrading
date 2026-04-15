@@ -414,6 +414,9 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
         <div style="color:{action_color};margin-top:6px;font-size:0.9em;font-weight:700;">
           ACTION: {action['detail']}
         </div>
+        <div style="color:#cbd5e1;margin-top:4px;font-size:0.86em;">
+          {sc.get('decision_summary', '')}
+        </div>
         <div style="color:#8ea2b8;margin-top:5px;font-size:0.86em;">
           Institutional quality: <span style="color:#fff;">{sc.get('idea_quality', sc.get('quality', '--'))}</span> |
           Entry timing: <span style="color:#fff;">{sc.get('entry_timing', '--')}</span>

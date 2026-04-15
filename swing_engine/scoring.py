@@ -111,6 +111,41 @@ def _timing_label(score: float) -> str:
     )
 
 
+def _decision_summary(action_bias: str, idea_score: float, timing_score: float,
+                      idea_factors: dict | None = None) -> str:
+    """
+    Short trader-style summary of what matters most right now.
+    """
+    idea_factors = idea_factors or {}
+    chart_score = _safe_float(idea_factors.get("chart_quality"), 50.0)
+    base_score = _safe_float(idea_factors.get("base_quality"), 55.0)
+    group_score = _safe_float(idea_factors.get("group_strength"), 55.0)
+    clean_air_score = _safe_float(idea_factors.get("clean_air"), 50.0)
+    breakout_score = _safe_float(idea_factors.get("breakout_integrity"), 55.0)
+
+    if action_bias == "avoid":
+        if breakout_score < 40:
+            return "Avoid for now: recent breakout behavior is not trustworthy."
+        if chart_score < 40 or base_score < 40:
+            return "Avoid for now: the chart is too loose for a clean swing setup."
+        return "Avoid for now: structure and timing are not good enough."
+
+    if action_bias == "wait":
+        if timing_score < 55:
+            return "Wait for a better entry: the idea may be fine, but timing is not ready."
+        if clean_air_score < 40:
+            return "Wait for more room: resistance is too close for a clean swing."
+        return "Wait for confirmation: quality is improving, but not actionable yet."
+
+    if group_score < 50:
+        return "Constructive, but group confirmation is weak."
+    if clean_air_score < 50:
+        return "Constructive, but reward path is tight into resistance."
+    if idea_score >= 75 and timing_score >= 75:
+        return "High-quality swing candidate with both structure and timing aligned."
+    return "Good swing candidate, but execution still matters."
+
+
 def _score_trend_quality(state: dict, timeframe: str) -> tuple[float, str]:
     """Collapse overlapping MA facts into a smaller structural factor."""
     if timeframe == "weekly":
@@ -630,6 +665,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
 
     wg = _check_weekly_gate(weekly_state)
     if not wg["passed"]:
+        summary = "Blocked: weekly structure is broken, so there is no long swing setup yet."
         return {
             "score": 20,
             "quality": "F - weekly trend broken",
@@ -644,13 +680,15 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
             "idea_factors": {},
             "timing_factors": {},
             "weekly_gate": wg,
-            "daily_gate": {"passed": False, "detail": "Skipped - weekly failed"},
-            "reasons": [wg["detail"], "Score capped at 30"],
+            "daily_gate": {"passed": False, "detail": "Skipped - weekly gate failed"},
+            "reasons": [wg["detail"], "Composite capped due to weekly gate failure"],
             "action_bias": "avoid",
+            "decision_summary": summary,
         }
 
     dg = _check_daily_gate(daily_state)
     if not dg["passed"]:
+        summary = "Wait: weekly trend is intact, but the daily trend has not repaired enough yet."
         return {
             "score": 40,
             "quality": "D - daily trend broken",
@@ -666,8 +704,9 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
             "timing_factors": {},
             "weekly_gate": wg,
             "daily_gate": dg,
-            "reasons": [wg["detail"], dg["detail"], "Score capped at 50"],
+            "reasons": [wg["detail"], dg["detail"], "Composite capped due to daily gate failure"],
             "action_bias": "wait",
+            "decision_summary": summary,
         }
 
     idea = _score_idea_quality(
@@ -798,6 +837,12 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         "wait" if idea_score >= 55 else
         "avoid"
     )
+    decision_summary = _decision_summary(
+        action_bias,
+        idea_score,
+        timing_score,
+        idea.get("factors", {}),
+    )
 
     return {
         "score": score,
@@ -816,6 +861,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         "daily_gate": dg,
         "reasons": reasons,
         "action_bias": action_bias,
+        "decision_summary": decision_summary,
     }
 
 
