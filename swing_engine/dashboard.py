@@ -230,6 +230,12 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     chart_quality = pkt.get("chart_quality", {})
     overhead_supply = pkt.get("overhead_supply", {})
     breakout_integrity = pkt.get("breakout_integrity", {})
+    base_quality = pkt.get("base_quality", {})
+    weekly_close_quality = pkt.get("weekly_close_quality", {})
+    failed_breakout_memory = pkt.get("failed_breakout_memory", {})
+    catalyst_context = pkt.get("catalyst_context", {})
+    clean_air = pkt.get("clean_air", {})
+    group_strength = pkt.get("group_strength", {})
 
     score = sc.get("score", 0)
     idea_score = sc.get("idea_quality_score", score)
@@ -427,6 +433,36 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             <div style="color:#c4b5fd;font-size:0.74em;letter-spacing:0.08em;">BREAKOUT INTEGRITY</div>
             <div style="color:#fff;font-weight:700;">{_fmt(breakout_integrity.get('score'), 1)}/100</div>
             <div style="color:#7f8ea3;font-size:0.76em;">{breakout_integrity.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#86efac;font-size:0.74em;letter-spacing:0.08em;">BASE QUALITY</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(base_quality.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{base_quality.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#fcd34d;font-size:0.74em;letter-spacing:0.08em;">GROUP STRENGTH</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(group_strength.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{group_strength.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#93c5fd;font-size:0.74em;letter-spacing:0.08em;">CLEAN AIR</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(clean_air.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{clean_air.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#f9a8d4;font-size:0.74em;letter-spacing:0.08em;">WEEKLY CLOSE</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(weekly_close_quality.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{weekly_close_quality.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#fdba74;font-size:0.74em;letter-spacing:0.08em;">CATALYST</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(catalyst_context.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{catalyst_context.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#fca5a5;font-size:0.74em;letter-spacing:0.08em;">BREAKOUT MEMORY</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(failed_breakout_memory.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{failed_breakout_memory.get('detail', '--')}</div>
           </div>
         </div>
         <div style="color:#aaa;margin-top:4px;">

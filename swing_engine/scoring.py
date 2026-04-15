@@ -195,6 +195,36 @@ def _score_breakout_integrity(breakout_integrity: dict) -> tuple[float, str]:
     return score, breakout_integrity.get("detail", f"Breakout integrity {score:.0f}/100")
 
 
+def _score_base_quality(base_quality: dict) -> tuple[float, str]:
+    score = _safe_float(base_quality.get("score"), 55.0)
+    return score, base_quality.get("detail", f"Base quality {score:.0f}/100")
+
+
+def _score_weekly_close_quality(weekly_close_quality: dict) -> tuple[float, str]:
+    score = _safe_float(weekly_close_quality.get("score"), 55.0)
+    return score, weekly_close_quality.get("detail", f"Weekly close quality {score:.0f}/100")
+
+
+def _score_failed_breakout_memory(failed_breakout_memory: dict) -> tuple[float, str]:
+    score = _safe_float(failed_breakout_memory.get("score"), 60.0)
+    return score, failed_breakout_memory.get("detail", f"Breakout memory {score:.0f}/100")
+
+
+def _score_catalyst_context(catalyst_context: dict) -> tuple[float, str]:
+    score = _safe_float(catalyst_context.get("score"), 55.0)
+    return score, catalyst_context.get("detail", f"Catalyst context {score:.0f}/100")
+
+
+def _score_clean_air(clean_air: dict) -> tuple[float, str]:
+    score = _safe_float(clean_air.get("score"), 50.0)
+    return score, clean_air.get("detail", f"Clean air {score:.0f}/100")
+
+
+def _score_group_strength(group_strength: dict) -> tuple[float, str]:
+    score = _safe_float(group_strength.get("score"), 55.0)
+    return score, group_strength.get("detail", f"Group strength {score:.0f}/100")
+
+
 def _event_penalty(event_risk: dict, earnings: dict) -> tuple[float, str]:
     penalty = 0.0
     if event_risk.get("high_risk_imminent"):
@@ -213,7 +243,13 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
                         event_risk: dict, earnings: dict,
                         chart_quality: dict | None = None,
                         overhead_supply: dict | None = None,
-                        breakout_integrity: dict | None = None) -> dict:
+                        breakout_integrity: dict | None = None,
+                        base_quality: dict | None = None,
+                        weekly_close_quality: dict | None = None,
+                        failed_breakout_memory: dict | None = None,
+                        catalyst_context: dict | None = None,
+                        clean_air: dict | None = None,
+                        group_strength: dict | None = None) -> dict:
     """Institutional quality: durable structure, leadership, sponsorship, liquidity."""
     price = _safe_float(daily_state.get("last_close"), 0.0)
     if price <= 0:
@@ -222,6 +258,12 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     chart_quality = chart_quality or {}
     overhead_supply = overhead_supply or {}
     breakout_integrity = breakout_integrity or {}
+    base_quality = base_quality or {}
+    weekly_close_quality = weekly_close_quality or {}
+    failed_breakout_memory = failed_breakout_memory or {}
+    catalyst_context = catalyst_context or {}
+    clean_air = clean_air or {}
+    group_strength = group_strength or {}
 
     weekly_score, weekly_reason = _score_trend_quality(weekly_state, "weekly")
     daily_score, daily_reason = _score_trend_quality(daily_state, "daily")
@@ -232,18 +274,30 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     chart_score, chart_reason = _score_chart_quality(chart_quality)
     overhead_score, overhead_reason = _score_overhead_supply(overhead_supply)
     breakout_score, breakout_reason = _score_breakout_integrity(breakout_integrity)
+    base_score, base_reason = _score_base_quality(base_quality)
+    weekly_close_score, weekly_close_reason = _score_weekly_close_quality(weekly_close_quality)
+    failed_memory_score, failed_memory_reason = _score_failed_breakout_memory(failed_breakout_memory)
+    catalyst_score, catalyst_reason = _score_catalyst_context(catalyst_context)
+    clean_air_score, clean_air_reason = _score_clean_air(clean_air)
+    group_score, group_reason = _score_group_strength(group_strength)
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
 
     raw_score = (
-        0.22 * weekly_score +
-        0.18 * daily_score +
-        0.15 * rs_score +
-        0.10 * avwap_score +
-        0.09 * liquidity_score +
-        0.08 * support_score +
-        0.10 * chart_score +
-        0.04 * overhead_score +
-        0.04 * breakout_score
+        0.14 * weekly_score +
+        0.12 * daily_score +
+        0.11 * rs_score +
+        0.07 * avwap_score +
+        0.06 * liquidity_score +
+        0.07 * support_score +
+        0.08 * chart_score +
+        0.08 * base_score +
+        0.05 * overhead_score +
+        0.05 * breakout_score +
+        0.06 * group_score +
+        0.04 * clean_air_score +
+        0.03 * weekly_close_score +
+        0.02 * catalyst_score +
+        0.02 * failed_memory_score
     )
     score = round(_clamp(raw_score - penalty), 1)
     reasons = [
@@ -254,8 +308,14 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
         liquidity_reason,
         support_reason,
         chart_reason,
+        base_reason,
         overhead_reason,
         breakout_reason,
+        group_reason,
+        clean_air_reason,
+        weekly_close_reason,
+        catalyst_reason,
+        failed_memory_reason,
     ]
     if penalty > 0:
         reasons.append(penalty_reason)
@@ -272,8 +332,14 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
             "liquidity": liquidity_score,
             "support_integrity": support_score,
             "chart_quality": chart_score,
+            "base_quality": base_score,
             "overhead_supply": overhead_score,
             "breakout_integrity": breakout_score,
+            "group_strength": group_score,
+            "clean_air": clean_air_score,
+            "weekly_close_quality": weekly_close_score,
+            "catalyst_context": catalyst_score,
+            "failed_breakout_memory": failed_memory_score,
             "event_penalty": penalty,
         },
     }
@@ -362,7 +428,13 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  regime: dict = None,
                  chart_quality: dict | None = None,
                  overhead_supply: dict | None = None,
-                 breakout_integrity: dict | None = None) -> dict:
+                 breakout_integrity: dict | None = None,
+                 base_quality: dict | None = None,
+                 weekly_close_quality: dict | None = None,
+                 failed_breakout_memory: dict | None = None,
+                 catalyst_context: dict | None = None,
+                 clean_air: dict | None = None,
+                 group_strength: dict | None = None) -> dict:
     """
     Full gated scoring pipeline for a symbol.
     Includes post-scoring adjustments for:
@@ -427,6 +499,12 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         chart_quality=chart_quality,
         overhead_supply=overhead_supply,
         breakout_integrity=breakout_integrity,
+        base_quality=base_quality,
+        weekly_close_quality=weekly_close_quality,
+        failed_breakout_memory=failed_breakout_memory,
+        catalyst_context=catalyst_context,
+        clean_air=clean_air,
+        group_strength=group_strength,
     )
     timing = _score_entry_timing(
         daily_state, intra_state, event_risk, earnings,
@@ -539,7 +617,13 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  regime: dict = None,
                  chart_quality: dict | None = None,
                  overhead_supply: dict | None = None,
-                 breakout_integrity: dict | None = None) -> dict:
+                 breakout_integrity: dict | None = None,
+                 base_quality: dict | None = None,
+                 weekly_close_quality: dict | None = None,
+                 failed_breakout_memory: dict | None = None,
+                 catalyst_context: dict | None = None,
+                 clean_air: dict | None = None,
+                 group_strength: dict | None = None) -> dict:
     regime = regime or {}
     regime_label = regime.get("regime", "neutral")
     risk_appetite = regime.get("risk_appetite", "full")
@@ -591,6 +675,12 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         chart_quality=chart_quality,
         overhead_supply=overhead_supply,
         breakout_integrity=breakout_integrity,
+        base_quality=base_quality,
+        weekly_close_quality=weekly_close_quality,
+        failed_breakout_memory=failed_breakout_memory,
+        catalyst_context=catalyst_context,
+        clean_air=clean_air,
+        group_strength=group_strength,
     )
     timing = _score_entry_timing(
         daily_state, intra_state, event_risk, earnings,
@@ -604,8 +694,14 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     sma10_dir = daily_state.get("sma_10_direction", "unknown")
     sma20_dir = daily_state.get("sma_20_direction", "unknown")
     chart_score = _safe_float(idea["factors"].get("chart_quality"), 50.0)
+    base_score = _safe_float(idea["factors"].get("base_quality"), 55.0)
     overhead_score = _safe_float(idea["factors"].get("overhead_supply"), 50.0)
     breakout_score = _safe_float(idea["factors"].get("breakout_integrity"), 55.0)
+    group_score = _safe_float(idea["factors"].get("group_strength"), 55.0)
+    clean_air_score = _safe_float(idea["factors"].get("clean_air"), 50.0)
+    weekly_close_score = _safe_float(idea["factors"].get("weekly_close_quality"), 55.0)
+    catalyst_score = _safe_float(idea["factors"].get("catalyst_context"), 55.0)
+    failed_memory_score = _safe_float(idea["factors"].get("failed_breakout_memory"), 60.0)
 
     if chart_score < 35:
         idea_score = min(idea_score, 52)
@@ -631,6 +727,32 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         idea_score = min(idea_score, 58)
         timing_score = min(timing_score, 55)
         adjustment_notes.append("Idea/timing trimmed: breakout integrity is weak")
+
+    if base_score < 40:
+        idea_score = min(idea_score, 55)
+        timing_score = min(timing_score, 52)
+        adjustment_notes.append("Idea/timing capped: base quality is weak")
+
+    if group_score < 40:
+        idea_score = min(idea_score, 60)
+        adjustment_notes.append("Idea capped at 60: peer group is not confirming")
+
+    if clean_air_score < 35:
+        timing_score = min(timing_score, 55)
+        adjustment_notes.append("Timing capped: not enough clean air before resistance")
+
+    if weekly_close_score < 35:
+        idea_score = min(idea_score, 60)
+        adjustment_notes.append("Idea capped: weak weekly close quality")
+
+    if catalyst_score < 35:
+        idea_score = min(idea_score, 62)
+        timing_score = min(timing_score, 58)
+        adjustment_notes.append("Idea/timing trimmed: catalyst backdrop is weak")
+
+    if failed_memory_score < 40:
+        idea_score = min(idea_score, 55)
+        adjustment_notes.append("Idea capped: too many recent breakout failures")
 
     if sma5_dir == "falling":
         timing_score = min(timing_score, 75)

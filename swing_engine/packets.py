@@ -15,6 +15,13 @@ from . import events
 from . import sizing
 
 
+def _find_group_name(symbol: str) -> str | None:
+    for group_name, symbols in cfg.CORRELATION_GROUPS.items():
+        if symbol in symbols:
+            return group_name
+    return None
+
+
 def build_packet(symbol: str, data: dict,
                  spy_daily: pd.DataFrame = None,
                  existing_group_risk: float = 0.0,
@@ -106,6 +113,15 @@ def build_packet(symbol: str, data: dict,
         price, daily, pivots, avwap_map, reference_levels=reference_levels
     )
     breakout_integrity = feat.assess_breakout_integrity(daily)
+    base_quality = feat.assess_base_quality(daily)
+    weekly_close_quality = feat.assess_weekly_close_quality(weekly)
+    failed_breakout_memory = feat.assess_failed_breakout_memory(daily)
+    catalyst_context = feat.assess_catalyst_context(
+        daily_state, event_ctx, earnings, breakout_integrity, base_quality
+    )
+    clean_air = feat.assess_clean_air(
+        price, daily_state, pivots, avwap_map, reference_levels, overhead_supply
+    )
 
     # --- Gated scoring ---
     score_result = scoring.score_symbol(
@@ -115,6 +131,11 @@ def build_packet(symbol: str, data: dict,
         chart_quality=chart_quality,
         overhead_supply=overhead_supply,
         breakout_integrity=breakout_integrity,
+        base_quality=base_quality,
+        weekly_close_quality=weekly_close_quality,
+        failed_breakout_memory=failed_breakout_memory,
+        catalyst_context=catalyst_context,
+        clean_air=clean_air,
     )
 
     # --- Entry zone (with pivot-based targets) --- must be before classify_setup
@@ -159,6 +180,13 @@ def build_packet(symbol: str, data: dict,
         "chart_quality": chart_quality,
         "overhead_supply": overhead_supply,
         "breakout_integrity": breakout_integrity,
+        "base_quality": base_quality,
+        "weekly_close_quality": weekly_close_quality,
+        "failed_breakout_memory": failed_breakout_memory,
+        "catalyst_context": catalyst_context,
+        "clean_air": clean_air,
+        "group_name": _find_group_name(symbol),
+        "group_strength": {},
         "score": score_result,
         "setup": setup,
         "entry_zone": entry_zone,
@@ -173,3 +201,80 @@ def save_packet(symbol: str, packet: dict) -> Path:
     with open(path, "w") as f:
         json.dump(packet, f, indent=2, default=str)
     return path
+
+
+def enrich_group_strength(packets: dict, regime: dict | None = None) -> None:
+    """
+    Second-pass enrichment once all packets are built, so each symbol can see
+    how strong its peer group is. Re-scores watchlist symbols afterward.
+    """
+    regime = regime or {}
+
+    for symbol, packet in packets.items():
+        group_name = packet.get("group_name")
+        if not group_name:
+            continue
+
+        peer_symbols = [sym for sym in cfg.CORRELATION_GROUPS.get(group_name, []) if sym in packets and sym != symbol]
+        if not peer_symbols:
+            packet["group_strength"] = {"score": 55.0, "detail": "No peer group data available", "group_name": group_name}
+            continue
+
+        peer_packets = [packets[sym] for sym in peer_symbols]
+        peer_rs = [
+            float(p.get("relative_strength", {}).get("rs_20d", 0.0) or 0.0)
+            for p in peer_packets
+        ]
+        peer_trend = [
+            1.0 if p.get("daily", {}).get("close_above_sma_50") else 0.0
+            for p in peer_packets
+        ]
+        peer_quality = [
+            float(p.get("score", {}).get("idea_quality_score", p.get("score", {}).get("score", 50.0)) or 50.0)
+            for p in peer_packets
+        ]
+
+        avg_rs = sum(peer_rs) / len(peer_rs) if peer_rs else 0.0
+        trend_participation = sum(peer_trend) / len(peer_trend) if peer_trend else 0.0
+        avg_quality = sum(peer_quality) / len(peer_quality) if peer_quality else 55.0
+
+        rs_component = max(0.0, min(100.0, (avg_rs + 8.0) / 18.0 * 100.0))
+        trend_component = 100.0 * trend_participation
+        quality_component = avg_quality
+        score = round(0.35 * rs_component + 0.30 * trend_component + 0.35 * quality_component, 1)
+        packet["group_strength"] = {
+            "score": score,
+            "group_name": group_name,
+            "peer_count": len(peer_symbols),
+            "avg_peer_rs_20d": round(avg_rs, 2),
+            "trend_participation": round(trend_participation, 2),
+            "avg_peer_quality": round(avg_quality, 1),
+            "detail": (
+                f"{group_name} peers {len(peer_symbols)}, avg RS20 {avg_rs:+.1f}, "
+                f"{trend_participation:.0%} above 50d"
+            ),
+        }
+
+    for symbol, packet in packets.items():
+        if symbol not in cfg.WATCHLIST:
+            continue
+        packet["score"] = scoring.score_symbol(
+            packet.get("daily", {}),
+            packet.get("weekly", {}),
+            packet.get("intraday", {}),
+            packet.get("avwap_map", {}),
+            packet.get("relative_strength", {}),
+            packet.get("confluence", {}),
+            packet.get("events", {}),
+            packet.get("earnings", {}),
+            regime=regime,
+            chart_quality=packet.get("chart_quality"),
+            overhead_supply=packet.get("overhead_supply"),
+            breakout_integrity=packet.get("breakout_integrity"),
+            base_quality=packet.get("base_quality"),
+            weekly_close_quality=packet.get("weekly_close_quality"),
+            failed_breakout_memory=packet.get("failed_breakout_memory"),
+            catalyst_context=packet.get("catalyst_context"),
+            clean_air=packet.get("clean_air"),
+            group_strength=packet.get("group_strength"),
+        )

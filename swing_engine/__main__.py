@@ -116,6 +116,12 @@ def run_daily(force: bool = False):
         pkt = packets.build_packet(sym, bench_data[sym], spy_daily, regime=regime_result)
         all_packets[sym] = pkt
 
+    # --- Cross-symbol expert context (group strength / rescoring) ---
+    packets.enrich_group_strength(all_packets, regime=regime_result)
+    for sym in cfg.WATCHLIST + cfg.BENCHMARKS:
+        if sym in all_packets:
+            packets.save_packet(sym, all_packets[sym])
+
     # --- Log signals ---
     print("\n[4/8] Logging signals...")
     for sym in cfg.WATCHLIST:

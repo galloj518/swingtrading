@@ -442,6 +442,203 @@ def assess_breakout_integrity(daily_df: pd.DataFrame) -> dict:
     }
 
 
+def assess_base_quality(daily_df: pd.DataFrame) -> dict:
+    """
+    Evaluate whether the recent base/pullback is orderly enough for a swing entry.
+    """
+    if daily_df.empty or len(daily_df) < 35:
+        return {
+            "score": 55.0,
+            "compression_pct": None,
+            "volume_dryup_ratio": None,
+            "down_weeks": None,
+            "detail": "Base quality unavailable",
+        }
+
+    recent = daily_df.iloc[-25:].copy()
+    prior = daily_df.iloc[-50:-25].copy() if len(daily_df) >= 50 else recent
+    close = float(recent["close"].iloc[-1])
+    base_range_pct = ((float(recent["high"].max()) - float(recent["low"].min())) / close) * 100 if close else 0.0
+    compression_score = 100.0 * max(0.0, 1.0 - min(base_range_pct / 22.0, 1.0))
+
+    recent_vol = float(recent["volume"].mean()) if not recent.empty else 0.0
+    prior_vol = float(prior["volume"].mean()) if not prior.empty else recent_vol
+    dryup_ratio = (recent_vol / prior_vol) if prior_vol else 1.0
+    dryup_score = 100.0 * max(0.0, min((1.35 - dryup_ratio) / 0.65, 1.0))
+
+    down_closes = float((recent["close"].diff() < 0).mean())
+    churn_score = 100.0 * max(0.0, 1.0 - min(down_closes / 0.6, 1.0))
+
+    score = float(round(
+        max(0.0, min(100.0, 0.45 * compression_score + 0.25 * dryup_score + 0.30 * churn_score)),
+        1,
+    ))
+    return {
+        "score": score,
+        "compression_pct": round(base_range_pct, 2),
+        "volume_dryup_ratio": round(dryup_ratio, 2),
+        "down_close_ratio": round(down_closes, 2),
+        "detail": (
+            f"Base range {base_range_pct:.1f}%, volume dry-up {dryup_ratio:.2f}x, "
+            f"down-close ratio {down_closes:.2f}"
+        ),
+    }
+
+
+def assess_weekly_close_quality(weekly_df: pd.DataFrame) -> dict:
+    """
+    Strong swing names tend to close in the upper portion of their weekly range.
+    """
+    if weekly_df.empty or len(weekly_df) < 3:
+        return {
+            "score": 55.0,
+            "close_location": None,
+            "avg_close_location": None,
+            "detail": "Weekly close quality unavailable",
+        }
+
+    recent = weekly_df.iloc[-3:].copy()
+    close_locations = []
+    for _, row in recent.iterrows():
+        rng = float(row["high"] - row["low"])
+        if rng <= 0:
+            close_locations.append(0.5)
+        else:
+            close_locations.append(float((row["close"] - row["low"]) / rng))
+
+    current_clv = close_locations[-1]
+    avg_clv = sum(close_locations) / len(close_locations)
+    score = float(round(100.0 * (0.65 * current_clv + 0.35 * avg_clv), 1))
+    return {
+        "score": score,
+        "close_location": round(current_clv, 2),
+        "avg_close_location": round(avg_clv, 2),
+        "detail": f"Weekly close location {current_clv:.2f}, 3-week avg {avg_clv:.2f}",
+    }
+
+
+def assess_failed_breakout_memory(daily_df: pd.DataFrame) -> dict:
+    """
+    Count failed breakout attempts over the last few months.
+    Repeated failures reduce confidence even if the current setup looks okay.
+    """
+    if daily_df.empty or len(daily_df) < 60:
+        return {
+            "score": 60.0,
+            "failed_count": 0,
+            "recent_failed_count": 0,
+            "detail": "Breakout memory unavailable",
+        }
+
+    df = daily_df.copy()
+    df["prior_20d_high"] = df["high"].rolling(20).max().shift(1)
+    failed_indices = []
+    for idx in range(21, len(df) - 5):
+        row = df.iloc[idx]
+        prior_high = row.get("prior_20d_high")
+        if pd.isna(prior_high):
+            continue
+        if float(row["close"]) <= float(prior_high) * 1.003:
+            continue
+        follow = df.iloc[idx + 1: idx + 6]
+        if follow.empty:
+            continue
+        if float(follow["close"].min()) < float(prior_high) * 0.99:
+            failed_indices.append(idx)
+
+    failed_count = len(failed_indices)
+    recent_cutoff = max(len(df) - 40, 0)
+    recent_failed = sum(1 for idx in failed_indices if idx >= recent_cutoff)
+    score = float(round(max(0.0, 95.0 - 18.0 * failed_count - 12.0 * recent_failed), 1))
+    return {
+        "score": score,
+        "failed_count": failed_count,
+        "recent_failed_count": recent_failed,
+        "detail": f"{failed_count} failed breakout(s), {recent_failed} in the last 40 bars",
+    }
+
+
+def assess_catalyst_context(daily_state: dict, event_risk: dict, earnings: dict,
+                            breakout_integrity: dict, base_quality: dict) -> dict:
+    """
+    Estimate whether the setup has a constructive catalyst backdrop.
+    This is not news intelligence; it is a readiness proxy.
+    """
+    rvol = float(daily_state.get("rvol", 1.0) or 1.0)
+    score = 55.0
+    reasons = []
+
+    if breakout_integrity.get("recent_breakout") and not breakout_integrity.get("failed_breakout"):
+        score += 12.0
+        reasons.append("constructive breakout backdrop")
+    if rvol >= 1.4:
+        score += 8.0
+        reasons.append("volume expansion")
+    if float(base_quality.get("score", 50.0)) >= 65:
+        score += 6.0
+        reasons.append("orderly base")
+
+    if earnings.get("warning"):
+        score -= 18.0
+        reasons.append("earnings/event risk")
+    if event_risk.get("high_risk_imminent"):
+        score -= 14.0
+        reasons.append("macro event imminent")
+    elif event_risk.get("elevated_risk"):
+        score -= 8.0
+        reasons.append("macro risk elevated")
+
+    score = float(round(max(0.0, min(100.0, score)), 1))
+    detail = ", ".join(reasons) if reasons else "No strong catalyst signal detected"
+    return {"score": score, "detail": detail}
+
+
+def assess_clean_air(price: float, daily_state: dict, pivots: dict,
+                     avwap_map: dict, reference_levels: dict,
+                     overhead_supply: dict) -> dict:
+    """
+    Measure whether price has enough room to travel before likely resistance.
+    """
+    if not price:
+        return {
+            "score": 50.0,
+            "nearest_resistance_pct": None,
+            "atr_to_resistance": None,
+            "detail": "Clean-air score unavailable",
+        }
+
+    levels = []
+    for key in ("r1", "r2", "r3"):
+        val = pivots.get(key)
+        if val:
+            levels.append((key, float(val)))
+    for key in ("prior_day_high",):
+        val = reference_levels.get(key)
+        if val:
+            levels.append((key, float(val)))
+    for label, data in avwap_map.items():
+        avwap = data.get("avwap")
+        if avwap and float(avwap) > price:
+            levels.append((f"avwap_{label}", float(avwap)))
+
+    if overhead_supply.get("nearest_pct") is not None:
+        levels.append((str(overhead_supply.get("nearest_level", "overhead")), price * (1.0 + float(overhead_supply["nearest_pct"]) / 100.0)))
+
+    above = [((level / price) - 1.0) * 100.0 for _, level in levels if level > price]
+    nearest_pct = min(above) if above else 12.0
+    atr = float(daily_state.get("atr", 0.0) or 0.0)
+    atr_pct = ((atr / price) * 100.0) if price and atr else 2.0
+    atr_to_resistance = nearest_pct / atr_pct if atr_pct > 0 else nearest_pct / 2.0
+
+    score = float(round(max(0.0, min(100.0, 100.0 * min(atr_to_resistance / 3.0, 1.0))), 1))
+    return {
+        "score": score,
+        "nearest_resistance_pct": round(nearest_pct, 2),
+        "atr_to_resistance": round(atr_to_resistance, 2),
+        "detail": f"Nearest resistance {nearest_pct:.1f}% away, about {atr_to_resistance:.1f} ATRs",
+    }
+
+
 # =============================================================================
 # SMA5 TOMORROW LOGIC
 # =============================================================================
