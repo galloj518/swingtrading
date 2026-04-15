@@ -189,10 +189,9 @@ def _action_style(label: str) -> tuple[str, str]:
 
 def _build_actionability(pkt: dict, cl: dict | None) -> dict:
     """Build a normalized actionability object for dashboard rendering."""
-    action = pkt.get("actionability")
-    if action:
-        return action
     action = (cl or {}).get("actionability")
+    if not action:
+        action = pkt.get("actionability")
     if not action:
         action = checklist.evaluate_actionability(pkt, (cl or {}).get("checks"))
     return action

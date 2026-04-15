@@ -42,12 +42,30 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
     continuation_score = float(idea_factors.get("continuation_pattern", 55) or 55)
     sponsorship_score = float(idea_factors.get("institutional_sponsorship", 55) or 55)
     short_term_posture = float(timing_factors.get("short_term_posture", timing_score) or timing_score)
+    liquidity_status = str(packet.get("position_sizing", {}).get("liquidity_status", "ok") or "ok").lower()
 
     failed_items = {
         c["item"] for c in (checks or []) if not c.get("passed", False)
     }
+    if tradeability_score < 60:
+        failed_items.add("Score")
+    if idea_score < 55:
+        failed_items.add("Idea Quality")
+    if timing_score < 60 or short_term_posture < 60:
+        failed_items.add("Entry Timing")
+    if data_quality_score < 60:
+        failed_items.add("Data Quality")
+    if liquidity_status == "blocked":
+        failed_items.add("Liquidity")
+    if rs_score < 45:
+        failed_items.add("Relative Strength")
+
+    score_failed = "Score" in failed_items
+    liquidity_failed = "Liquidity" in failed_items
+    rs_failed = "Relative Strength" in failed_items
+    data_failed = "Data Quality" in failed_items
     critical_failed = bool(
-        {"Regime", "Weekly Gate", "Daily Gate", "Stop", "Event Risk"} & failed_items
+        {"Regime", "Weekly Gate", "Daily Gate", "Stop", "Event Risk", "Liquidity", "Data Quality"} & failed_items
     )
     timing_failed = "Entry Timing" in failed_items
 
@@ -71,7 +89,8 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
         confidence_score >= 55 and
         data_quality_score >= 60 and
         group_score >= 45 and
-        rs_score >= 45
+        rs_score >= 45 and
+        liquidity_status != "blocked"
     )
 
     if setup_type == "tight_continuation":
@@ -82,6 +101,7 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             short_term_posture >= 72 and
             continuation_score >= 70 and
             sponsorship_score >= 62 and
+            in_zone and
             institutional_ready
         ):
             return {
@@ -105,6 +125,23 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
         }
 
     if setup_type == "breakout":
+        if (
+            in_zone and
+            tradeability_score >= 78 and
+            idea_score >= 65 and
+            timing_score >= 68 and
+            short_term_posture >= 72 and
+            continuation_score >= 65 and
+            sponsorship_score >= 60 and
+            not (score_failed or rs_failed or liquidity_failed or data_failed) and
+            institutional_ready
+        ):
+            return {
+                "label": "BUY NOW",
+                "detail": "Breakout has confirmation, sponsorship, and enough timing quality to act now",
+                "rank": 0,
+                "actionable_now": True,
+            }
         return {
             "label": "WATCH BREAKOUT",
             "detail": setup.get("trigger") or "Needs breakout confirmation",
@@ -113,6 +150,22 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
         }
 
     if setup_type in ("reclaim", "pullback_developing", "watch", "below_10dma_wait"):
+        if (
+            setup_type == "reclaim" and
+            in_zone and
+            tradeability_score >= 76 and
+            idea_score >= 62 and
+            timing_score >= 65 and
+            short_term_posture >= 68 and
+            not (score_failed or rs_failed or liquidity_failed or data_failed) and
+            institutional_ready
+        ):
+            return {
+                "label": "BUY NOW",
+                "detail": "Reclaim setup is confirmed and back in a valid entry zone",
+                "rank": 0,
+                "actionable_now": True,
+            }
         return {
             "label": "WAIT SETUP",
             "detail": setup.get("trigger") or "Pattern is still developing",
@@ -143,7 +196,7 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             "actionable_now": False,
         }
 
-    if timing_failed or not institutional_ready:
+    if timing_failed or score_failed or liquidity_failed or rs_failed or data_failed or not institutional_ready:
         return {
             "label": "WAIT SETUP",
             "detail": "Entry timing or confirmation quality is not ready yet",
@@ -159,11 +212,25 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             "actionable_now": False,
         }
 
+    if (
+        tradeability_score >= 72 and
+        idea_score >= 62 and
+        timing_score >= 65 and
+        short_term_posture >= 65 and
+        not (score_failed or rs_failed or liquidity_failed or data_failed)
+    ):
+        return {
+            "label": "BUY NOW",
+            "detail": setup.get("trigger") or "Inside valid entry zone",
+            "rank": 0,
+            "actionable_now": True,
+        }
+
     return {
-        "label": "BUY NOW",
-        "detail": setup.get("trigger") or "Inside valid entry zone",
-        "rank": 0,
-        "actionable_now": True,
+        "label": "WAIT SETUP",
+        "detail": "Inside the zone, but confirmation and tradeability are not strong enough yet",
+        "rank": 3,
+        "actionable_now": False,
     }
 
 
