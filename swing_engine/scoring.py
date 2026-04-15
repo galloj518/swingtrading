@@ -416,6 +416,11 @@ def _score_base_quality(base_quality: dict) -> tuple[float, str]:
     return score, base_quality.get("detail", f"Base quality {score:.0f}/100")
 
 
+def _score_continuation_pattern(continuation_pattern: dict) -> tuple[float, str]:
+    score = _safe_float(continuation_pattern.get("score"), 55.0)
+    return score, continuation_pattern.get("detail", f"Continuation pattern {score:.0f}/100")
+
+
 def _score_weekly_close_quality(weekly_close_quality: dict) -> tuple[float, str]:
     score = _safe_float(weekly_close_quality.get("score"), 55.0)
     return score, weekly_close_quality.get("detail", f"Weekly close quality {score:.0f}/100")
@@ -471,6 +476,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
                         overhead_supply: dict | None = None,
                         breakout_integrity: dict | None = None,
                         base_quality: dict | None = None,
+                        continuation_pattern: dict | None = None,
                         weekly_close_quality: dict | None = None,
                         failed_breakout_memory: dict | None = None,
                         catalyst_context: dict | None = None,
@@ -487,6 +493,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     overhead_supply = overhead_supply or {}
     breakout_integrity = breakout_integrity or {}
     base_quality = base_quality or {}
+    continuation_pattern = continuation_pattern or {}
     weekly_close_quality = weekly_close_quality or {}
     failed_breakout_memory = failed_breakout_memory or {}
     catalyst_context = catalyst_context or {}
@@ -505,6 +512,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     overhead_score, overhead_reason = _score_overhead_supply(overhead_supply)
     breakout_score, breakout_reason = _score_breakout_integrity(breakout_integrity)
     base_score, base_reason = _score_base_quality(base_quality)
+    continuation_score, continuation_reason = _score_continuation_pattern(continuation_pattern)
     weekly_close_score, weekly_close_reason = _score_weekly_close_quality(weekly_close_quality)
     failed_memory_score, failed_memory_reason = _score_failed_breakout_memory(failed_breakout_memory)
     catalyst_score, catalyst_reason = _score_catalyst_context(catalyst_context)
@@ -515,23 +523,24 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
 
     raw_score = (
-        0.14 * weekly_score +
-        0.12 * daily_score +
-        0.11 * rs_score +
+        0.12 * weekly_score +
+        0.10 * daily_score +
+        0.10 * rs_score +
         0.07 * avwap_score +
         0.06 * liquidity_score +
-        0.07 * support_score +
-        0.08 * chart_score +
-        0.08 * base_score +
-        0.05 * overhead_score +
-        0.05 * breakout_score +
+        0.06 * support_score +
+        0.07 * chart_score +
+        0.07 * base_score +
+        0.05 * continuation_score +
+        0.04 * overhead_score +
+        0.04 * breakout_score +
         0.06 * group_score +
         0.04 * clean_air_score +
         0.03 * weekly_close_score +
         0.02 * catalyst_score +
         0.02 * failed_memory_score +
-        0.04 * data_quality_score +
-        0.06 * evidence_score
+        0.03 * data_quality_score +
+        0.02 * evidence_score
     )
     score = round(_clamp(raw_score - penalty), 1)
     reasons = [
@@ -543,6 +552,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
         support_reason,
         chart_reason,
         base_reason,
+        continuation_reason,
         overhead_reason,
         breakout_reason,
         group_reason,
@@ -569,6 +579,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
             "support_integrity": support_score,
             "chart_quality": chart_score,
             "base_quality": base_score,
+            "continuation_pattern": continuation_score,
             "overhead_supply": overhead_score,
             "breakout_integrity": breakout_score,
             "group_strength": group_score,
@@ -720,6 +731,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  overhead_supply: dict | None = None,
                  breakout_integrity: dict | None = None,
                  base_quality: dict | None = None,
+                 continuation_pattern: dict | None = None,
                  weekly_close_quality: dict | None = None,
                  failed_breakout_memory: dict | None = None,
                  catalyst_context: dict | None = None,
@@ -819,6 +831,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         overhead_supply=overhead_supply,
         breakout_integrity=breakout_integrity,
         base_quality=base_quality,
+        continuation_pattern=continuation_pattern,
         weekly_close_quality=weekly_close_quality,
         failed_breakout_memory=failed_breakout_memory,
         catalyst_context=catalyst_context,
@@ -846,6 +859,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     short_term_posture = _safe_float(timing["factors"].get("short_term_posture"), timing_score)
     chart_score = _safe_float(idea["factors"].get("chart_quality"), 50.0)
     base_score = _safe_float(idea["factors"].get("base_quality"), 55.0)
+    continuation_score = _safe_float(idea["factors"].get("continuation_pattern"), 55.0)
     overhead_score = _safe_float(idea["factors"].get("overhead_supply"), 50.0)
     breakout_score = _safe_float(idea["factors"].get("breakout_integrity"), 55.0)
     group_score = _safe_float(idea["factors"].get("group_strength"), 55.0)
@@ -886,6 +900,13 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         idea_score = min(idea_score, 55)
         timing_score = min(timing_score, 52)
         adjustment_notes.append("Idea/timing capped: base quality is weak")
+    elif continuation_score >= 78 and short_term_posture >= 70 and chart_score >= 60:
+        idea_score = max(idea_score, min(90.0, idea_score + 4.0))
+        timing_score = max(timing_score, 72)
+        adjustment_notes.append("Idea/timing boosted: tight continuation pattern with strong follow-through posture")
+    elif continuation_score >= 88 and short_term_posture >= 80:
+        timing_score = max(timing_score, 82)
+        adjustment_notes.append("Timing boosted: elite continuation pattern")
 
     if group_score < 40:
         idea_score = min(idea_score, 60)
@@ -1047,7 +1068,8 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
 def classify_setup(daily_state: dict, score: int, action_bias: str,
                    recent_high: dict, price: float,
                    entry_zone: dict = None, pivots: dict = None,
-                   event_risk: dict = None, weekly_state: dict = None) -> dict:
+                   event_risk: dict = None, weekly_state: dict = None,
+                   continuation_pattern: dict | None = None) -> dict:
     """
     Generate a complete trade plan with specific triggers, gap scenarios,
     partial take plan, max chase logic, and upgrade conditions.
@@ -1056,6 +1078,7 @@ def classify_setup(daily_state: dict, score: int, action_bias: str,
     pivots = pivots or {}
     event_risk = event_risk or {}
     weekly_state = weekly_state or {}
+    continuation_pattern = continuation_pattern or {}
 
     sma5 = daily_state.get("sma_5", 0)
     sma10 = daily_state.get("sma_10", 0)
@@ -1084,6 +1107,9 @@ def classify_setup(daily_state: dict, score: int, action_bias: str,
     in_zone = entry_zone.get("in_zone", False)
 
     has_event_risk = event_risk.get("high_risk_imminent") or event_risk.get("elevated_risk")
+    secondary_buy_candidate = bool(continuation_pattern.get("secondary_buy_candidate"))
+    continuation_trigger = continuation_pattern.get("buy_trigger")
+    continuation_range_high = continuation_pattern.get("buy_range_high")
 
     # --- BASE fields every plan gets ---
     base = {
@@ -1179,6 +1205,31 @@ def classify_setup(daily_state: dict, score: int, action_bias: str,
             "upgrade_conditions": [
                 f"Price pulls back to {_fmt2(sma10)} - {_fmt2(sma20)} zone on light volume",
                 f"5 SMA catches up to price (distance narrows to < 2%)",
+            ],
+        }
+
+    if (secondary_buy_candidate and continuation_trigger and
+        daily_state.get("close_above_sma_5") and
+        sma5_dir != "falling" and sma10_dir != "falling"):
+        return {**base,
+            "type": "tight_continuation",
+            "description": f"Tight continuation / secondary-buy structure near {_fmt2(continuation_trigger)}.",
+            "trigger": f"BUY while price holds above {_fmt2(sma5)} and can clear {_fmt2(continuation_trigger)}",
+            "watch_for": (
+                f"Tight closes, contained range, and volume dry-up. "
+                f"Buy range extends to {_fmt2(continuation_range_high)}"
+            ),
+            "invalidation": f"Loss of {_fmt2(sma10)} or a close below {_fmt2(sma20)}",
+            "gap_up_plan": f"If it opens above {_fmt2(continuation_trigger)}, buy only while it holds the breakout level intraday",
+            "gap_down_plan": f"If it opens near {_fmt2(sma5)} or {_fmt2(sma10)}, watch for support and reclaim",
+            "partial_take_plan": f"Take 1/3 at R1 ({_fmt2(r1)}), 1/3 at {_fmt2(t1)}, trail the rest with the 10 SMA",
+            "max_chase_pct": 3.0,
+            "time_horizon": "Act on the continuation window over the next 1-3 days",
+            "position_size_guidance": "half size" if has_event_risk else "full",
+            "upgrade_conditions": [
+                "Tight closes continue",
+                "Volume expands on the breakout day",
+                "Price keeps holding above the 5-day moving average",
             ],
         }
 
@@ -1366,6 +1417,9 @@ def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_qu
     elif setup_type == "breakout":
         base_score = min(max(base_score, 62.0), 88.0)
         detail_parts.append("Needs breakout confirmation, but strong breakouts can still be actionable")
+    elif setup_type == "tight_continuation":
+        base_score = min(max(base_score, 72.0), 92.0)
+        detail_parts.append("Tight continuation / secondary-buy structure")
     elif setup_type in ("pullback_developing", "reclaim", "watch", "below_10dma_wait"):
         base_score = min(base_score, 62.0)
         detail_parts.append("Constructive, but still developing")

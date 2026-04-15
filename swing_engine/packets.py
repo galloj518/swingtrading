@@ -147,6 +147,7 @@ def build_packet(symbol: str, data: dict,
     )
     breakout_integrity = feat.assess_breakout_integrity(daily)
     base_quality = feat.assess_base_quality(daily)
+    continuation_pattern = feat.assess_continuation_pattern(daily, weekly)
     weekly_close_quality = feat.assess_weekly_close_quality(weekly)
     failed_breakout_memory = feat.assess_failed_breakout_memory(daily)
     catalyst_context = feat.assess_catalyst_context(
@@ -165,6 +166,7 @@ def build_packet(symbol: str, data: dict,
         overhead_supply=overhead_supply,
         breakout_integrity=breakout_integrity,
         base_quality=base_quality,
+        continuation_pattern=continuation_pattern,
         weekly_close_quality=weekly_close_quality,
         failed_breakout_memory=failed_breakout_memory,
         catalyst_context=catalyst_context,
@@ -181,6 +183,7 @@ def build_packet(symbol: str, data: dict,
         score_result["action_bias"], rh, price,
         entry_zone=entry_zone, pivots=pivots,
         event_risk=event_ctx, weekly_state=weekly_state,
+        continuation_pattern=continuation_pattern,
     )
     score_result["tradeability"] = scoring.calc_tradeability(
         score_result, entry_zone, setup, data_quality=data_quality
@@ -219,6 +222,7 @@ def build_packet(symbol: str, data: dict,
         "overhead_supply": overhead_supply,
         "breakout_integrity": breakout_integrity,
         "base_quality": base_quality,
+        "continuation_pattern": continuation_pattern,
         "weekly_close_quality": weekly_close_quality,
         "failed_breakout_memory": failed_breakout_memory,
         "catalyst_context": catalyst_context,
@@ -256,6 +260,7 @@ def _refresh_trade_plan(packet: dict) -> None:
         pivots=packet.get("pivots", {}),
         event_risk=packet.get("events", {}),
         weekly_state=packet.get("weekly", {}),
+        continuation_pattern=packet.get("continuation_pattern", {}),
     )
     packet.setdefault("score", {})["tradeability"] = scoring.calc_tradeability(
         packet.get("score", {}),
@@ -334,6 +339,7 @@ def enrich_group_strength(packets: dict, regime: dict | None = None) -> None:
             overhead_supply=packet.get("overhead_supply"),
             breakout_integrity=packet.get("breakout_integrity"),
             base_quality=packet.get("base_quality"),
+            continuation_pattern=packet.get("continuation_pattern"),
             weekly_close_quality=packet.get("weekly_close_quality"),
             failed_breakout_memory=packet.get("failed_breakout_memory"),
             catalyst_context=packet.get("catalyst_context"),
@@ -376,6 +382,7 @@ def enrich_calibration(packets: dict, calibration_profile: dict, regime: dict | 
             overhead_supply=packet.get("overhead_supply"),
             breakout_integrity=packet.get("breakout_integrity"),
             base_quality=packet.get("base_quality"),
+            continuation_pattern=packet.get("continuation_pattern"),
             weekly_close_quality=packet.get("weekly_close_quality"),
             failed_breakout_memory=packet.get("failed_breakout_memory"),
             catalyst_context=packet.get("catalyst_context"),

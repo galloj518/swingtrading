@@ -13,6 +13,17 @@ from . import config as cfg
 # STANDARD INDICATORS (pure pandas — no dependencies)
 # =============================================================================
 
+def _band_ratio(value: float, outer_low: float, ideal_low: float,
+                ideal_high: float, outer_high: float) -> float:
+    if value <= outer_low or value >= outer_high:
+        return 0.0
+    if ideal_low <= value <= ideal_high:
+        return 1.0
+    if value < ideal_low:
+        return max(0.0, min(1.0, (value - outer_low) / (ideal_low - outer_low))) if ideal_low != outer_low else 0.0
+    return max(0.0, min(1.0, (outer_high - value) / (outer_high - ideal_high))) if outer_high != ideal_high else 0.0
+
+
 def add_smas(df: pd.DataFrame, periods: list) -> pd.DataFrame:
     """Add SMA columns."""
     df = df.copy()
@@ -629,6 +640,124 @@ def assess_base_quality(daily_df: pd.DataFrame) -> dict:
         "detail": (
             f"Base range {base_range_pct:.1f}%, volume dry-up {dryup_ratio:.2f}x, "
             f"down-close ratio {down_closes:.2f}"
+        ),
+    }
+
+
+def assess_continuation_pattern(daily_df: pd.DataFrame, weekly_df: pd.DataFrame) -> dict:
+    """
+    Detect continuation and secondary-buy behavior that often precedes positive follow-through:
+    tight price action, volatility contraction, dry-up volume, and gap-hold behavior.
+    """
+    if daily_df.empty or len(daily_df) < 25:
+        return {
+            "score": 50.0,
+            "three_weeks_tight": False,
+            "tight_closes_5d": False,
+            "nr7": False,
+            "secondary_buy_candidate": False,
+            "buy_trigger": None,
+            "buy_range_high": None,
+            "detail": "Continuation pattern unavailable",
+        }
+
+    recent5 = daily_df.iloc[-5:].copy()
+    prior15 = daily_df.iloc[-20:-5].copy() if len(daily_df) >= 20 else daily_df.iloc[:-5].copy()
+    last_close = float(recent5["close"].iloc[-1])
+
+    close_tight_pct = ((float(recent5["close"].max()) - float(recent5["close"].min())) / last_close * 100.0) if last_close else 0.0
+    tight_close_score = 100.0 * max(0.0, 1.0 - min(close_tight_pct / 4.5, 1.0))
+    tight_closes_5d = close_tight_pct <= 2.0
+
+    recent_ranges = (recent5["high"] - recent5["low"]).astype(float)
+    prior_ranges = (prior15["high"] - prior15["low"]).astype(float) if not prior15.empty else recent_ranges
+    avg_recent_range = float(recent_ranges.mean()) if not recent_ranges.empty else 0.0
+    avg_prior_range = float(prior_ranges.mean()) if not prior_ranges.empty else avg_recent_range
+    contraction_ratio = (avg_recent_range / avg_prior_range) if avg_prior_range else 1.0
+    contraction_score = 100.0 * max(0.0, min((1.35 - contraction_ratio) / 0.75, 1.0))
+
+    recent_vol = float(recent5["volume"].mean()) if "volume" in recent5.columns and not recent5.empty else 0.0
+    prior_vol = float(prior15["volume"].mean()) if "volume" in prior15.columns and not prior15.empty else recent_vol
+    dryup_ratio = (recent_vol / prior_vol) if prior_vol else 1.0
+    dryup_score = 100.0 * max(0.0, min((1.25 - dryup_ratio) / 0.55, 1.0))
+
+    nr7 = False
+    nr7_score = 55.0
+    if len(daily_df) >= 7:
+        ranges7 = (daily_df["high"].iloc[-7:] - daily_df["low"].iloc[-7:]).astype(float)
+        nr7 = bool(ranges7.iloc[-1] <= ranges7.min() + 1e-9)
+        nr7_score = 90.0 if nr7 else 55.0
+
+    three_weeks_tight = False
+    weekly_tight_pct = None
+    weekly_tight_score = 55.0
+    if not weekly_df.empty and len(weekly_df) >= 3:
+        wk = weekly_df.iloc[-3:].copy()
+        latest_week_close = float(wk["close"].iloc[-1])
+        if latest_week_close:
+            weekly_tight_pct = ((float(wk["close"].max()) - float(wk["close"].min())) / latest_week_close) * 100.0
+            three_weeks_tight = weekly_tight_pct <= 1.5
+            weekly_tight_score = 100.0 * max(0.0, 1.0 - min((weekly_tight_pct or 0.0) / 4.0, 1.0))
+
+    prior_20_high = float(daily_df["high"].iloc[-21:-1].max()) if len(daily_df) >= 21 else float(daily_df["high"].iloc[:-1].max())
+    breakout_distance_pct = ((prior_20_high / last_close) - 1.0) * 100.0 if last_close and prior_20_high else 0.0
+    breakout_ready = -1.0 <= breakout_distance_pct <= 4.0
+    proximity_score = 100.0 * _band_ratio(breakout_distance_pct, -6.0, -0.5, 2.5, 6.0)
+
+    gap_hold_score = 55.0
+    gap_hold = False
+    if len(daily_df) >= 12:
+        recent = daily_df.iloc[-12:].copy()
+        prev_close = recent["close"].shift(1)
+        gap_pct = ((recent["open"] / prev_close) - 1.0) * 100.0
+        avg_vol = recent["volume"].rolling(20, min_periods=1).mean()
+        volume_ratio = (recent["volume"] / avg_vol.replace(0, np.nan)).replace([np.inf, -np.inf], np.nan).fillna(1.0)
+        candidates = recent[(gap_pct >= 3.0) & (volume_ratio >= 1.3) & prev_close.notna()]
+        if not candidates.empty:
+            row = candidates.iloc[-1]
+            gap_hold = bool(last_close >= float(row["open"]))
+            gap_hold_score = 82.0 if gap_hold else 40.0
+
+    score = float(round(
+        max(0.0, min(
+            100.0,
+            0.22 * tight_close_score +
+            0.18 * contraction_score +
+            0.12 * dryup_score +
+            0.12 * nr7_score +
+            0.18 * weekly_tight_score +
+            0.10 * proximity_score +
+            0.08 * gap_hold_score
+        )),
+        1,
+    ))
+
+    buy_trigger = round(max(float(recent5["high"].max()), prior_20_high), 2) if breakout_ready else round(float(recent5["high"].max()), 2)
+    buy_range_high = round(buy_trigger * 1.03, 2) if buy_trigger else None
+    secondary_buy_candidate = bool(
+        score >= 68 and (
+            three_weeks_tight or tight_closes_5d or nr7
+        ) and breakout_ready
+    )
+
+    weekly_tight_txt = f"{weekly_tight_pct:.1f}%" if weekly_tight_pct is not None else "--"
+    return {
+        "score": score,
+        "three_weeks_tight": three_weeks_tight,
+        "tight_closes_5d": tight_closes_5d,
+        "nr7": nr7,
+        "gap_hold": gap_hold,
+        "breakout_ready": breakout_ready,
+        "secondary_buy_candidate": secondary_buy_candidate,
+        "buy_trigger": buy_trigger,
+        "buy_range_high": buy_range_high,
+        "close_tight_pct": round(close_tight_pct, 2),
+        "weekly_tight_pct": round(weekly_tight_pct, 2) if weekly_tight_pct is not None else None,
+        "contraction_ratio": round(contraction_ratio, 2),
+        "volume_dryup_ratio": round(dryup_ratio, 2),
+        "detail": (
+            f"5d tightness {close_tight_pct:.1f}%, 3WT {weekly_tight_txt}, "
+            f"range ratio {contraction_ratio:.2f}, dry-up {dryup_ratio:.2f}x"
         ),
     }
 

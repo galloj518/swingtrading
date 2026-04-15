@@ -58,6 +58,21 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             "actionable_now": False,
         }
 
+    if setup_type == "tight_continuation":
+        if tradeability_score >= 75:
+            return {
+                "label": "BUY NOW",
+                "detail": setup.get("trigger") or "Tight continuation is actionable now",
+                "rank": 0,
+                "actionable_now": True,
+            }
+        return {
+            "label": "WATCH BREAKOUT",
+            "detail": setup.get("trigger") or "Continuation pattern is close but not ready",
+            "rank": 1,
+            "actionable_now": False,
+        }
+
     if setup_type == "breakout":
         return {
             "label": "WATCH BREAKOUT",

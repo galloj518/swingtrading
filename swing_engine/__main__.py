@@ -273,6 +273,7 @@ def run_daily(force: bool = False):
             "data_quality": p.get("data_quality", {}),
             "chart_quality": p.get("chart_quality", {}),
             "base_quality": p.get("base_quality", {}),
+            "continuation_pattern": p.get("continuation_pattern", {}),
             "overhead_supply": p.get("overhead_supply", {}),
             "clean_air": p.get("clean_air", {}),
             "group_strength": p.get("group_strength", {}),
