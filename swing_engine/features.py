@@ -132,13 +132,148 @@ def get_dynamic_anchor_dates(daily_df: pd.DataFrame) -> dict:
     return result
 
 
+def _add_anchor_if_missing(anchor_map: dict, label: str, anchor_date: str | None) -> None:
+    if label and anchor_date and label not in anchor_map:
+        anchor_map[label] = anchor_date
+
+
+def detect_statistical_gap_anchors(daily_df: pd.DataFrame, limit: int = 3) -> dict:
+    """
+    Detect significant recent gap bars that are likely to matter for AVWAP.
+    This is a deterministic proxy for headline/earnings-driven event anchors.
+    """
+    if daily_df.empty or len(daily_df) < 25:
+        return {}
+
+    df = daily_df.copy()
+    df["prev_close"] = df["close"].shift(1)
+    df["gap_pct"] = ((df["open"] / df["prev_close"]) - 1.0) * 100.0
+    if "avg_volume" in df.columns:
+        volume_ratio = df["volume"] / df["avg_volume"].replace(0, np.nan)
+    else:
+        volume_ratio = pd.Series(1.0, index=df.index)
+    df["volume_ratio"] = volume_ratio.replace([np.inf, -np.inf], np.nan).fillna(1.0)
+    df["range_pct"] = ((df["high"] - df["low"]) / df["prev_close"].replace(0, np.nan)) * 100.0
+
+    candidates = df[
+        df["prev_close"].notna() &
+        (df["gap_pct"].abs() >= 3.5) &
+        ((df["volume_ratio"] >= 1.4) | (df["range_pct"] >= 5.0))
+    ].copy()
+    if candidates.empty:
+        return {}
+
+    candidates["event_strength"] = (
+        candidates["gap_pct"].abs() * 0.65 +
+        candidates["volume_ratio"].clip(upper=4.0) * 1.5 +
+        candidates["range_pct"].clip(upper=10.0) * 0.25
+    )
+    candidates = candidates.sort_values(["date", "event_strength"], ascending=[False, False]).head(limit)
+
+    anchors = {}
+    for _, row in candidates.iterrows():
+        direction = "gap_up" if float(row["gap_pct"]) > 0 else "gap_down"
+        label = f"{direction}_{row['date'].strftime('%Y%m%d')}"
+        anchors[label] = row["date"].strftime("%Y-%m-%d")
+    return anchors
+
+
+def summarize_avwap_context(price: float, avwap_map: dict) -> dict:
+    """
+    Identify the most relevant AVWAPs above and below price.
+    """
+    if not price or not avwap_map:
+        return {
+            "nearest_above": None,
+            "nearest_below": None,
+            "primary_support": None,
+            "primary_resistance": None,
+            "relevant_labels": [],
+            "detail": "No AVWAP context available",
+        }
+
+    levels = []
+    for label, data in avwap_map.items():
+        avwap = data.get("avwap")
+        if avwap in (None, "", 0):
+            continue
+        dist_pct = ((float(avwap) / price) - 1.0) * 100.0
+        levels.append((label, float(avwap), dist_pct))
+
+    if not levels:
+        return {
+            "nearest_above": None,
+            "nearest_below": None,
+            "primary_support": None,
+            "primary_resistance": None,
+            "relevant_labels": [],
+            "detail": "No AVWAP context available",
+        }
+
+    above = sorted([item for item in levels if item[2] >= 0], key=lambda item: item[2])
+    below = sorted([item for item in levels if item[2] < 0], key=lambda item: abs(item[2]))
+    nearest_above = above[0] if above else None
+    nearest_below = below[0] if below else None
+
+    relevant = []
+    for candidate in (nearest_below, nearest_above):
+        if candidate:
+            relevant.append(candidate[0])
+    for label, _, dist_pct in sorted(levels, key=lambda item: abs(item[2])):
+        if abs(dist_pct) <= 3.0 and label not in relevant:
+            relevant.append(label)
+        if len(relevant) >= 4:
+            break
+
+    detail_parts = []
+    if nearest_below:
+        detail_parts.append(f"support {nearest_below[0]} ({nearest_below[2]:+.1f}%)")
+    if nearest_above:
+        detail_parts.append(f"resistance {nearest_above[0]} ({nearest_above[2]:+.1f}%)")
+
+    return {
+        "nearest_above": {
+            "label": nearest_above[0],
+            "avwap": round(nearest_above[1], 2),
+            "dist_pct": round(nearest_above[2], 2),
+        } if nearest_above else None,
+        "nearest_below": {
+            "label": nearest_below[0],
+            "avwap": round(nearest_below[1], 2),
+            "dist_pct": round(nearest_below[2], 2),
+        } if nearest_below else None,
+        "primary_support": nearest_below[0] if nearest_below else None,
+        "primary_resistance": nearest_above[0] if nearest_above else None,
+        "relevant_labels": relevant,
+        "detail": "; ".join(detail_parts) if detail_parts else "AVWAPs distant from price",
+    }
+
+
 def build_avwap_map(daily_df: pd.DataFrame, symbol: str) -> dict:
-    """Build all AVWAPs for a symbol from its configured anchor dates."""
+    """Build a richer AVWAP map from configured, dynamic, structural, and event anchors."""
     anchors = get_anchors(symbol)
     dynamic_anchors = get_dynamic_anchor_dates(daily_df)
     for label in ("wtd", "mtd"):
         if label not in anchors and label in dynamic_anchors:
             anchors[label] = dynamic_anchors[label]
+
+    if not daily_df.empty:
+        recent_20_high = find_recent_high(daily_df, lookback=min(20, len(daily_df)))
+        recent_20_low = find_recent_low(daily_df, lookback=min(20, len(daily_df)))
+        recent_60_high = find_recent_high(daily_df, lookback=min(60, len(daily_df)))
+        recent_60_low = find_recent_low(daily_df, lookback=min(60, len(daily_df)))
+        recent_252_high = find_recent_high(daily_df, lookback=min(252, len(daily_df)))
+        recent_252_low = find_recent_low(daily_df, lookback=min(252, len(daily_df)))
+
+        _add_anchor_if_missing(anchors, "recent_high_20d", recent_20_high.get("date") if recent_20_high else None)
+        _add_anchor_if_missing(anchors, "recent_low_20d", recent_20_low.get("date") if recent_20_low else None)
+        _add_anchor_if_missing(anchors, "recent_high_60d", recent_60_high.get("date") if recent_60_high else None)
+        _add_anchor_if_missing(anchors, "recent_low_60d", recent_60_low.get("date") if recent_60_low else None)
+        _add_anchor_if_missing(anchors, "52wk_high", recent_252_high.get("date") if recent_252_high else None)
+        _add_anchor_if_missing(anchors, "52wk_low", recent_252_low.get("date") if recent_252_low else None)
+
+        for label, anchor_date in detect_statistical_gap_anchors(daily_df).items():
+            _add_anchor_if_missing(anchors, label, anchor_date)
 
     avwap_map = {}
     for label, dt_str in anchors.items():

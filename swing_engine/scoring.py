@@ -243,17 +243,43 @@ def _score_trend_quality(state: dict, timeframe: str) -> tuple[float, str]:
 
 def _score_avwap_sponsorship(price: float, avwap_map: dict) -> tuple[float, str]:
     levels = []
-    for data in avwap_map.values():
+    for label, data in avwap_map.items():
         avwap = _safe_float(data.get("avwap"), 0.0)
         if avwap > 0:
-            levels.append(avwap)
+            dist_pct = ((avwap / price) - 1.0) * 100.0 if price > 0 else 0.0
+            levels.append((label, avwap, dist_pct))
     if not levels or price <= 0:
         return 50.0, "AVWAP sponsorship unavailable"
 
-    above_count = sum(1 for level in levels if price > level)
-    ratio = above_count / len(levels)
-    score = round(15.0 + 85.0 * ratio, 1)
-    return score, f"Above {above_count}/{len(levels)} AVWAPs"
+    below = sorted([item for item in levels if item[2] < 0], key=lambda item: abs(item[2]))
+    above = sorted([item for item in levels if item[2] >= 0], key=lambda item: item[2])
+    support_score = 45.0
+    resistance_penalty = 0.0
+
+    if below:
+        nearest_support = abs(below[0][2])
+        if nearest_support <= 1.5:
+            support_score = 95.0
+        elif nearest_support <= 3.0:
+            support_score = 80.0
+        elif nearest_support <= 5.0:
+            support_score = 65.0
+        else:
+            support_score = 50.0
+    if above:
+        nearest_resistance = above[0][2]
+        if nearest_resistance <= 1.0:
+            resistance_penalty = 18.0
+        elif nearest_resistance <= 2.5:
+            resistance_penalty = 10.0
+        elif nearest_resistance <= 4.0:
+            resistance_penalty = 5.0
+    breadth_bonus = min(sum(1 for _, _, dist in levels if dist < 0) * 4.0, 16.0)
+    score = round(_clamp(support_score + breadth_bonus - resistance_penalty), 1)
+
+    support_txt = below[0][0] if below else "none nearby"
+    resist_txt = above[0][0] if above else "none nearby"
+    return score, f"Nearest AVWAP support {support_txt}; nearest overhead AVWAP {resist_txt}"
 
 
 def _score_relative_strength(rs: dict) -> tuple[float, str]:

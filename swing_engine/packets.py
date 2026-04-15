@@ -60,31 +60,9 @@ def build_packet(symbol: str, data: dict,
     # --- AVWAPs ---
     avwap_map = feat.build_avwap_map(daily, symbol) if not daily.empty else {}
     reference_levels = feat.get_prior_session_levels(daily) if not daily.empty else {}
-
-    # Auto-anchors from recent high/low (60-day)
     if not daily.empty:
         rh = feat.find_recent_high(daily, lookback=60)
         rl = feat.find_recent_low(daily, lookback=60)
-        if rh:
-            val = feat.calc_avwap(daily, rh["date"])
-            if val:
-                avwap_map["recent_high_60d"] = {"anchor_date": rh["date"], "avwap": val}
-        if rl:
-            val = feat.calc_avwap(daily, rl["date"])
-            if val:
-                avwap_map["recent_low_60d"] = {"anchor_date": rl["date"], "avwap": val}
-
-        # 52-week high/low anchors
-        rh52 = feat.find_recent_high(daily, lookback=252)
-        rl52 = feat.find_recent_low(daily, lookback=252)
-        if rh52 and rh52.get("date") != rh.get("date"):
-            val = feat.calc_avwap(daily, rh52["date"])
-            if val:
-                avwap_map["52wk_high"] = {"anchor_date": rh52["date"], "avwap": val}
-        if rl52 and rl52.get("date") != rl.get("date"):
-            val = feat.calc_avwap(daily, rl52["date"])
-            if val:
-                avwap_map["52wk_low"] = {"anchor_date": rl52["date"], "avwap": val}
     else:
         rh, rl = {}, {}
 
@@ -105,6 +83,7 @@ def build_packet(symbol: str, data: dict,
 
     # --- Confluence ---
     price = daily_state.get("last_close", 0)
+    avwap_context = feat.summarize_avwap_context(price, avwap_map)
     confluence = feat.calc_confluence(
         price, daily_state, pivots, avwap_map, reference_levels=reference_levels
     )
@@ -168,6 +147,7 @@ def build_packet(symbol: str, data: dict,
         "intraday": intra_state,
         "pivots": pivots,
         "avwap_map": avwap_map,
+        "avwap_context": avwap_context,
         "reference_levels": reference_levels,
         "session_vwaps": session_vwaps,
         "relative_strength": rs,

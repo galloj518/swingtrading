@@ -218,6 +218,7 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     intra = pkt.get("intraday", {})
     pivots = pkt.get("pivots", {})
     avwaps = pkt.get("avwap_map", {})
+    avwap_context = pkt.get("avwap_context", {})
     refs = pkt.get("reference_levels", {})
     session_vwaps = pkt.get("session_vwaps", {})
     rs = pkt.get("relative_strength", {})
@@ -430,6 +431,9 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
         </div>
         <div style="color:#7f8ea3;margin-top:4px;font-size:0.8em;">
           {sc.get('confidence_detail', '')}
+        </div>
+        <div style="color:#9fb3c8;margin-top:4px;font-size:0.82em;">
+          AVWAP control: <span style="color:#fff;">{avwap_context.get('detail', '--')}</span>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
           <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">

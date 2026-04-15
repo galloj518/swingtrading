@@ -66,6 +66,7 @@ def generate_narrative(packet: dict, regime: dict) -> Optional[str]:
     setup = packet.get("setup", {})
     pivots = packet.get("pivots", {})
     avwaps = packet.get("avwap_map", {})
+    avwap_context = packet.get("avwap_context", {})
     session_v = packet.get("session_vwaps", {})
     rs = packet.get("relative_strength", {})
     rh = packet.get("recent_high", {})
@@ -95,6 +96,7 @@ def generate_narrative(packet: dict, regime: dict) -> Optional[str]:
         "entry_zone": ez,
         "pivots": pivots,
         "avwaps_near_price": avwap_summary,
+        "avwap_context": avwap_context,
         "session_vwap": session_v,
         "daily_ma": {
             "sma5": d.get("sma_5"), "sma5_dir": d.get("sma_5_direction"),
