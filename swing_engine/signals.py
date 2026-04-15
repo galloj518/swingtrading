@@ -85,6 +85,14 @@ def _set_signal_value(df: pd.DataFrame, idx, column: str, value) -> None:
         else:
             df.at[idx, column] = bool(value)
         return
+    if isinstance(value, str):
+        if column not in df.columns:
+            df[column] = pd.Series(dtype="object")
+        elif not (pd.api.types.is_object_dtype(df[column]) or pd.api.types.is_string_dtype(df[column])):
+            df[column] = df[column].astype("object")
+    elif pd.isna(value):
+        if column not in df.columns:
+            df[column] = pd.Series(dtype="object")
     df.at[idx, column] = value
 
 
