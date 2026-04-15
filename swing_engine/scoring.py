@@ -421,6 +421,11 @@ def _score_continuation_pattern(continuation_pattern: dict) -> tuple[float, str]
     return score, continuation_pattern.get("detail", f"Continuation pattern {score:.0f}/100")
 
 
+def _score_institutional_sponsorship(institutional_sponsorship: dict) -> tuple[float, str]:
+    score = _safe_float(institutional_sponsorship.get("score"), 55.0)
+    return score, institutional_sponsorship.get("detail", f"Sponsorship {score:.0f}/100")
+
+
 def _score_weekly_close_quality(weekly_close_quality: dict) -> tuple[float, str]:
     score = _safe_float(weekly_close_quality.get("score"), 55.0)
     return score, weekly_close_quality.get("detail", f"Weekly close quality {score:.0f}/100")
@@ -477,6 +482,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
                         breakout_integrity: dict | None = None,
                         base_quality: dict | None = None,
                         continuation_pattern: dict | None = None,
+                        institutional_sponsorship: dict | None = None,
                         weekly_close_quality: dict | None = None,
                         failed_breakout_memory: dict | None = None,
                         catalyst_context: dict | None = None,
@@ -494,6 +500,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     breakout_integrity = breakout_integrity or {}
     base_quality = base_quality or {}
     continuation_pattern = continuation_pattern or {}
+    institutional_sponsorship = institutional_sponsorship or {}
     weekly_close_quality = weekly_close_quality or {}
     failed_breakout_memory = failed_breakout_memory or {}
     catalyst_context = catalyst_context or {}
@@ -513,6 +520,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     breakout_score, breakout_reason = _score_breakout_integrity(breakout_integrity)
     base_score, base_reason = _score_base_quality(base_quality)
     continuation_score, continuation_reason = _score_continuation_pattern(continuation_pattern)
+    sponsorship_score, sponsorship_reason = _score_institutional_sponsorship(institutional_sponsorship)
     weekly_close_score, weekly_close_reason = _score_weekly_close_quality(weekly_close_quality)
     failed_memory_score, failed_memory_reason = _score_failed_breakout_memory(failed_breakout_memory)
     catalyst_score, catalyst_reason = _score_catalyst_context(catalyst_context)
@@ -532,6 +540,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
         0.07 * chart_score +
         0.07 * base_score +
         0.05 * continuation_score +
+        0.05 * sponsorship_score +
         0.04 * overhead_score +
         0.04 * breakout_score +
         0.06 * group_score +
@@ -553,6 +562,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
         chart_reason,
         base_reason,
         continuation_reason,
+        sponsorship_reason,
         overhead_reason,
         breakout_reason,
         group_reason,
@@ -580,6 +590,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
             "chart_quality": chart_score,
             "base_quality": base_score,
             "continuation_pattern": continuation_score,
+            "institutional_sponsorship": sponsorship_score,
             "overhead_supply": overhead_score,
             "breakout_integrity": breakout_score,
             "group_strength": group_score,
@@ -732,6 +743,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  breakout_integrity: dict | None = None,
                  base_quality: dict | None = None,
                  continuation_pattern: dict | None = None,
+                 institutional_sponsorship: dict | None = None,
                  weekly_close_quality: dict | None = None,
                  failed_breakout_memory: dict | None = None,
                  catalyst_context: dict | None = None,
@@ -832,6 +844,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         breakout_integrity=breakout_integrity,
         base_quality=base_quality,
         continuation_pattern=continuation_pattern,
+        institutional_sponsorship=institutional_sponsorship,
         weekly_close_quality=weekly_close_quality,
         failed_breakout_memory=failed_breakout_memory,
         catalyst_context=catalyst_context,
@@ -860,6 +873,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     chart_score = _safe_float(idea["factors"].get("chart_quality"), 50.0)
     base_score = _safe_float(idea["factors"].get("base_quality"), 55.0)
     continuation_score = _safe_float(idea["factors"].get("continuation_pattern"), 55.0)
+    sponsorship_score = _safe_float(idea["factors"].get("institutional_sponsorship"), 55.0)
     overhead_score = _safe_float(idea["factors"].get("overhead_supply"), 50.0)
     breakout_score = _safe_float(idea["factors"].get("breakout_integrity"), 55.0)
     group_score = _safe_float(idea["factors"].get("group_strength"), 55.0)
@@ -911,6 +925,14 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     if group_score < 40:
         idea_score = min(idea_score, 60)
         adjustment_notes.append("Idea capped at 60: peer group is not confirming")
+
+    if sponsorship_score < 35:
+        idea_score = min(idea_score, 56)
+        timing_score = min(timing_score, 58)
+        adjustment_notes.append("Idea/timing capped: sponsorship quality is weak")
+    elif sponsorship_score >= 78 and continuation_score >= 70:
+        idea_score = max(idea_score, min(90.0, idea_score + 3.0))
+        adjustment_notes.append("Idea boosted: accumulation and continuation are aligned")
 
     if data_quality_score < 45:
         idea_score = min(idea_score, 50)

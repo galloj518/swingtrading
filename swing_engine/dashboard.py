@@ -240,6 +240,7 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     breakout_integrity = pkt.get("breakout_integrity", {})
     base_quality = pkt.get("base_quality", {})
     continuation_pattern = pkt.get("continuation_pattern", {})
+    institutional_sponsorship = pkt.get("institutional_sponsorship", {})
     weekly_close_quality = pkt.get("weekly_close_quality", {})
     failed_breakout_memory = pkt.get("failed_breakout_memory", {})
     catalyst_context = pkt.get("catalyst_context", {})
@@ -473,6 +474,11 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             <div style="color:#93c5fd;font-size:0.74em;letter-spacing:0.08em;">CONTINUATION</div>
             <div style="color:#fff;font-weight:700;">{_fmt(continuation_pattern.get('score'), 1)}/100</div>
             <div style="color:#7f8ea3;font-size:0.76em;">{continuation_pattern.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#fca5a5;font-size:0.74em;letter-spacing:0.08em;">SPONSORSHIP</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(institutional_sponsorship.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{institutional_sponsorship.get('detail', '--')}</div>
           </div>
           <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
             <div style="color:#fcd34d;font-size:0.74em;letter-spacing:0.08em;">GROUP STRENGTH</div>

@@ -762,6 +762,72 @@ def assess_continuation_pattern(daily_df: pd.DataFrame, weekly_df: pd.DataFrame)
     }
 
 
+def assess_institutional_sponsorship(daily_df: pd.DataFrame) -> dict:
+    """
+    Approximate institutional demand by measuring accumulation vs distribution,
+    up/down volume quality, and where stocks are closing in their daily ranges.
+    """
+    if daily_df.empty or len(daily_df) < 25:
+        return {
+            "score": 55.0,
+            "accumulation_days": 0,
+            "distribution_days": 0,
+            "up_down_volume_ratio": None,
+            "detail": "Sponsorship quality unavailable",
+        }
+
+    df = daily_df.copy()
+    recent = df.iloc[-20:].copy()
+    recent["prev_close"] = recent["close"].shift(1)
+    recent["prev_volume"] = recent["volume"].shift(1)
+    recent["clv"] = ((recent["close"] - recent["low"]) - (recent["high"] - recent["close"])) / (
+        (recent["high"] - recent["low"]).replace(0, np.nan)
+    )
+    recent["clv"] = recent["clv"].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+
+    accumulation = recent[
+        (recent["close"] > recent["prev_close"]) &
+        (recent["volume"] > recent["prev_volume"]) &
+        (recent["clv"] > 0.15)
+    ]
+    distribution = recent[
+        (recent["close"] < recent["prev_close"]) &
+        (recent["volume"] > recent["prev_volume"]) &
+        (recent["clv"] < -0.15)
+    ]
+
+    up_days = recent[recent["close"] > recent["prev_close"]]
+    down_days = recent[recent["close"] < recent["prev_close"]]
+    up_vol = float(up_days["volume"].mean()) if not up_days.empty else 0.0
+    down_vol = float(down_days["volume"].mean()) if not down_days.empty else 0.0
+    up_down_ratio = (up_vol / down_vol) if down_vol else (1.5 if up_vol else 1.0)
+    ratio_score = 100.0 * max(0.0, min((up_down_ratio - 0.75) / 0.85, 1.0))
+
+    acc_count = int(len(accumulation))
+    dist_count = int(len(distribution))
+    acc_score = 100.0 * max(0.0, min((acc_count - dist_count + 3.0) / 8.0, 1.0))
+
+    avg_clv = float(recent["clv"].mean())
+    clv_score = 100.0 * max(0.0, min((avg_clv + 0.35) / 0.70, 1.0))
+
+    score = float(round(
+        max(0.0, min(100.0, 0.40 * acc_score + 0.35 * ratio_score + 0.25 * clv_score)),
+        1,
+    ))
+
+    return {
+        "score": score,
+        "accumulation_days": acc_count,
+        "distribution_days": dist_count,
+        "up_down_volume_ratio": round(up_down_ratio, 2),
+        "avg_close_location": round(avg_clv, 2),
+        "detail": (
+            f"Acc/Dist {acc_count}/{dist_count}, up/down volume {up_down_ratio:.2f}x, "
+            f"avg close location {avg_clv:.2f}"
+        ),
+    }
+
+
 def assess_weekly_close_quality(weekly_df: pd.DataFrame) -> dict:
     """
     Strong swing names tend to close in the upper portion of their weekly range.
