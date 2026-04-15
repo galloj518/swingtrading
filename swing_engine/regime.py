@@ -1,8 +1,13 @@
 """
 Deterministic Market Regime Model.
 
-Classifies market regime from benchmark data using price structure only.
-No LLM involved — same inputs always produce same output.
+Two-layer design:
+  Layer 1: Price-structure regime (original) — SPY/QQQ/SOXX/DIA MA signals.
+  Layer 2: Macro overlay — VIX term structure, credit spreads, yield curve,
+           options skew. Modulates risk_appetite without overriding the
+           price-structure label.
+
+Same inputs always produce same output (no LLM, no randomness).
 """
 from typing import Optional
 
@@ -23,9 +28,92 @@ def _leadership_score(state: dict) -> float:
     return score
 
 
+def _calc_macro_overlay(macro_signals: dict) -> dict:
+    """
+    Convert macro indicator signals into a stress score and an appetite modifier.
+
+    Stress score (0-100):
+        0-20  → appetite_modifier = "upgrade"   (unusually benign conditions)
+        20-50 → appetite_modifier = "neutral"   (normal background risk)
+        50+   → appetite_modifier = "downgrade" (macro headwinds present)
+
+    Components and their max stress contributions:
+        Term structure inversion (VIX3M/VIX < 0.95):  +25
+        Credit spread stress (HYG-LQD 20d < -2%):     +20
+        Yield curve inversion:                         +15
+        Elevated skew (SKEW > 140):                    +10
+        Missing / unknown macro data:                   +5  (uncertainty premium)
+    """
+    from .constants import ThresholdRegistry as TR
+
+    stress = 0.0
+    detail = []
+
+    term_ratio = macro_signals.get("vix_term_structure")
+    critical_data_missing = False
+    if term_ratio is not None:
+        if term_ratio < TR.MACRO_STRESS_CONTANGO_INVERSION:
+            stress += 25.0
+            detail.append(f"VIX term structure inverted (ratio={term_ratio:.3f})")
+        elif term_ratio < 1.0:
+            stress += 10.0
+            detail.append(f"VIX term structure flat (ratio={term_ratio:.3f})")
+    else:
+        stress += 5.0
+        critical_data_missing = True
+        detail.append("VIX term structure unavailable")
+
+    credit = macro_signals.get("credit_signal")
+    spread = macro_signals.get("hyg_lqd_spread_20d")
+    if credit == "stressed":
+        stress += 20.0
+        detail.append(f"Credit spreads stressed (HYG-LQD={spread:.1f}%)")
+    elif credit == "widening":
+        stress += 10.0
+        detail.append(f"Credit spreads widening (HYG-LQD={spread:.1f}%)")
+    elif credit == "unknown" or credit is None:
+        stress += 5.0
+        critical_data_missing = True
+        detail.append("Credit spread data unavailable")
+
+    if macro_signals.get("curve_inverted"):
+        stress += 15.0
+        spread_val = macro_signals.get("yield_curve_spread", "?")
+        detail.append(f"Yield curve inverted ({spread_val}%)")
+
+    if macro_signals.get("skew_elevated"):
+        stress += 10.0
+        skew = macro_signals.get("skew_level", "?")
+        detail.append(f"Options skew elevated (SKEW={skew})")
+
+    stress = min(100.0, stress)
+
+    if critical_data_missing:
+        stress = max(stress, TR.MACRO_UPGRADE_THRESHOLD)
+        detail.append("Macro overlay held neutral due to incomplete data")
+
+    if stress < TR.MACRO_UPGRADE_THRESHOLD:
+        modifier = "upgrade"
+    elif stress < TR.MACRO_DOWNGRADE_THRESHOLD:
+        modifier = "neutral"
+    else:
+        modifier = "downgrade"
+
+    return {
+        "macro_stress_score": round(stress, 1),
+        "appetite_modifier": modifier,
+        "macro_detail": detail,
+        "vix_term_structure": term_ratio,
+        "credit_signal": credit,
+        "curve_inverted": macro_signals.get("curve_inverted"),
+        "skew_elevated": macro_signals.get("skew_elevated"),
+    }
+
+
 def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
                 vix_close: Optional[float] = None,
-                event_risk: dict = None) -> dict:
+                event_risk: dict = None,
+                macro_signals: Optional[dict] = None) -> dict:
     """
     Calculate market regime from benchmark MA states.
 
@@ -89,7 +177,7 @@ def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
     semi_leading = soxx_leadership >= qqq_leadership - 2.0 and soxx.get("close_above_sma_50", False)
     industrial_confirm = dia.get("close_above_sma_50", False) and _leadership_score(dia) >= 35.0
 
-    # Risk appetite
+    # Layer 1: price-structure risk appetite
     er = event_risk or {}
     if er.get("high_risk_imminent"):
         risk_appetite = "defensive"
@@ -102,6 +190,18 @@ def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
     else:
         risk_appetite = "full"
 
+    # Layer 2: macro overlay — modulate risk_appetite without changing regime label
+    macro_overlay = _calc_macro_overlay(macro_signals or {})
+    modifier = macro_overlay["appetite_modifier"]
+
+    _appetite_order = ["defensive", "minimal", "reduced", "moderate", "full"]
+    if risk_appetite != "defensive":  # never upgrade past defensive
+        idx = _appetite_order.index(risk_appetite)
+        if modifier == "downgrade" and idx > 0:
+            risk_appetite = _appetite_order[idx - 1]
+        elif modifier == "upgrade" and idx < len(_appetite_order) - 1:
+            risk_appetite = _appetite_order[idx + 1]
+
     # Swing bias
     if regime in ("bullish", "lean_bullish") and risk_appetite in ("full", "moderate"):
         swing_bias = "long"
@@ -110,7 +210,7 @@ def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
     else:
         swing_bias = "neutral"
 
-    # Caution flags
+    # Caution flags (price-structure)
     flags = []
     if vix_ctx in ("fear", "extreme_fear"):
         flags.append(f"VIX elevated at {vix:.0f}")
@@ -124,6 +224,11 @@ def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
         flags.append("Macro event imminent")
     if spy.get("ma_stack") == "bearish":
         flags.append("SPY MA stack bearish")
+
+    # Macro overlay flags
+    macro_flags = macro_overlay.get("macro_detail", [])
+    if macro_overlay["macro_stress_score"] >= 50:
+        flags.extend(macro_flags)
 
     return {
         "regime": regime,
@@ -144,6 +249,7 @@ def calc_regime(spy: dict, qqq: dict, soxx: dict, dia: dict,
             "soxx": round(soxx_leadership, 1),
             "dia": round(_leadership_score(dia), 1),
         },
+        "macro_overlay": macro_overlay,
     }
 
 
@@ -156,9 +262,13 @@ def regime_summary_text(regime: dict) -> str:
     total = regime["total_signals"]
     vix = regime.get("vix_context", "?")
 
-    line = f"{r} ({bull}/{total}) | Bias: {bias} | Risk: {appetite} | VIX: {vix}"
+    macro = regime.get("macro_overlay", {})
+    stress = macro.get("macro_stress_score")
+    stress_str = f" | Macro stress: {stress:.0f}/100" if stress is not None else ""
+
+    line = f"{r} ({bull}/{total}) | Bias: {bias} | Risk: {appetite} | VIX: {vix}{stress_str}"
 
     flags = regime.get("caution_flags", [])
     if flags:
-        line += f" | CAUTION: {'; '.join(flags)}"
+        line += f" | CAUTION: {'; '.join(flags[:2])}"  # cap at 2 for readability
     return line

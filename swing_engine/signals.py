@@ -23,6 +23,7 @@ SIGNAL_COLUMNS = [
     "weekly_gate", "daily_gate", "entry_low", "entry_high", "stop",
     "target_1", "target_2", "price_at_signal", "atr", "rs_20d",
     "regime", "event_risk", "rvol",
+    "slippage_est_bps", "cost_dollars_est", "net_rr_t1_est",
     # Outcome fields (backfilled later)
     "triggered", "trigger_date", "trigger_price",
     "fwd_1d_ret", "fwd_3d_ret", "fwd_5d_ret",
@@ -322,6 +323,10 @@ def log_signal(packet: dict, regime_label: str = "") -> None:
         "regime": regime_label,
         "event_risk": packet["events"].get("high_risk_imminent", False),
         "rvol": packet["daily"].get("rvol"),
+        # Cost model (from position_sizing sub-dict)
+        "slippage_est_bps": (packet.get("position_sizing") or {}).get("costs", {}).get("round_trip_bps"),
+        "cost_dollars_est": (packet.get("position_sizing") or {}).get("costs", {}).get("total_cost_dollars"),
+        "net_rr_t1_est": (packet.get("position_sizing") or {}).get("costs", {}).get("net_rr_t1"),
         # Outcomes left blank
         "triggered": None, "trigger_date": None, "trigger_price": None,
         "fwd_1d_ret": None, "fwd_3d_ret": None, "fwd_5d_ret": None,

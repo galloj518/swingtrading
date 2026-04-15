@@ -1,9 +1,17 @@
 """
-Position sizing with correlation group risk limits.
+Position sizing with dynamic correlation group risk limits.
 
-Prevents over-concentration in correlated names.
+Uses rolling pairwise return correlations (via correlation.py) when
+USE_DYNAMIC_CORRELATION=True. Falls back to static group membership.
+Also computes net-of-cost position economics via costs.py.
 """
+from __future__ import annotations
+from typing import Optional
+
+import pandas as pd
+
 from . import config as cfg
+from . import costs as cost_model
 
 
 def get_group(symbol: str) -> str:
@@ -19,7 +27,11 @@ def calc_position_size(entry: float, stop: float, symbol: str = "",
                        leverage: float = 1.0,
                        avg_volume: float = 0.0,
                        avg_dollar_volume: float = 0.0,
-                       rvol: float = 1.0) -> dict:
+                       rvol: float = 1.0,
+                       corr_matrix: Optional[pd.DataFrame] = None,
+                       open_positions: Optional[dict] = None,
+                       target_1: Optional[float] = None,
+                       target_2: Optional[float] = None) -> dict:
     """
     Calculate position size based on risk parameters and group limits.
 
@@ -37,10 +49,17 @@ def calc_position_size(entry: float, stop: float, symbol: str = "",
     # Account risk limit
     max_risk = cfg.ACCOUNT_SIZE * (cfg.MAX_RISK_PCT / 100)
 
-    # Group risk limit
+    # Group risk limit — dynamic correlation if available, else static
     group = get_group(symbol)
     max_group_risk = cfg.ACCOUNT_SIZE * (cfg.MAX_GROUP_RISK_PCT / 100)
-    remaining_group_risk = max(0, max_group_risk - existing_group_risk)
+
+    if getattr(cfg, "USE_DYNAMIC_CORRELATION", False) and corr_matrix is not None and open_positions:
+        from . import correlation as corr_mod
+        correlated_risk = corr_mod.calc_dynamic_group_risk(symbol, open_positions, corr_matrix)
+    else:
+        correlated_risk = existing_group_risk
+
+    remaining_group_risk = max(0, max_group_risk - correlated_risk)
 
     # Use the tighter constraint
     effective_max_risk = min(max_risk, remaining_group_risk)
@@ -82,6 +101,21 @@ def calc_position_size(entry: float, stop: float, symbol: str = "",
 
     actual_risk = round(shares * risk_per_share, 2)
 
+    # Execution cost model
+    costs = {}
+    if shares > 0 and avg_dollar_volume > 0:
+        try:
+            costs = cost_model.calc_round_trip_cost(
+                entry=entry,
+                shares=shares,
+                avg_dollar_volume=avg_dollar_volume,
+                stop=stop,
+                target_1=target_1,
+                target_2=target_2,
+            )
+        except Exception:
+            pass
+
     return {
         "shares": shares,
         "base_shares": raw_shares,
@@ -90,17 +124,18 @@ def calc_position_size(entry: float, stop: float, symbol: str = "",
         "dollar_exposure": round(shares * entry, 2),
         "pct_of_account": round(shares * entry / cfg.ACCOUNT_SIZE * 100, 1),
         "group": group,
-        "group_risk_used": round(existing_group_risk + actual_risk, 2),
-        "group_risk_remaining": round(max_group_risk - existing_group_risk - actual_risk, 2),
+        "group_risk_used": round(correlated_risk + actual_risk, 2),
+        "group_risk_remaining": round(max_group_risk - correlated_risk - actual_risk, 2),
         "leverage": leverage,
         "avg_volume": round(avg_volume, 0) if avg_volume else 0,
         "avg_dollar_volume": round(avg_dollar_volume, 0) if avg_dollar_volume else 0,
         "rvol": round(rvol, 2) if rvol else 0,
         "liquidity_multiplier": round(liquidity_multiplier, 2),
         "liquidity_status": liquidity_status,
+        "costs": costs,
         "max_liquidity_shares": max_liquidity_shares,
         "note": " | ".join(filter(None, [
-            f"Group '{group}': ${existing_group_risk:.0f} existing risk" if existing_group_risk > 0 else "",
+            f"Group '{group}': ${correlated_risk:.0f} correlated risk" if correlated_risk > 0 else "",
             liquidity_note,
         ])),
     }

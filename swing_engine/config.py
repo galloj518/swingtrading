@@ -204,3 +204,79 @@ SIGNAL_EXPIRY_DAYS = 3
 SCHWAB_APP_KEY = os.environ.get("SCHWAB_APP_KEY", "")
 SCHWAB_APP_SECRET = os.environ.get("SCHWAB_APP_SECRET", "")
 SCHWAB_REFRESH_TOKEN = os.environ.get("SCHWAB_REFRESH_TOKEN", "")
+
+# =============================================================================
+# EXECUTION COST MODEL
+# =============================================================================
+COST_MODEL = {
+    "commission_per_share":   0.00,   # Schwab: zero stock commissions
+    "commission_per_trade":   0.00,   # Default equity workflow: no per-trade commission
+    "slippage_bps_liquid":    3,      # >$100M ADV names: ~3bps round-trip entry
+    "slippage_bps_semiliquid": 8,     # $25M-$100M ADV names
+    "slippage_bps_illiquid":  20,     # <$25M ADV (should be blocked anyway)
+    "spread_bps_liquid":      2,      # Bid-ask half-spread for liquid names
+    "spread_bps_semiliquid":  5,
+    "spread_bps_illiquid":    15,
+}
+
+# =============================================================================
+# ALERTS
+# =============================================================================
+ALERT_EMAIL_TO       = os.environ.get("ALERT_EMAIL_TO", "")
+ALERT_EMAIL_FROM     = os.environ.get("ALERT_EMAIL_FROM", "")
+ALERT_EMAIL_PASSWORD = os.environ.get("ALERT_EMAIL_PASSWORD", "")
+ALERT_EMAIL_SMTP     = os.environ.get("ALERT_EMAIL_SMTP", "smtp.gmail.com")
+ALERT_WEBHOOK_URL    = os.environ.get("ALERT_WEBHOOK_URL", "")  # Slack/Discord/Teams
+ALERT_MIN_SCORE      = 70        # Only alert on setups scoring >= this
+ALERT_ACTION_BIASES  = ("buy", "lean_buy")
+
+# =============================================================================
+# EARNINGS AUTO-FETCH
+# =============================================================================
+AUTO_FETCH_EARNINGS = True   # Set False to rely on manual EARNINGS_CALENDAR only
+
+# =============================================================================
+# MACRO SIGNAL TICKERS (for regime overlay)
+# =============================================================================
+MACRO_SIGNAL_TICKERS = {
+    "vix":   "^VIX",
+    "vix3m": "^VIX3M",
+    "hyg":   "HYG",
+    "lqd":   "LQD",
+    "irx":   "^IRX",
+    "tnx":   "^TNX",
+    "skew":  "^SKEW",
+}
+
+# =============================================================================
+# DYNAMIC CORRELATION
+# =============================================================================
+USE_DYNAMIC_CORRELATION   = True
+DYNAMIC_CORR_LOOKBACK     = 60    # trading days
+DYNAMIC_CORR_THRESHOLD    = 0.65  # correlation above which names share a risk bucket
+
+# =============================================================================
+# EXIT POLICY (matched to ThresholdRegistry — change there to override)
+# =============================================================================
+EXIT_POLICY = {
+    "trailing_stop_atr_mult":     1.5,
+    "partial_1_at_rr":            1.0,   # take 1/3 at 1R
+    "partial_2_at_rr":            2.0,   # take 1/3 at 2R
+    "trail_remaining_from_rr":    1.0,   # start trailing after 1R
+    "max_hold_days":              15,
+    "time_stop_below_entry_pct": -3.0,   # % loss threshold for time stop
+    "time_stop_trigger_days":     5,
+}
+
+# =============================================================================
+# BACKTESTING
+# =============================================================================
+BACKTEST_START_DATE                = "2023-01-01"
+WALK_FORWARD_IN_SAMPLE_MONTHS      = 12
+WALK_FORWARD_OUT_OF_SAMPLE_MONTHS  = 3
+WALK_FORWARD_STEP_MONTHS           = 3
+
+# =============================================================================
+# CALIBRATION
+# =============================================================================
+CALIBRATION_MIN_SAMPLES_WEIGHT = 6   # Minimum signals before evidence gets weight

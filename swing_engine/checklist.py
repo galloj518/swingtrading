@@ -31,8 +31,17 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
     data_quality = packet.get("data_quality", {})
     data_quality_score = float(data_quality.get("score", 0) or 0)
     idea_score = float(sc.get("idea_quality_score", sc.get("score", 0)) or 0)
+    timing_score = float(sc.get("entry_timing_score", sc.get("score", 0)) or 0)
+    confidence_score = float(sc.get("confidence_score", sc.get("confidence_adjusted_score", sc.get("score", 0))) or 0)
     tradeability = sc.get("tradeability", {})
     tradeability_score = float(tradeability.get("score", sc.get("score", 0)) or 0)
+    idea_factors = sc.get("idea_factors", {}) or {}
+    timing_factors = sc.get("timing_factors", {}) or {}
+    group_score = float(idea_factors.get("group_strength", 55) or 55)
+    rs_score = float(idea_factors.get("relative_strength", 50) or 50)
+    continuation_score = float(idea_factors.get("continuation_pattern", 55) or 55)
+    sponsorship_score = float(idea_factors.get("institutional_sponsorship", 55) or 55)
+    short_term_posture = float(timing_factors.get("short_term_posture", timing_score) or timing_score)
 
     failed_items = {
         c["item"] for c in (checks or []) if not c.get("passed", False)
@@ -58,18 +67,40 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             "actionable_now": False,
         }
 
+    institutional_ready = (
+        confidence_score >= 55 and
+        data_quality_score >= 60 and
+        group_score >= 45 and
+        rs_score >= 45
+    )
+
     if setup_type == "tight_continuation":
-        if tradeability_score >= 75:
+        if (
+            tradeability_score >= 82 and
+            idea_score >= 60 and
+            timing_score >= 72 and
+            short_term_posture >= 72 and
+            continuation_score >= 70 and
+            sponsorship_score >= 62 and
+            institutional_ready
+        ):
             return {
                 "label": "BUY NOW",
                 "detail": setup.get("trigger") or "Tight continuation is actionable now",
                 "rank": 0,
                 "actionable_now": True,
             }
+        if tradeability_score >= 58 and continuation_score >= 68 and short_term_posture >= 68:
+            return {
+                "label": "WATCH CONTINUATION",
+                "detail": "Strong continuation candidate, but still needs better confirmation",
+                "rank": 1,
+                "actionable_now": False,
+            }
         return {
-            "label": "WATCH BREAKOUT",
+            "label": "WAIT SETUP",
             "detail": setup.get("trigger") or "Continuation pattern is close but not ready",
-            "rank": 1,
+            "rank": 3,
             "actionable_now": False,
         }
 
@@ -90,6 +121,21 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
         }
 
     if setup_type in ("extended_wait", "above_zone_wait", "below_5dma_wait"):
+        if (
+            setup_type in ("extended_wait", "above_zone_wait") and
+            tradeability_score >= 52 and
+            continuation_score >= 70 and
+            sponsorship_score >= 60 and
+            short_term_posture >= 72 and
+            institutional_ready and
+            rs_score >= 55
+        ):
+            return {
+                "label": "WATCH CONTINUATION",
+                "detail": "Continuation is strong, but price is still extended above value",
+                "rank": 1,
+                "actionable_now": False,
+            }
         return {
             "label": "WAIT PULLBACK",
             "detail": setup.get("trigger") or "Price is extended above the zone",
@@ -97,10 +143,10 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             "actionable_now": False,
         }
 
-    if timing_failed:
+    if timing_failed or not institutional_ready:
         return {
             "label": "WAIT SETUP",
-            "detail": "Entry timing is not ready yet",
+            "detail": "Entry timing or confirmation quality is not ready yet",
             "rank": 3,
             "actionable_now": False,
         }

@@ -57,6 +57,9 @@ def initialize() -> None:
                 regime TEXT,
                 event_risk INTEGER,
                 rvol REAL,
+                slippage_est_bps REAL,
+                cost_dollars_est REAL,
+                net_rr_t1_est REAL,
                 triggered INTEGER,
                 trigger_date TEXT,
                 trigger_price REAL,
@@ -102,9 +105,34 @@ def initialize() -> None:
                 r_multiple REAL,
                 pnl_dollars REAL,
                 status TEXT NOT NULL DEFAULT 'open',
+                partial_1_taken INTEGER DEFAULT 0,
+                partial_2_taken INTEGER DEFAULT 0,
+                current_stop REAL,
+                trailing_stop REAL,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                snapshot_date TEXT NOT NULL,
+                open_positions INTEGER,
+                total_dollar_exposure REAL,
+                net_beta_exposure REAL,
+                net_beta_pct REAL,
+                portfolio_beta REAL,
+                open_risk_dollars REAL,
+                open_risk_pct REAL,
+                vix_1pt_impact_dollars REAL,
+                max_single_position_pct REAL,
+                largest_sector_exposure REAL,
+                largest_sector_pct REAL,
+                snapshot_json TEXT,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_portfolio_snapshots_date
+            ON portfolio_snapshots(snapshot_date);
 
             CREATE INDEX IF NOT EXISTS idx_signals_symbol_date
             ON signals(symbol, signal_date);
@@ -114,6 +142,7 @@ def initialize() -> None:
             """
         )
         _ensure_signal_columns(conn)
+        _ensure_trade_columns(conn)
 
     _INITIALIZED = True
     sync_csv_to_db()
@@ -124,16 +153,44 @@ def _now_iso() -> str:
 
 
 def _ensure_signal_columns(conn: sqlite3.Connection) -> None:
-    """Add new learning columns to an existing signals table."""
+    """Add any missing columns required by the current signals schema."""
     existing = {
         row["name"]
         for row in conn.execute("PRAGMA table_info(signals)").fetchall()
     }
     desired = {
+        "score": "REAL",
+        "quality": "TEXT",
         "idea_quality_score": "REAL",
         "idea_quality": "TEXT",
         "entry_timing_score": "REAL",
         "entry_timing": "TEXT",
+        "action_bias": "TEXT",
+        "setup_type": "TEXT",
+        "weekly_gate": "INTEGER",
+        "daily_gate": "INTEGER",
+        "entry_low": "REAL",
+        "entry_high": "REAL",
+        "stop": "REAL",
+        "target_1": "REAL",
+        "target_2": "REAL",
+        "price_at_signal": "REAL",
+        "atr": "REAL",
+        "rs_20d": "REAL",
+        "regime": "TEXT",
+        "event_risk": "INTEGER",
+        "rvol": "REAL",
+        "slippage_est_bps": "REAL",
+        "cost_dollars_est": "REAL",
+        "net_rr_t1_est": "REAL",
+        "triggered": "INTEGER",
+        "trigger_date": "TEXT",
+        "trigger_price": "REAL",
+        "fwd_1d_ret": "REAL",
+        "fwd_3d_ret": "REAL",
+        "fwd_5d_ret": "REAL",
+        "outcome_r": "REAL",
+        "outcome_status": "TEXT",
         "hit_target_1": "INTEGER",
         "hit_target_2": "INTEGER",
         "hit_pivot_r1": "INTEGER",
@@ -149,10 +206,40 @@ def _ensure_signal_columns(conn: sqlite3.Connection) -> None:
         "first_support": "TEXT",
         "max_favorable_excursion_pct": "REAL",
         "max_adverse_excursion_pct": "REAL",
+        "packet_json": "TEXT",
+        "created_at": "TEXT",
+        "updated_at": "TEXT",
     }
     for column, col_type in desired.items():
         if column not in existing:
             conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {col_type}")
+
+
+def _ensure_trade_columns(conn: sqlite3.Connection) -> None:
+    """Add new trade-management columns to an existing trades table."""
+    existing = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(trades)").fetchall()
+    }
+    desired = {
+        "partial_1_taken": "INTEGER DEFAULT 0",
+        "partial_2_taken": "INTEGER DEFAULT 0",
+        "current_stop": "REAL",
+        "trailing_stop": "REAL",
+    }
+    for column, col_type in desired.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE trades ADD COLUMN {column} {col_type}")
+
+    conn.execute(
+        """
+        UPDATE trades
+        SET
+            partial_1_taken = COALESCE(partial_1_taken, 0),
+            partial_2_taken = COALESCE(partial_2_taken, 0),
+            current_stop = COALESCE(current_stop, stop_price)
+        """
+    )
 
 
 def _coerce_bool(value):
@@ -214,6 +301,9 @@ def upsert_signal(row: dict, packet: dict = None) -> None:
         "regime": row.get("regime"),
         "event_risk": _coerce_bool(row.get("event_risk")),
         "rvol": _coerce_float(row.get("rvol")),
+        "slippage_est_bps": _coerce_float(row.get("slippage_est_bps")),
+        "cost_dollars_est": _coerce_float(row.get("cost_dollars_est")),
+        "net_rr_t1_est": _coerce_float(row.get("net_rr_t1_est")),
         "triggered": _coerce_bool(row.get("triggered")),
         "trigger_date": row.get("trigger_date"),
         "trigger_price": _coerce_float(row.get("trigger_price")),
@@ -276,6 +366,10 @@ def insert_trade(row: dict) -> None:
         "r_multiple": _coerce_float(row.get("r_multiple")),
         "pnl_dollars": _coerce_float(row.get("pnl_dollars")),
         "status": "closed" if row.get("exit_date") else "open",
+        "partial_1_taken": 0,
+        "partial_2_taken": 0,
+        "current_stop": _coerce_float(row.get("stop_price")),
+        "trailing_stop": None,
         "created_at": now,
         "updated_at": now,
     }
@@ -286,12 +380,14 @@ def insert_trade(row: dict) -> None:
             INSERT INTO trades (
                 open_date, symbol, action, entry_price, stop_price, shares,
                 reason, notes, exit_date, exit_price, exit_reason,
-                r_multiple, pnl_dollars, status, created_at, updated_at
+                r_multiple, pnl_dollars, status, partial_1_taken, partial_2_taken,
+                current_stop, trailing_stop, created_at, updated_at
             )
             VALUES (
                 :open_date, :symbol, :action, :entry_price, :stop_price, :shares,
                 :reason, :notes, :exit_date, :exit_price, :exit_reason,
-                :r_multiple, :pnl_dollars, :status, :created_at, :updated_at
+                :r_multiple, :pnl_dollars, :status, :partial_1_taken, :partial_2_taken,
+                :current_stop, :trailing_stop, :created_at, :updated_at
             )
             """,
             payload,
@@ -380,6 +476,80 @@ def sync_csv_to_db() -> None:
             if key in existing:
                 continue
             insert_trade(row)
+
+
+def get_open_trades() -> list[dict]:
+    """Return all open trades as a list of dicts."""
+    initialize()
+    with _connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM trades WHERE status = 'open' ORDER BY open_date ASC
+            """
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_trade_stop(trade_id: int, new_stop: float, partial_1: bool = None, partial_2: bool = None) -> bool:
+    """Update the trailing stop (and optionally partial-exit flags) for an open trade."""
+    initialize()
+    fields = ["current_stop = :stop", "trailing_stop = :stop", "updated_at = :ts"]
+    params: dict = {"id": trade_id, "stop": new_stop, "ts": _now_iso()}
+
+    if partial_1 is not None:
+        fields.append("partial_1_taken = :p1")
+        params["p1"] = int(partial_1)
+    if partial_2 is not None:
+        fields.append("partial_2_taken = :p2")
+        params["p2"] = int(partial_2)
+
+    with _connect() as conn:
+        conn.execute(
+            f"UPDATE trades SET {', '.join(fields)} WHERE id = :id",
+            params,
+        )
+    return True
+
+
+def save_portfolio_snapshot(exposure: dict) -> None:
+    """Persist a portfolio exposure snapshot for trend analysis."""
+    initialize()
+    import json as _json
+    now = _now_iso()
+    with _connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO portfolio_snapshots (
+                snapshot_date, open_positions, total_dollar_exposure,
+                net_beta_exposure, net_beta_pct, portfolio_beta,
+                open_risk_dollars, open_risk_pct, vix_1pt_impact_dollars,
+                max_single_position_pct, largest_sector_exposure,
+                largest_sector_pct, snapshot_json, created_at
+            ) VALUES (
+                :snapshot_date, :open_positions, :total_dollar_exposure,
+                :net_beta_exposure, :net_beta_pct, :portfolio_beta,
+                :open_risk_dollars, :open_risk_pct, :vix_1pt_impact_dollars,
+                :max_single_position_pct, :largest_sector_exposure,
+                :largest_sector_pct, :snapshot_json, :created_at
+            )
+            """,
+            {
+                "snapshot_date": exposure.get("snapshot_date"),
+                "open_positions": exposure.get("open_positions"),
+                "total_dollar_exposure": exposure.get("total_dollar_exposure"),
+                "net_beta_exposure": exposure.get("net_beta_exposure"),
+                "net_beta_pct": exposure.get("net_beta_pct"),
+                "portfolio_beta": exposure.get("portfolio_beta"),
+                "open_risk_dollars": exposure.get("open_risk_dollars"),
+                "open_risk_pct": exposure.get("open_risk_pct"),
+                "vix_1pt_impact_dollars": exposure.get("vix_1pt_impact_dollars"),
+                "max_single_position_pct": exposure.get("max_single_position_pct"),
+                "largest_sector_exposure": exposure.get("largest_sector_exposure"),
+                "largest_sector_pct": exposure.get("largest_sector_pct"),
+                "snapshot_json": _json.dumps(exposure, default=str),
+                "created_at": now,
+            },
+        )
 
 
 def load_signal_packet(signal_date: str, symbol: str):
