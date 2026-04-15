@@ -242,6 +242,29 @@ def save_packet(symbol: str, packet: dict) -> Path:
     return path
 
 
+def _refresh_trade_plan(packet: dict) -> None:
+    """Keep setup, entry zone, and tradeability aligned after rescoring."""
+    entry_zone = scoring.calc_entry_zone(packet.get("daily", {}), pivots=packet.get("pivots", {}))
+    packet["entry_zone"] = entry_zone
+    packet["setup"] = scoring.classify_setup(
+        packet.get("daily", {}),
+        packet.get("score", {}).get("score", 0),
+        packet.get("score", {}).get("action_bias", ""),
+        packet.get("recent_high", {}),
+        packet.get("daily", {}).get("last_close", 0),
+        entry_zone=entry_zone,
+        pivots=packet.get("pivots", {}),
+        event_risk=packet.get("events", {}),
+        weekly_state=packet.get("weekly", {}),
+    )
+    packet.setdefault("score", {})["tradeability"] = scoring.calc_tradeability(
+        packet.get("score", {}),
+        entry_zone,
+        packet.get("setup", {}),
+        data_quality=packet.get("data_quality", {}),
+    )
+
+
 def enrich_group_strength(packets: dict, regime: dict | None = None) -> None:
     """
     Second-pass enrichment once all packets are built, so each symbol can see
@@ -318,6 +341,7 @@ def enrich_group_strength(packets: dict, regime: dict | None = None) -> None:
             data_quality=packet.get("data_quality"),
             group_strength=packet.get("group_strength"),
         )
+        _refresh_trade_plan(packet)
 
 
 def enrich_calibration(packets: dict, calibration_profile: dict, regime: dict | None = None) -> None:
@@ -360,3 +384,4 @@ def enrich_calibration(packets: dict, calibration_profile: dict, regime: dict | 
             group_strength=packet.get("group_strength"),
             calibration_context=packet.get("calibration"),
         )
+        _refresh_trade_plan(packet)

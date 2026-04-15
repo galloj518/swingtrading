@@ -78,8 +78,8 @@ DOWNLOAD_SYMBOL_OVERRIDES = {
 # =============================================================================
 # INDICATOR PARAMETERS
 # =============================================================================
-DAILY_SMA_PERIODS = [5, 10, 20, 50, 200]
-WEEKLY_SMA_PERIODS = [5, 10, 20]
+DAILY_SMA_PERIODS = [5, 10, 20, 50, 150, 200]
+WEEKLY_SMA_PERIODS = [5, 10, 20, 30]
 INTRA_SMA_PERIODS = [10, 20, 50]
 ATR_PERIOD = 14
 RVOL_PERIOD = 20

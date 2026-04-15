@@ -66,7 +66,7 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             "actionable_now": False,
         }
 
-    if setup_type in ("reclaim", "pullback_developing", "watch"):
+    if setup_type in ("reclaim", "pullback_developing", "watch", "below_10dma_wait"):
         return {
             "label": "WAIT SETUP",
             "detail": setup.get("trigger") or "Pattern is still developing",
@@ -74,7 +74,7 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             "actionable_now": False,
         }
 
-    if setup_type in ("extended_wait", "above_zone_wait"):
+    if setup_type in ("extended_wait", "above_zone_wait", "below_5dma_wait"):
         return {
             "label": "WAIT PULLBACK",
             "detail": setup.get("trigger") or "Price is extended above the zone",
@@ -176,7 +176,8 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
         "item": "Setup",
         "value": f"{setup['type']} - {setup['description']}",
         "passed": setup["type"] not in (
-            "no_setup", "extended", "extended_wait", "above_zone_wait", "watch"
+            "no_setup", "extended", "extended_wait", "above_zone_wait", "watch",
+            "below_5dma_wait", "below_10dma_wait"
         ),
     })
 

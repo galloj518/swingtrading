@@ -18,29 +18,74 @@ from . import config as cfg
 
 def _check_weekly_gate(weekly_state: dict) -> dict:
     """
-    Gate 1: Weekly trend must show minimum constructive structure.
-    Requires: close above weekly 20 SMA.
+    Gate 1: Weekly trend must show constructive intermediate structure.
+
+    Institutional swing longs should not require perfection, but they should
+    show sponsorship on the weekly 10/20 structure and a non-broken trend.
     """
-    key = cfg.GATE_WEEKLY_REQUIRES  # "close_above_sma_20"
-    passed = weekly_state.get(key, False)
+    close_above_10 = bool(weekly_state.get("close_above_sma_10"))
+    close_above_20 = bool(weekly_state.get("close_above_sma_20"))
+    close_above_30 = bool(weekly_state.get("close_above_sma_30", close_above_20))
+    sma10_above_20 = bool(weekly_state.get("sma10_above_sma20"))
+    sma20_above_30 = bool(weekly_state.get("sma20_above_sma30", True))
+    sma10_dir = weekly_state.get("sma_10_direction", "unknown")
+    sma20_dir = weekly_state.get("sma_20_direction", "unknown")
+
+    passed = (
+        (
+            close_above_10 and close_above_20 and
+            sma10_dir != "falling" and sma20_dir != "falling"
+        ) or
+        (
+            close_above_20 and close_above_30 and
+            sma10_above_20 and sma20_above_30 and
+            sma20_dir == "rising"
+        )
+    )
+
+    detail = (
+        "Weekly 10/20 structure constructive"
+        if passed else
+        "FAILED: weekly 10/20 structure not constructive"
+    )
     return {
         "passed": bool(passed),
-        "check": key,
-        "detail": "Weekly close above 20 SMA" if passed else "FAILED: below weekly 20 SMA",
+        "check": cfg.GATE_WEEKLY_REQUIRES,
+        "detail": detail,
     }
 
 
 def _check_daily_gate(daily_state: dict) -> dict:
     """
-    Gate 2: Daily trend must show minimum structure.
-    Requires: close above daily 50 SMA.
+    Gate 2: Daily trend must show a usable swing-trend backbone.
+
+    We allow either a mature trend template or an early constructive trend
+    where price is reclaiming and holding the 10/20 area above a supportive 50.
     """
-    key = cfg.GATE_DAILY_REQUIRES  # "close_above_sma_50"
-    passed = daily_state.get(key, False)
+    close_above_10 = bool(daily_state.get("close_above_sma_10"))
+    close_above_20 = bool(daily_state.get("close_above_sma_20"))
+    close_above_50 = bool(daily_state.get("close_above_sma_50"))
+    sma20_above_50 = bool(daily_state.get("sma20_above_sma50"))
+    sma20_dir = daily_state.get("sma_20_direction", "unknown")
+    sma50_dir = daily_state.get("sma_50_direction", "unknown")
+
+    passed = (
+        close_above_20 and close_above_50 and
+        sma20_dir != "falling" and sma50_dir != "falling"
+    ) or (
+        close_above_10 and close_above_20 and
+        sma20_above_50 and sma20_dir == "rising"
+    )
+
+    detail = (
+        "Daily trend backbone constructive"
+        if passed else
+        "FAILED: daily 20/50 structure not constructive"
+    )
     return {
         "passed": bool(passed),
-        "check": key,
-        "detail": "Daily close above 50 SMA" if passed else "FAILED: below daily 50 SMA",
+        "check": cfg.GATE_DAILY_REQUIRES,
+        "detail": detail,
     }
 
 
@@ -85,6 +130,18 @@ def _stack_score(stack: str) -> float:
 
 def _direction_score(direction: str) -> float:
     return {"rising": 100.0, "flat": 55.0, "falling": 0.0}.get(direction, 50.0)
+
+
+def _bias_to_direction(bias: str) -> str:
+    return {
+        "will_rise": "rising",
+        "will_fall": "falling",
+        "flat": "flat",
+    }.get(bias, "unknown")
+
+
+def _tomorrow_bias_score(bias: str) -> float:
+    return _direction_score(_bias_to_direction(bias))
 
 
 def _bool_score(flag) -> float:
@@ -229,27 +286,43 @@ def _tradeability_label(score: float) -> str:
 
 
 def _score_trend_quality(state: dict, timeframe: str) -> tuple[float, str]:
-    """Collapse overlapping MA facts into a smaller structural factor."""
+    """Institutional trend template using fewer, more orthogonal MA factors."""
     if timeframe == "weekly":
         sponsorship = _avg([
+            _bool_score(state.get("close_above_sma_10")),
             _bool_score(state.get("close_above_sma_20")),
-            _bool_score(state.get("sma10_above_sma20")),
+            _bool_score(state.get("close_above_sma_30", state.get("close_above_sma_20"))),
         ])
-        slope = _direction_score(state.get("sma_20_direction", "unknown"))
-        stack = _stack_score(state.get("ma_stack", "unknown"))
-        score = 0.45 * stack + 0.35 * sponsorship + 0.20 * slope
+        alignment = _avg([
+            _bool_score(state.get("sma5_above_sma10")),
+            _bool_score(state.get("sma10_above_sma20")),
+            _bool_score(state.get("sma20_above_sma30", True)),
+        ])
+        slope = _avg([
+            _direction_score(state.get("sma_10_direction", "unknown")),
+            _direction_score(state.get("sma_20_direction", "unknown")),
+            _direction_score(state.get("sma_30_direction", "unknown")) if "sma_30" in state else 55.0,
+        ])
+        score = 0.38 * sponsorship + 0.34 * alignment + 0.28 * slope
     else:
         sponsorship = _avg([
             _bool_score(state.get("close_above_sma_20")),
             _bool_score(state.get("close_above_sma_50")),
+            _bool_score(state.get("close_above_sma_150", state.get("close_above_sma_50"))),
             _bool_score(state.get("close_above_sma_200")),
+        ])
+        alignment = _avg([
+            _bool_score(state.get("sma20_above_sma50")),
+            _bool_score(state.get("sma50_above_sma150", state.get("sma50_above_sma200"))),
+            _bool_score(state.get("sma150_above_sma200", True)),
         ])
         slope = _avg([
             _direction_score(state.get("sma_20_direction", "unknown")),
             _direction_score(state.get("sma_50_direction", "unknown")),
+            _direction_score(state.get("sma_150_direction", "unknown")) if "sma_150" in state else 55.0,
+            _direction_score(state.get("sma_200_direction", "unknown")),
         ])
-        stack = _stack_score(state.get("ma_stack", "unknown"))
-        score = 0.40 * stack + 0.35 * sponsorship + 0.25 * slope
+        score = 0.38 * sponsorship + 0.34 * alignment + 0.28 * slope
     score = round(score, 1)
     return score, f"{timeframe.capitalize()} trend {score:.0f}/100"
 
@@ -513,6 +586,12 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
 
 
 def _score_intraday_timing(intra_state: dict) -> tuple[float, str]:
+    if intra_state.get("error") or not intra_state:
+        return 55.0, "Intraday timing unavailable; using neutral score"
+
+    if "sma_20" not in intra_state or "sma_50" not in intra_state:
+        return 55.0, "Intraday timing unavailable; using neutral score"
+
     stack = _stack_score(intra_state.get("ma_stack", "unknown"))
     sponsorship = _avg([
         _bool_score(intra_state.get("close_above_sma_20")),
@@ -520,6 +599,55 @@ def _score_intraday_timing(intra_state: dict) -> tuple[float, str]:
     ])
     score = round(0.55 * stack + 0.45 * sponsorship, 1)
     return score, f"Intraday alignment {score:.0f}/100"
+
+
+def _score_short_term_posture(daily_state: dict) -> tuple[float, str]:
+    """How healthy is the immediate 5/10/20 posture for a swing long right now?"""
+    close_above_5 = bool(daily_state.get("close_above_sma_5"))
+    close_above_10 = bool(daily_state.get("close_above_sma_10"))
+    close_above_20 = bool(daily_state.get("close_above_sma_20"))
+    sma5_dir = daily_state.get("sma_5_direction", "unknown")
+    sma10_dir = daily_state.get("sma_10_direction", "unknown")
+    sma20_dir = daily_state.get("sma_20_direction", "unknown")
+    sma5_bias = daily_state.get("sma_5_tomorrow_bias", "unknown")
+    sma10_bias = daily_state.get("sma_10_tomorrow_bias", "unknown")
+
+    score = (
+        0.18 * _bool_score(close_above_5) +
+        0.12 * _bool_score(close_above_10) +
+        0.06 * _bool_score(close_above_20) +
+        0.18 * _direction_score(sma5_dir) +
+        0.12 * _direction_score(sma10_dir) +
+        0.06 * _direction_score(sma20_dir) +
+        0.15 * _tomorrow_bias_score(sma5_bias) +
+        0.08 * _tomorrow_bias_score(sma10_bias) +
+        0.05 * _bool_score(daily_state.get("sma5_above_sma10")) +
+        0.00 * _bool_score(daily_state.get("sma10_above_sma20"))
+    )
+    score += 0.10 * _bool_score(daily_state.get("sma10_above_sma20"))
+
+    if not close_above_5 and sma5_dir == "falling":
+        score = min(score, 22.0)
+    elif not close_above_5 and sma5_bias == "will_fall":
+        score = min(score, 28.0)
+
+    if not close_above_10 and sma10_dir == "falling":
+        score = min(score, 38.0)
+
+    if (
+        close_above_5 and close_above_10 and close_above_20 and
+        sma5_dir == "rising" and sma10_dir == "rising" and sma20_dir == "rising" and
+        sma5_bias == "will_rise" and sma10_bias != "will_fall"
+    ):
+        score = max(score, 90.0)
+
+    score = round(_clamp(score), 1)
+    detail = (
+        f"5/10/20 posture {score:.0f}/100 | "
+        f"5d {'above' if close_above_5 else 'below'} / {sma5_dir} / {sma5_bias}, "
+        f"10d {'above' if close_above_10 else 'below'} / {sma10_dir} / {sma10_bias}"
+    )
+    return score, detail
 
 
 def _score_entry_timing(daily_state: dict, intra_state: dict,
@@ -536,19 +664,7 @@ def _score_entry_timing(daily_state: dict, intra_state: dict,
         0.35 * _band_ratio(dist10, -5.0, -1.0, 2.0, 9.0)
     )
 
-    def _bias_to_direction(bias: str) -> str:
-        return {
-            "will_rise": "rising",
-            "will_fall": "falling",
-            "flat": "flat",
-        }.get(bias, "unknown")
-
-    short_term_score = _avg([
-        _direction_score(daily_state.get("sma_5_direction", "unknown")),
-        _direction_score(daily_state.get("sma_10_direction", "unknown")),
-        _direction_score(_bias_to_direction(daily_state.get("sma_5_tomorrow_bias", "unknown"))),
-        _direction_score(_bias_to_direction(daily_state.get("sma_10_tomorrow_bias", "unknown"))),
-    ])
+    short_term_score, short_term_reason = _score_short_term_posture(daily_state)
 
     rvol = _safe_float(daily_state.get("rvol"), 1.0)
     low_volume_pullback = _band_ratio(rvol, 0.30, 0.50, 1.00, 1.60) * _band_ratio(dist20, -5.0, -2.5, 0.8, 5.0)
@@ -567,15 +683,15 @@ def _score_entry_timing(daily_state: dict, intra_state: dict,
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
 
     raw_score = (
-        0.42 * zone_score +
-        0.24 * short_term_score +
-        0.16 * volume_score +
-        0.18 * intraday_score
+        0.30 * zone_score +
+        0.45 * short_term_score +
+        0.10 * volume_score +
+        0.15 * intraday_score
     )
     score = round(_clamp(raw_score - 0.35 * penalty), 1)
     reasons = [
         f"Entry zone fit {zone_score:.0f}/100 (dist20 {dist20:+.1f}%, dist10 {dist10:+.1f}%)",
-        f"Short-term posture {short_term_score:.0f}/100",
+        short_term_reason,
         f"Volume context {volume_score:.0f}/100 at {rvol:.1f}x RVOL",
         intraday_reason,
     ]
@@ -722,6 +838,12 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     sma5_dir = daily_state.get("sma_5_direction", "unknown")
     sma10_dir = daily_state.get("sma_10_direction", "unknown")
     sma20_dir = daily_state.get("sma_20_direction", "unknown")
+    sma5_bias = daily_state.get("sma_5_tomorrow_bias", "unknown")
+    sma10_bias = daily_state.get("sma_10_tomorrow_bias", "unknown")
+    close_above_5 = bool(daily_state.get("close_above_sma_5"))
+    close_above_10 = bool(daily_state.get("close_above_sma_10"))
+    close_above_20 = bool(daily_state.get("close_above_sma_20"))
+    short_term_posture = _safe_float(timing["factors"].get("short_term_posture"), timing_score)
     chart_score = _safe_float(idea["factors"].get("chart_quality"), 50.0)
     base_score = _safe_float(idea["factors"].get("base_quality"), 55.0)
     overhead_score = _safe_float(idea["factors"].get("overhead_supply"), 50.0)
@@ -740,16 +862,16 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         timing_score = min(timing_score, 50)
         adjustment_notes.append("Idea/timing capped: chart is too choppy for premium swing quality")
     elif chart_score < 50:
-        idea_score = min(idea_score, 62)
-        adjustment_notes.append("Idea capped at 62: chart quality is mediocre")
+        idea_score = min(idea_score, 68)
+        adjustment_notes.append("Idea capped at 68: chart quality is mediocre")
 
     if overhead_score < 35:
         idea_score = min(idea_score, 58)
         timing_score = min(timing_score, 55)
         adjustment_notes.append("Idea/timing capped: heavy overhead supply nearby")
     elif overhead_score < 50:
-        timing_score = min(timing_score, 62)
-        adjustment_notes.append("Timing capped at 62: nearby overhead supply")
+        timing_score = min(timing_score, 66)
+        adjustment_notes.append("Timing capped at 66: nearby overhead supply")
 
     if breakout_score < 30:
         idea_score = min(idea_score, 45)
@@ -803,18 +925,43 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         idea_score = min(idea_score, 55)
         adjustment_notes.append("Idea capped: too many recent breakout failures")
 
-    if sma5_dir == "falling":
-        timing_score = min(timing_score, 75)
-        adjustment_notes.append("Timing capped at 75: daily 5 SMA falling")
+    if not close_above_5 and sma5_dir == "falling":
+        timing_score = min(timing_score, 32)
+        adjustment_notes.append("Timing capped at 32: below a declining 5 SMA")
+    elif not close_above_5 and sma5_bias == "will_fall":
+        timing_score = min(timing_score, 38)
+        adjustment_notes.append("Timing capped at 38: below 5 SMA and tomorrow bias still points lower")
+    elif sma5_dir == "falling":
+        timing_score = min(timing_score, 64)
+        adjustment_notes.append("Timing capped at 64: daily 5 SMA still falling")
 
-    if sma5_dir == "falling" and sma10_dir == "falling":
-        timing_score = min(timing_score, 60)
-        adjustment_notes.append("Timing capped at 60: daily 5+10 SMA both falling")
+    if not close_above_10 and sma10_dir == "falling":
+        timing_score = min(timing_score, 44)
+        adjustment_notes.append("Timing capped at 44: below a declining 10 SMA")
+    elif sma5_dir == "falling" and sma10_dir == "falling":
+        timing_score = min(timing_score, 48)
+        adjustment_notes.append("Timing capped at 48: daily 5+10 SMA both falling")
 
     if sma20_dir == "falling":
         idea_score = min(idea_score, 65)
         timing_score = min(timing_score, 65)
         adjustment_notes.append("Idea/timing capped at 65: daily 20 SMA falling")
+
+    if (
+        close_above_5 and close_above_10 and close_above_20 and
+        sma5_dir == "rising" and sma10_dir == "rising" and sma20_dir == "rising" and
+        sma5_bias == "will_rise" and sma10_bias != "will_fall"
+    ):
+        timing_score = max(timing_score, 84)
+        idea_score = max(idea_score, min(90.0, idea_score + 5.0))
+        adjustment_notes.append("Idea/timing boosted: 5/10/20 structure and next-day bias are aligned")
+    elif (
+        close_above_5 and close_above_10 and
+        sma5_dir == "rising" and sma10_dir == "rising" and
+        sma5_bias == "will_rise"
+    ):
+        timing_score = max(timing_score, 72)
+        adjustment_notes.append("Timing boosted: 5/10 structure is improving")
 
     price = daily_state.get("last_close", 0)
     sma10 = daily_state.get("sma_10", price)
@@ -849,11 +996,13 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     quality = _quality_label(score)
     reasons = [wg["detail"], dg["detail"]] + idea["reasons"] + timing["reasons"] + adjustment_notes
     action_bias = (
-        "buy" if idea_score >= 75 and timing_score >= 75 and score >= 72 else
-        "lean_buy" if idea_score >= 70 and timing_score >= 58 and score >= 62 else
+        "buy" if idea_score >= 74 and timing_score >= 78 and score >= 74 and short_term_posture >= 75 else
+        "lean_buy" if idea_score >= 68 and timing_score >= 62 and score >= 64 and short_term_posture >= 58 else
         "wait" if idea_score >= 55 else
         "avoid"
     )
+    if short_term_posture < 45 and action_bias in {"buy", "lean_buy"}:
+        action_bias = "wait"
     decision_summary = _decision_summary(
         action_bias,
         idea_score,
@@ -974,6 +1123,43 @@ def classify_setup(daily_state: dict, score: int, action_bias: str,
             "upgrade_conditions": [
                 f"Weekly close back above weekly 20 SMA",
                 f"Daily close above {_fmt2(sma50)} (50 SMA)",
+            ],
+        }
+
+    if (not daily_state.get("close_above_sma_5", True) and
+        sma5_dir == "falling" and
+        daily_state.get("sma_5_tomorrow_bias") == "will_fall"):
+        return {**base,
+            "type": "below_5dma_wait",
+            "description": "Below a declining 5 SMA with a lower next-day bias. Not a long entry yet.",
+            "trigger": f"Wait for reclaim of {_fmt2(sma5)} with the 5 SMA flattening or turning up",
+            "watch_for": f"Daily close back above {_fmt2(sma5)} and improving 5/10 posture",
+            "invalidation": f"Continued rejection below {_fmt2(sma5)} and {_fmt2(sma10)}",
+            "gap_up_plan": "No chase; require hold above the 5 SMA after the open",
+            "gap_down_plan": "No action while the 5 SMA is still falling",
+            "time_horizon": "Wait for short-term momentum to repair",
+            "upgrade_conditions": [
+                "Daily close back above the 5 SMA",
+                "5 SMA stops falling",
+                "5 SMA next-day bias improves from will_fall",
+            ],
+        }
+
+    if (not daily_state.get("close_above_sma_10", True) and
+        sma10_dir == "falling"):
+        return {**base,
+            "type": "below_10dma_wait",
+            "description": "Below a declining 10 SMA. Trend quality may be intact, but timing is not.",
+            "trigger": f"Wait for reclaim of {_fmt2(sma10)} with support holding above {_fmt2(sma20)}",
+            "watch_for": f"5 SMA turning up and price recovering the {_fmt2(sma10)} area",
+            "invalidation": f"Loss of {_fmt2(sma20)} support",
+            "gap_up_plan": "Require acceptance back above the 10 SMA before acting",
+            "gap_down_plan": "No action while the 10 SMA is still declining",
+            "time_horizon": "Wait for 10-day trend repair",
+            "upgrade_conditions": [
+                "Price reclaims the 10 SMA",
+                "10 SMA stops falling",
+                "Short-term MA stack improves",
             ],
         }
 
@@ -1153,6 +1339,8 @@ def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_qu
     rr_t1 = _safe_float(entry_zone.get("rr_t1"), 0.0)
     in_zone = bool(entry_zone.get("in_zone"))
     data_quality_score = _safe_float(data_quality.get("score"), 0.0)
+    timing_factors = score_result.get("timing_factors", {}) or {}
+    short_term_posture = _safe_float(timing_factors.get("short_term_posture"), timing_score)
 
     if action_bias == "unavailable" or setup_type == "data_unavailable" or data_quality_score <= 15:
         return {
@@ -1169,24 +1357,40 @@ def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_qu
             "detail": "Not tradable in the current condition set",
         }
 
-    base_score = 0.45 * timing_score + 0.35 * confidence_adj + 0.20 * idea_score
+    base_score = 0.55 * timing_score + 0.25 * confidence_adj + 0.20 * idea_score
     detail_parts = []
 
     if setup_type in ("extended_wait", "above_zone_wait"):
-        base_score = min(base_score, 54.0)
+        base_score = min(base_score, 52.0)
         detail_parts.append("Extended above value; wait for pullback")
     elif setup_type == "breakout":
-        base_score = min(max(base_score, 58.0), 74.0)
-        detail_parts.append("Needs breakout confirmation")
-    elif setup_type in ("pullback_developing", "reclaim", "watch"):
+        base_score = min(max(base_score, 62.0), 88.0)
+        detail_parts.append("Needs breakout confirmation, but strong breakouts can still be actionable")
+    elif setup_type in ("pullback_developing", "reclaim", "watch", "below_10dma_wait"):
         base_score = min(base_score, 62.0)
         detail_parts.append("Constructive, but still developing")
+    elif setup_type == "below_5dma_wait":
+        base_score = min(base_score, 36.0)
+        detail_parts.append("Below declining 5-day momentum; let the short-term trend repair first")
+
+    if short_term_posture < 30:
+        base_score = min(base_score, 34.0)
+        detail_parts.append("Short-term posture is too weak")
+    elif short_term_posture < 45:
+        base_score = min(base_score, 50.0)
+        detail_parts.append("Short-term posture is not ready")
+    elif short_term_posture >= 85:
+        base_score = max(base_score, 82.0)
+        detail_parts.append("Short-term posture is elite")
 
     if in_zone:
         base_score += 14.0
         detail_parts.append("Inside entry zone")
     else:
-        base_score -= 6.0
+        if setup_type == "breakout" and short_term_posture >= 75:
+            base_score += 2.0
+        else:
+            base_score -= 6.0
 
     if rr_t1 >= 2.0:
         base_score += 6.0
@@ -1202,7 +1406,7 @@ def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_qu
     elif action_bias == "lean_buy":
         base_score += 2.0
     elif action_bias == "wait":
-        base_score -= 2.0
+        base_score -= 4.0
 
     score = round(_clamp(base_score), 1)
     label = _tradeability_label(score)
