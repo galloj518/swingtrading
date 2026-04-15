@@ -11,6 +11,14 @@ from typing import Optional
 from . import config as cfg
 
 
+YF_TZ_CACHE_DIR = cfg.CACHE_DIR / "yfinance_tz"
+YF_TZ_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    yf.set_tz_cache_location(str(YF_TZ_CACHE_DIR))
+except Exception:
+    pass
+
+
 def _provider_symbol(symbol: str) -> str:
     """Map display symbols to provider-specific tickers when needed."""
     return cfg.DOWNLOAD_SYMBOL_OVERRIDES.get(symbol, symbol)
@@ -20,6 +28,26 @@ def _cache_path(symbol: str, timeframe: str) -> Path:
     """Generate dated cache path for a symbol/timeframe."""
     today = date.today().isoformat()
     return cfg.CACHE_DIR / f"{symbol}_{timeframe}_{today}.csv"
+
+
+def _latest_cached_df(symbol: str, timeframe: str, max_age_days: int) -> pd.DataFrame:
+    """Use the most recent cache file when a live fetch fails."""
+    pattern = f"{symbol}_{timeframe}_*.csv"
+    candidates = sorted(cfg.CACHE_DIR.glob(pattern), reverse=True)
+    today = date.today()
+    for path in candidates:
+        stem = path.stem
+        try:
+            file_date = date.fromisoformat(stem.rsplit("_", 1)[-1])
+        except ValueError:
+            continue
+        if (today - file_date).days > max_age_days:
+            continue
+        try:
+            return pd.read_csv(path, parse_dates=["date"])
+        except Exception:
+            continue
+    return pd.DataFrame()
 
 
 def _normalize_df(raw: pd.DataFrame) -> pd.DataFrame:
@@ -101,15 +129,26 @@ def load_daily(symbol: str, force: bool = False) -> pd.DataFrame:
                           interval="1d", auto_adjust=True, progress=False)
     except Exception as e:
         print(f"  WARNING: Failed to fetch daily data for {symbol}: {e}")
+        fallback = _latest_cached_df(symbol, "daily", max_age_days=7)
+        if not fallback.empty:
+            print(f"  WARNING: Using recent cached daily data for {symbol}")
+            return fallback
         return pd.DataFrame()
 
     if raw.empty:
         print(f"  WARNING: No daily data for {symbol}")
+        fallback = _latest_cached_df(symbol, "daily", max_age_days=7)
+        if not fallback.empty:
+            print(f"  WARNING: Using recent cached daily data for {symbol}")
+            return fallback
         return pd.DataFrame()
 
     df = _normalize_df(raw)
     if not df.empty:
-        df.to_csv(cp, index=False)
+        try:
+            df.to_csv(cp, index=False)
+        except Exception:
+            pass
 
     return df
 
@@ -128,15 +167,26 @@ def load_intraday(symbol: str, force: bool = False) -> pd.DataFrame:
                           interval="5m", auto_adjust=True, progress=False)
     except Exception as e:
         print(f"  WARNING: Failed to fetch intraday data for {symbol}: {e}")
+        fallback = _latest_cached_df(symbol, "intra5m", max_age_days=3)
+        if not fallback.empty:
+            print(f"  WARNING: Using recent cached intraday data for {symbol}")
+            return fallback
         return pd.DataFrame()
 
     if raw.empty:
         print(f"  WARNING: No intraday data for {symbol}")
+        fallback = _latest_cached_df(symbol, "intra5m", max_age_days=3)
+        if not fallback.empty:
+            print(f"  WARNING: Using recent cached intraday data for {symbol}")
+            return fallback
         return pd.DataFrame()
 
     df = _normalize_df(raw)
     if not df.empty:
-        df.to_csv(cp, index=False)
+        try:
+            df.to_csv(cp, index=False)
+        except Exception:
+            pass
 
     return df
 

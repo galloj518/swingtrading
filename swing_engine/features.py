@@ -412,15 +412,20 @@ def assess_chart_quality(daily_df: pd.DataFrame) -> dict:
         chop_ratio = 0.5
 
     chop_penalty = min(max(chop_ratio, 0.0), 1.0)
+    trend_inputs = [
+        max(float(eff20 if eff20 is not None else 50.0), 25.0),
+        max(float(eff60 if eff60 is not None else 50.0), 20.0),
+    ]
+    trend_component = sum(trend_inputs) / len(trend_inputs)
+    smoothness = 100.0 * (1.0 - chop_penalty)
     score = float(round(
         max(
             0.0,
             min(
                 100.0,
-                0.40 * (eff20 if eff20 is not None else 50.0) +
-                0.35 * (eff60 if eff60 is not None else 50.0) +
-                0.25 * tightness -
-                20.0 * chop_penalty,
+                0.40 * trend_component +
+                0.35 * tightness +
+                0.25 * smoothness,
             ),
         ),
         1,
@@ -481,7 +486,10 @@ def assess_overhead_supply(price: float, daily_df: pd.DataFrame, pivots: dict,
     above = []
     for name, level in levels:
         if level > price:
-            above.append((name, level, ((level / price) - 1.0) * 100.0))
+            pct = ((level / price) - 1.0) * 100.0
+            if pct < 0.35:
+                continue
+            above.append((name, level, pct))
 
     if not above:
         return {
@@ -493,10 +501,15 @@ def assess_overhead_supply(price: float, daily_df: pd.DataFrame, pivots: dict,
         }
 
     nearest = min(above, key=lambda item: item[2])
-    within_3 = [item for item in above if item[2] <= 3.0]
-    within_8 = [item for item in above if item[2] <= 8.0]
+    unique_above = {}
+    for name, level, pct in above:
+        bucket = round(pct, 1)
+        unique_above.setdefault(bucket, (name, level, pct))
+    unique_values = list(unique_above.values())
+    within_3 = [item for item in unique_values if item[2] <= 3.0]
+    within_8 = [item for item in unique_values if item[2] <= 8.0]
 
-    nearest_ratio = min(max((nearest[2] - 0.5) / 7.5, 0.0), 1.0)
+    nearest_ratio = min(max((nearest[2] - 0.75) / 7.25, 0.0), 1.0)
     density_ratio = 1.0 - min(len(within_8) / 6.0, 1.0)
     crowd_penalty = 0.10 if len(within_3) >= 2 else 0.0
     score = float(round(100.0 * max(0.0, min(1.0, 0.60 * nearest_ratio + 0.40 * density_ratio - crowd_penalty)), 1))
@@ -665,26 +678,30 @@ def assess_failed_breakout_memory(daily_df: pd.DataFrame) -> dict:
             "detail": "Breakout memory unavailable",
         }
 
-    df = daily_df.copy()
+    df = daily_df.copy().iloc[-140:].copy()
     df["prior_20d_high"] = df["high"].rolling(20).max().shift(1)
     failed_indices = []
+    last_failure_idx = -999
     for idx in range(21, len(df) - 5):
         row = df.iloc[idx]
         prior_high = row.get("prior_20d_high")
         if pd.isna(prior_high):
             continue
-        if float(row["close"]) <= float(prior_high) * 1.003:
+        if float(row["close"]) <= float(prior_high) * 1.01:
+            continue
+        if idx - last_failure_idx < 10:
             continue
         follow = df.iloc[idx + 1: idx + 6]
         if follow.empty:
             continue
-        if float(follow["close"].min()) < float(prior_high) * 0.99:
+        if float(follow["close"].min()) < float(prior_high) * 0.985:
             failed_indices.append(idx)
+            last_failure_idx = idx
 
     failed_count = len(failed_indices)
     recent_cutoff = max(len(df) - 40, 0)
     recent_failed = sum(1 for idx in failed_indices if idx >= recent_cutoff)
-    score = float(round(max(0.0, 95.0 - 18.0 * failed_count - 12.0 * recent_failed), 1))
+    score = float(round(max(15.0, 92.0 - 8.0 * failed_count - 10.0 * recent_failed), 1))
     return {
         "score": score,
         "failed_count": failed_count,
@@ -759,10 +776,11 @@ def assess_clean_air(price: float, daily_state: dict, pivots: dict,
     if overhead_supply.get("nearest_pct") is not None:
         levels.append((str(overhead_supply.get("nearest_level", "overhead")), price * (1.0 + float(overhead_supply["nearest_pct"]) / 100.0)))
 
-    above = [((level / price) - 1.0) * 100.0 for _, level in levels if level > price]
-    nearest_pct = min(above) if above else 12.0
     atr = float(daily_state.get("atr", 0.0) or 0.0)
     atr_pct = ((atr / price) * 100.0) if price and atr else 2.0
+    min_meaningful_pct = max(0.35, 0.5 * atr_pct)
+    above = [((level / price) - 1.0) * 100.0 for _, level in levels if level > price and (((level / price) - 1.0) * 100.0) >= min_meaningful_pct]
+    nearest_pct = min(above) if above else 12.0
     atr_to_resistance = nearest_pct / atr_pct if atr_pct > 0 else nearest_pct / 2.0
 
     score = float(round(max(0.0, min(100.0, 100.0 * min(atr_to_resistance / 3.0, 1.0))), 1))

@@ -28,6 +28,9 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
     action_bias = sc.get("action_bias", "")
     setup_type = setup.get("type", "no_setup")
     in_zone = _as_bool(ez.get("in_zone", False))
+    data_quality = packet.get("data_quality", {})
+    data_quality_score = float(data_quality.get("score", 0) or 0)
+    idea_score = float(sc.get("idea_quality_score", sc.get("score", 0)) or 0)
 
     failed_items = {
         c["item"] for c in (checks or []) if not c.get("passed", False)
@@ -35,22 +38,21 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
     critical_failed = bool(
         {"Regime", "Weekly Gate", "Daily Gate", "Stop", "Event Risk"} & failed_items
     )
-    idea_failed = "Idea Quality" in failed_items
     timing_failed = "Entry Timing" in failed_items
 
-    if critical_failed or idea_failed or action_bias == "avoid" or setup_type == "no_setup":
+    if action_bias == "unavailable" or setup_type == "data_unavailable" or data_quality_score <= 15:
+        return {
+            "label": "DATA UNAVAILABLE",
+            "detail": data_quality.get("detail") or "Fresh market data is not available yet",
+            "rank": 6,
+            "actionable_now": False,
+        }
+
+    if critical_failed or action_bias == "avoid" or setup_type == "no_setup" or idea_score < 50:
         return {
             "label": "BLOCK",
             "detail": "Idea quality, trend, or risk gates failed",
             "rank": 5,
-            "actionable_now": False,
-        }
-
-    if timing_failed:
-        return {
-            "label": "WAIT SETUP",
-            "detail": "Entry timing is not ready yet",
-            "rank": 3,
             "actionable_now": False,
         }
 
@@ -75,6 +77,14 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
             "label": "WAIT PULLBACK",
             "detail": setup.get("trigger") or "Price is extended above the zone",
             "rank": 2,
+            "actionable_now": False,
+        }
+
+    if timing_failed:
+        return {
+            "label": "WAIT SETUP",
+            "detail": "Entry timing is not ready yet",
+            "rank": 3,
             "actionable_now": False,
         }
 
@@ -142,13 +152,13 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
             f"Idea {sc.get('idea_quality_score', sc['score'])}/100 ({sc.get('idea_quality', sc['quality'])}) | "
             f"Timing {sc.get('entry_timing_score', sc['score'])}/100 ({sc.get('entry_timing', sc['quality'])})"
         ),
-        "passed": sc["score"] >= 60,
+        "passed": sc["score"] >= 55,
     })
 
     checks.append({
         "item": "Idea Quality",
         "value": f"{sc.get('idea_quality_score', sc['score'])}/100 ({sc.get('idea_quality', sc['quality'])})",
-        "passed": sc.get("idea_quality_score", sc["score"]) >= 60,
+        "passed": sc.get("idea_quality_score", sc["score"]) >= 55,
     })
 
     checks.append({
@@ -248,6 +258,8 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
 
     if actionability["label"] == "BLOCK":
         verdict = "BLOCK - critical check failed"
+    elif actionability["label"] == "DATA UNAVAILABLE":
+        verdict = f"DATA UNAVAILABLE - {actionability['detail']}"
     elif actionability["actionable_now"] and total_pass == total:
         verdict = f"BUY NOW - {sc['quality']} setup in {regime.get('regime', '?')} regime"
     elif actionability["label"].startswith("WATCH"):

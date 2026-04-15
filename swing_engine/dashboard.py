@@ -171,6 +171,8 @@ def _as_bool(val) -> bool:
 
 def _action_style(label: str) -> tuple[str, str]:
     """Color palette for actionability badges."""
+    if label.startswith("DATA"):
+        return "#94a3b8", "#111827"
     if label == "BUY NOW":
         return "#22c55e", "#052e16"
     if label.startswith("WATCH"):
@@ -384,6 +386,8 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             vc = "#22c55e"
         elif verdict.startswith("WATCH"):
             vc = "#3b82f6"
+        elif verdict.startswith("DATA"):
+            vc = "#94a3b8"
         elif verdict.startswith("WAIT") or verdict.startswith("CAUTION"):
             vc = "#eab308"
         else:
@@ -745,6 +749,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
     watch_syms = [s for s in wl_syms if wl_meta[s]["action"]["label"].startswith("WATCH")]
     wait_syms = [s for s in wl_syms if wl_meta[s]["action"]["label"].startswith("WAIT")]
     block_syms = [s for s in wl_syms if wl_meta[s]["action"]["label"] == "BLOCK"]
+    unavailable_syms = [s for s in wl_syms if wl_meta[s]["action"]["label"].startswith("DATA")]
     avg_watchlist_score = round(
         sum(wl_meta[s]["score"] for s in wl_syms) / len(wl_syms), 1
     ) if wl_syms else 0
@@ -810,6 +815,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
     kpi_html = "".join([
         _build_metric_tile("Desk Regime", r, regime_tone, f"Bias {regime.get('swing_bias', '?')}"),
         _build_metric_tile("Actionable", str(len(buy_now_syms)), "good" if buy_now_syms else "warn", "Ready right now"),
+        _build_metric_tile("Data Issues", str(len(unavailable_syms)), "bad" if unavailable_syms else "neutral", "Names withheld for weak data"),
         _build_metric_tile("Watchlist Avg", str(avg_watchlist_score), "info", f"{len(wl_syms)} names tracked"),
         _build_metric_tile("Hidden <50", str(hidden_low_score_count), "neutral", "Trimmed from web report"),
         _build_metric_tile("Watch Breakouts", str(len(watch_syms)), "info", "Needs trigger"),
@@ -1067,7 +1073,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
 <div class="section">
   <h2>ACTION BOARD</h2>
   <div style="color:#888;margin-bottom:10px;">
-    Buy now: {len(buy_now_syms)} | Watch breakout: {len(watch_syms)} | Wait: {len(wait_syms)} | Blocked: {len(block_syms)} | Hidden below 50: {hidden_low_score_count}
+    Buy now: {len(buy_now_syms)} | Watch breakout: {len(watch_syms)} | Wait: {len(wait_syms)} | Blocked: {len(block_syms)} | Data unavailable: {len(unavailable_syms)} | Hidden below 50: {hidden_low_score_count}
   </div>
   <div class="action-grid">
     {action_board}

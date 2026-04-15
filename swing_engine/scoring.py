@@ -125,6 +125,9 @@ def _decision_summary(action_bias: str, idea_score: float, timing_score: float,
     clean_air_score = _safe_float(idea_factors.get("clean_air"), 50.0)
     breakout_score = _safe_float(idea_factors.get("breakout_integrity"), 55.0)
 
+    if action_bias == "unavailable":
+        return "Data unavailable: hold judgment until fresh daily and intraday data are available."
+
     if action_bias == "avoid":
         if breakout_score < 40:
             return "Avoid for now: recent breakout behavior is not trustworthy."
@@ -594,6 +597,34 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     regime = regime or {}
     regime_label = regime.get("regime", "neutral")
     risk_appetite = regime.get("risk_appetite", "full")
+    data_quality = data_quality or {}
+
+    if daily_state.get("error") or weekly_state.get("error") or _safe_float(data_quality.get("score"), 0.0) <= 15.0:
+        detail = data_quality.get("detail") or daily_state.get("error") or weekly_state.get("error") or "market data unavailable"
+        summary = "Data unavailable: scoring withheld until fresh market data is available."
+        return {
+            "score": 0,
+            "confidence_adjusted_score": 0,
+            "confidence_score": 0,
+            "confidence_label": "Data unavailable",
+            "confidence_detail": detail,
+            "quality": "Data unavailable",
+            "composite_score": 0,
+            "composite_quality": "Data unavailable",
+            "idea_quality_score": 0,
+            "idea_quality": "Data unavailable",
+            "entry_timing_score": 0,
+            "entry_timing": "Data unavailable",
+            "idea_reasons": [detail],
+            "timing_reasons": [detail],
+            "idea_factors": {"data_quality": _safe_float(data_quality.get("score"), 0.0)},
+            "timing_factors": {"data_quality": _safe_float(data_quality.get("score"), 0.0)},
+            "weekly_gate": {"passed": False, "check": cfg.GATE_WEEKLY_REQUIRES, "detail": detail},
+            "daily_gate": {"passed": False, "check": cfg.GATE_DAILY_REQUIRES, "detail": detail},
+            "reasons": [detail],
+            "action_bias": "unavailable",
+            "decision_summary": summary,
+        }
 
     wg = _check_weekly_gate(weekly_state)
     if not wg["passed"]:
@@ -898,6 +929,22 @@ def classify_setup(daily_state: dict, score: int, action_bias: str,
         "position_size_guidance": "standard",
         "upgrade_conditions": [],
     }
+
+    if action_bias == "unavailable":
+        return {**base,
+            "type": "data_unavailable",
+            "description": "Market data unavailable. Do not trade from this read.",
+            "trigger": "Refresh daily and intraday data",
+            "watch_for": "Fresh daily and intraday bars with valid structure",
+            "invalidation": None,
+            "gap_up_plan": "No action until data quality is restored",
+            "gap_down_plan": "No action until data quality is restored",
+            "time_horizon": "Wait for next clean data refresh",
+            "upgrade_conditions": [
+                "Daily history reloads successfully",
+                "Intraday data reloads successfully",
+            ],
+        }
 
     # === NO SETUP ===
     if action_bias == "avoid":
