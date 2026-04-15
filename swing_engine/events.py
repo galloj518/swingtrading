@@ -57,8 +57,8 @@ def get_event_context(as_of: str = None) -> dict:
         "event_count_7d": len(upcoming),
         "recommendation": (
             "REDUCE / TIGHTEN STOPS" if high_risk
-            else "CAUTION — event risk ahead" if medium_risk
-            else f"Clear — {today_note}" if today_note
+            else "CAUTION - event risk ahead" if medium_risk
+            else f"CLEAR - {today_note}" if today_note
             else "No imminent macro events"
         ),
     }
@@ -70,11 +70,11 @@ def get_earnings_flag(symbol: str) -> dict:
     Benchmarks always return has_earnings=False.
     """
     if symbol.upper() in cfg.BENCHMARK_SET:
-        return {"has_earnings": False, "note": "Benchmark — skip"}
+        return {"has_earnings": False, "note": "Benchmark - skip"}
 
     earn_date = cfg.EARNINGS_CALENDAR.get(symbol.upper())
     if not earn_date:
-        return {"has_earnings": False, "note": "No known date"}
+        return {"has_earnings": False, "note": "Earnings date not configured"}
 
     days_to = (pd.Timestamp(earn_date) - pd.Timestamp.now().normalize()).days
     if days_to < 0:
@@ -85,5 +85,5 @@ def get_earnings_flag(symbol: str) -> dict:
         "earnings_date": earn_date,
         "days_to_earnings": days_to,
         "warning": days_to <= 5,
-        "note": f"Earnings in {days_to}d" + (" — HIGH RISK" if days_to <= 5 else ""),
+        "note": f"Earnings in {days_to}d" + (" - HIGH RISK" if days_to <= 5 else ""),
     }
