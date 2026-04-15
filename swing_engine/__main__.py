@@ -30,6 +30,7 @@ from . import review
 from . import narrative
 from . import leveraged
 from . import db
+from . import calibration
 
 
 def _load_spy(force: bool = False):
@@ -118,6 +119,8 @@ def run_daily(force: bool = False):
 
     # --- Cross-symbol expert context (group strength / rescoring) ---
     packets.enrich_group_strength(all_packets, regime=regime_result)
+    calibration_profile = calibration.build_calibration_profile()
+    packets.enrich_calibration(all_packets, calibration_profile, regime=regime_result)
     for sym in cfg.WATCHLIST + cfg.BENCHMARKS:
         if sym in all_packets:
             packets.save_packet(sym, all_packets[sym])
@@ -143,6 +146,7 @@ def run_daily(force: bool = False):
         key=lambda sym: (
             all_checklists[sym].get("actionability", {}).get("rank", 99),
             -all_packets[sym].get("score", {}).get("idea_quality_score", 0),
+            -all_packets[sym].get("calibration", {}).get("score", 50),
             -all_packets[sym].get("score", {}).get("entry_timing_score", 0),
             -all_packets[sym].get("score", {}).get("score", 0),
             sym,

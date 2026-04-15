@@ -236,6 +236,7 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     catalyst_context = pkt.get("catalyst_context", {})
     clean_air = pkt.get("clean_air", {})
     group_strength = pkt.get("group_strength", {})
+    calibration = pkt.get("calibration", {})
 
     score = sc.get("score", 0)
     idea_score = sc.get("idea_quality_score", score)
@@ -466,6 +467,11 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             <div style="color:#fca5a5;font-size:0.74em;letter-spacing:0.08em;">BREAKOUT MEMORY</div>
             <div style="color:#fff;font-weight:700;">{_fmt(failed_breakout_memory.get('score'), 1)}/100</div>
             <div style="color:#7f8ea3;font-size:0.76em;">{failed_breakout_memory.get('detail', '--')}</div>
+          </div>
+          <div style="padding:6px 10px;border-radius:10px;background:#0f1722;border:1px solid #1f2937;min-width:180px;">
+            <div style="color:#67e8f9;font-size:0.74em;letter-spacing:0.08em;">HISTORICAL EVIDENCE</div>
+            <div style="color:#fff;font-weight:700;">{_fmt(calibration.get('score'), 1)}/100</div>
+            <div style="color:#7f8ea3;font-size:0.76em;">{calibration.get('detail', '--')}</div>
           </div>
         </div>
         <div style="color:#aaa;margin-top:4px;">

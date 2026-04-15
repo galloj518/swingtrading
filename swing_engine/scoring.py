@@ -120,6 +120,8 @@ def _decision_summary(action_bias: str, idea_score: float, timing_score: float,
     chart_score = _safe_float(idea_factors.get("chart_quality"), 50.0)
     base_score = _safe_float(idea_factors.get("base_quality"), 55.0)
     group_score = _safe_float(idea_factors.get("group_strength"), 55.0)
+    evidence_score = _safe_float(idea_factors.get("historical_evidence"), 50.0)
+    evidence_samples = int(idea_factors.get("historical_evidence_samples", 0) or 0)
     clean_air_score = _safe_float(idea_factors.get("clean_air"), 50.0)
     breakout_score = _safe_float(idea_factors.get("breakout_integrity"), 55.0)
 
@@ -135,10 +137,14 @@ def _decision_summary(action_bias: str, idea_score: float, timing_score: float,
             return "Wait for a better entry: the idea may be fine, but timing is not ready."
         if clean_air_score < 40:
             return "Wait for more room: resistance is too close for a clean swing."
+        if evidence_samples >= 8 and evidence_score < 45:
+            return "Wait: history for similar setups is weak, so demand better confirmation."
         return "Wait for confirmation: quality is improving, but not actionable yet."
 
     if group_score < 50:
         return "Constructive, but group confirmation is weak."
+    if evidence_samples >= 10 and evidence_score < 50:
+        return "Constructive, but similar setups have not earned much trust historically."
     if clean_air_score < 50:
         return "Constructive, but reward path is tight into resistance."
     if idea_score >= 75 and timing_score >= 75:
@@ -260,6 +266,11 @@ def _score_group_strength(group_strength: dict) -> tuple[float, str]:
     return score, group_strength.get("detail", f"Group strength {score:.0f}/100")
 
 
+def _score_evidence(calibration_context: dict) -> tuple[float, str]:
+    score = _safe_float(calibration_context.get("score"), 50.0)
+    return score, calibration_context.get("detail", f"Historical evidence {score:.0f}/100")
+
+
 def _event_penalty(event_risk: dict, earnings: dict) -> tuple[float, str]:
     penalty = 0.0
     if event_risk.get("high_risk_imminent"):
@@ -284,7 +295,8 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
                         failed_breakout_memory: dict | None = None,
                         catalyst_context: dict | None = None,
                         clean_air: dict | None = None,
-                        group_strength: dict | None = None) -> dict:
+                        group_strength: dict | None = None,
+                        calibration_context: dict | None = None) -> dict:
     """Institutional quality: durable structure, leadership, sponsorship, liquidity."""
     price = _safe_float(daily_state.get("last_close"), 0.0)
     if price <= 0:
@@ -299,6 +311,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     catalyst_context = catalyst_context or {}
     clean_air = clean_air or {}
     group_strength = group_strength or {}
+    calibration_context = calibration_context or {}
 
     weekly_score, weekly_reason = _score_trend_quality(weekly_state, "weekly")
     daily_score, daily_reason = _score_trend_quality(daily_state, "daily")
@@ -315,6 +328,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     catalyst_score, catalyst_reason = _score_catalyst_context(catalyst_context)
     clean_air_score, clean_air_reason = _score_clean_air(clean_air)
     group_score, group_reason = _score_group_strength(group_strength)
+    evidence_score, evidence_reason = _score_evidence(calibration_context)
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
 
     raw_score = (
@@ -332,7 +346,8 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
         0.04 * clean_air_score +
         0.03 * weekly_close_score +
         0.02 * catalyst_score +
-        0.02 * failed_memory_score
+        0.02 * failed_memory_score +
+        0.06 * evidence_score
     )
     score = round(_clamp(raw_score - penalty), 1)
     reasons = [
@@ -347,6 +362,7 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
         overhead_reason,
         breakout_reason,
         group_reason,
+        evidence_reason,
         clean_air_reason,
         weekly_close_reason,
         catalyst_reason,
@@ -371,10 +387,13 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
             "overhead_supply": overhead_score,
             "breakout_integrity": breakout_score,
             "group_strength": group_score,
+            "historical_evidence": evidence_score,
             "clean_air": clean_air_score,
             "weekly_close_quality": weekly_close_score,
             "catalyst_context": catalyst_score,
             "failed_breakout_memory": failed_memory_score,
+            "historical_evidence_samples": calibration_context.get("sample_size", 0),
+            "historical_evidence_success_rate": calibration_context.get("success_rate"),
             "event_penalty": penalty,
         },
     }
@@ -469,7 +488,8 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  failed_breakout_memory: dict | None = None,
                  catalyst_context: dict | None = None,
                  clean_air: dict | None = None,
-                 group_strength: dict | None = None) -> dict:
+                 group_strength: dict | None = None,
+                 calibration_context: dict | None = None) -> dict:
     """
     Full gated scoring pipeline for a symbol.
     Includes post-scoring adjustments for:
@@ -540,6 +560,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         catalyst_context=catalyst_context,
         clean_air=clean_air,
         group_strength=group_strength,
+        calibration_context=calibration_context,
     )
     timing = _score_entry_timing(
         daily_state, intra_state, event_risk, earnings,
@@ -658,7 +679,8 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
                  failed_breakout_memory: dict | None = None,
                  catalyst_context: dict | None = None,
                  clean_air: dict | None = None,
-                 group_strength: dict | None = None) -> dict:
+                 group_strength: dict | None = None,
+                 calibration_context: dict | None = None) -> dict:
     regime = regime or {}
     regime_label = regime.get("regime", "neutral")
     risk_appetite = regime.get("risk_appetite", "full")
@@ -720,6 +742,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         catalyst_context=catalyst_context,
         clean_air=clean_air,
         group_strength=group_strength,
+        calibration_context=calibration_context,
     )
     timing = _score_entry_timing(
         daily_state, intra_state, event_risk, earnings,
@@ -737,6 +760,8 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     overhead_score = _safe_float(idea["factors"].get("overhead_supply"), 50.0)
     breakout_score = _safe_float(idea["factors"].get("breakout_integrity"), 55.0)
     group_score = _safe_float(idea["factors"].get("group_strength"), 55.0)
+    evidence_score = _safe_float(idea["factors"].get("historical_evidence"), 50.0)
+    evidence_samples = int(idea["factors"].get("historical_evidence_samples", 0) or 0)
     clean_air_score = _safe_float(idea["factors"].get("clean_air"), 50.0)
     weekly_close_score = _safe_float(idea["factors"].get("weekly_close_quality"), 55.0)
     catalyst_score = _safe_float(idea["factors"].get("catalyst_context"), 55.0)
@@ -775,6 +800,14 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     if group_score < 40:
         idea_score = min(idea_score, 60)
         adjustment_notes.append("Idea capped at 60: peer group is not confirming")
+
+    if evidence_samples >= 8 and evidence_score < 45:
+        idea_score = min(idea_score, 58)
+        timing_score = min(timing_score, 58)
+        adjustment_notes.append("Idea/timing capped: similar setups have weak historical evidence")
+    elif evidence_samples >= 12 and evidence_score >= 60:
+        idea_score = min(100.0, idea_score + 2.0)
+        adjustment_notes.append("Idea boosted slightly: historical evidence is supportive")
 
     if clean_air_score < 35:
         timing_score = min(timing_score, 55)

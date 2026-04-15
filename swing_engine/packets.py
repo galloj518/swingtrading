@@ -278,3 +278,44 @@ def enrich_group_strength(packets: dict, regime: dict | None = None) -> None:
             clean_air=packet.get("clean_air"),
             group_strength=packet.get("group_strength"),
         )
+
+
+def enrich_calibration(packets: dict, calibration_profile: dict, regime: dict | None = None) -> None:
+    """Apply evidence-weighted historical calibration and rescore watchlist packets."""
+    from . import calibration
+
+    regime = regime or {}
+    regime_label = regime.get("regime", "")
+
+    for symbol, packet in packets.items():
+        if symbol not in cfg.WATCHLIST:
+            continue
+        setup_type = packet.get("setup", {}).get("type", "unknown")
+        current_score = float(packet.get("score", {}).get("score", 50.0) or 50.0)
+        packet["calibration"] = calibration.estimate_setup_evidence(
+            calibration_profile,
+            setup_type=setup_type,
+            regime_label=regime_label,
+            score=current_score,
+        )
+        packet["score"] = scoring.score_symbol(
+            packet.get("daily", {}),
+            packet.get("weekly", {}),
+            packet.get("intraday", {}),
+            packet.get("avwap_map", {}),
+            packet.get("relative_strength", {}),
+            packet.get("confluence", {}),
+            packet.get("events", {}),
+            packet.get("earnings", {}),
+            regime=regime,
+            chart_quality=packet.get("chart_quality"),
+            overhead_supply=packet.get("overhead_supply"),
+            breakout_integrity=packet.get("breakout_integrity"),
+            base_quality=packet.get("base_quality"),
+            weekly_close_quality=packet.get("weekly_close_quality"),
+            failed_breakout_memory=packet.get("failed_breakout_memory"),
+            catalyst_context=packet.get("catalyst_context"),
+            clean_air=packet.get("clean_air"),
+            group_strength=packet.get("group_strength"),
+            calibration_context=packet.get("calibration"),
+        )

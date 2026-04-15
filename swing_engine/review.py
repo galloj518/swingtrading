@@ -9,6 +9,7 @@ import pandas as pd
 
 from . import config as cfg
 from . import db
+from . import calibration
 from .signals import SIGNAL_LOG, JOURNAL_LOG
 
 
@@ -198,6 +199,32 @@ def run_review() -> dict:
             print("\n  No signal outcomes backfilled yet.")
     else:
         print("\n  No signal log found.")
+
+    cal = calibration.build_calibration_profile()
+    if cal.get("available"):
+        g = cal.get("global", {})
+        print(f"\n  CALIBRATION")
+        print(f"  {'-'*45}")
+        print(
+            f"  Global success: {g.get('success_rate', 0)*100:.1f}% | "
+            f"avg outcome: {g.get('avg_outcome', 0):+.2f} | "
+            f"sample: {g.get('sample_size', 0)}"
+        )
+        by_setup = cal.get("by_setup", {})
+        ranked = sorted(
+            by_setup.items(),
+            key=lambda item: (item[1].get("score", 50), item[1].get("sample_size", 0)),
+            reverse=True,
+        )
+        if ranked:
+            print("\n  BEST EVIDENCE BY SETUP:")
+            for setup_name, summary in ranked[:5]:
+                print(
+                    f"  {setup_name}: score {summary.get('score', 50):.1f}, "
+                    f"success {summary.get('success_rate', 0)*100:.0f}%, "
+                    f"avg outcome {summary.get('avg_outcome', 0):+.2f}, "
+                    f"n={summary.get('sample_size', 0)}"
+                )
 
     print(f"\n{'='*60}")
     return results
