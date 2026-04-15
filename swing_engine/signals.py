@@ -76,6 +76,18 @@ def _coerce_nullable_bool(series: pd.Series) -> pd.Series:
     return series.map(_convert).astype("boolean")
 
 
+def _set_signal_value(df: pd.DataFrame, idx, column: str, value) -> None:
+    """Assign into a signal DataFrame while preserving resilient dtypes."""
+    if column in SIGNAL_BOOL_COLUMNS:
+        df[column] = _coerce_nullable_bool(df[column])
+        if pd.isna(value):
+            df.at[idx, column] = pd.NA
+        else:
+            df.at[idx, column] = bool(value)
+        return
+    df.at[idx, column] = value
+
+
 def _ensure_log(path: Path, columns: list) -> pd.DataFrame:
     """Load or create a log CSV."""
     if path.exists():
@@ -440,11 +452,11 @@ def backfill_outcomes(lookback_days: int = 14) -> int:
         sig_price = sub.iloc[0]["close"]
 
         # Forward returns
-        df.loc[idx, "fwd_1d_ret"] = round((sub.iloc[1]["close"] / sig_price - 1) * 100, 2)
+        _set_signal_value(df, idx, "fwd_1d_ret", round((sub.iloc[1]["close"] / sig_price - 1) * 100, 2))
         if len(sub) >= 4:
-            df.loc[idx, "fwd_3d_ret"] = round((sub.iloc[3]["close"] / sig_price - 1) * 100, 2)
+            _set_signal_value(df, idx, "fwd_3d_ret", round((sub.iloc[3]["close"] / sig_price - 1) * 100, 2))
         if len(sub) >= 6:
-            df.loc[idx, "fwd_5d_ret"] = round((sub.iloc[5]["close"] / sig_price - 1) * 100, 2)
+            _set_signal_value(df, idx, "fwd_5d_ret", round((sub.iloc[5]["close"] / sig_price - 1) * 100, 2))
 
         # Check if price entered entry zone within expiry
         entry_low = row.get("entry_low")
@@ -466,41 +478,38 @@ def backfill_outcomes(lookback_days: int = 14) -> int:
 
                 triggered = True
                 trigger_date = bar["_ds"]
-                df.loc[idx, "triggered"] = True
-                df.loc[idx, "trigger_date"] = trigger_date
+                _set_signal_value(df, idx, "triggered", True)
+                _set_signal_value(df, idx, "trigger_date", trigger_date)
                 trigger_price = round(
                     min(max(bar["open"], entry_low), entry_high), 2
                 )
-                df.loc[idx, "trigger_price"] = trigger_price
+                _set_signal_value(df, idx, "trigger_price", trigger_price)
 
                 if pd.notna(stop) and stop not in (0, None):
                     risk_per_share = abs(trigger_price - stop)
                     if risk_per_share > 0 and len(sub) >= 6:
                         fwd5_close = sub.iloc[5]["close"]
-                        df.loc[idx, "outcome_r"] = round(
-                            (fwd5_close - trigger_price) / risk_per_share, 2
+                        _set_signal_value(
+                            df, idx, "outcome_r",
+                            round((fwd5_close - trigger_price) / risk_per_share, 2)
                         )
-                        df.loc[idx, "outcome_status"] = (
+                        _set_signal_value(df, idx, "outcome_status", (
                             "positive_5d" if fwd5_close > trigger_price
                             else "negative_5d" if fwd5_close < trigger_price
                             else "flat_5d"
-                        )
+                        ))
                 break
 
         if not triggered:
-            df.loc[idx, "triggered"] = False
-            df.loc[idx, "outcome_status"] = "expired"
+            _set_signal_value(df, idx, "triggered", False)
+            _set_signal_value(df, idx, "outcome_status", "expired")
         else:
             active = sub[sub["_ds"] >= trigger_date].copy()
             if not active.empty and trigger_price:
                 max_high = active["high"].max()
                 min_low = active["low"].min()
-                df.loc[idx, "max_favorable_excursion_pct"] = round(
-                    (max_high / trigger_price - 1) * 100, 2
-                )
-                df.loc[idx, "max_adverse_excursion_pct"] = round(
-                    (min_low / trigger_price - 1) * 100, 2
-                )
+                _set_signal_value(df, idx, "max_favorable_excursion_pct", round((max_high / trigger_price - 1) * 100, 2))
+                _set_signal_value(df, idx, "max_adverse_excursion_pct", round((min_low / trigger_price - 1) * 100, 2))
 
                 pivots = packet.get("pivots", {}) if packet else {}
                 hit_target_1 = pd.notna(target_1) and (active["high"] >= float(target_1)).any()
@@ -510,11 +519,11 @@ def backfill_outcomes(lookback_days: int = 14) -> int:
                 hit_r3 = pd.notna(pivots.get("r3")) and (active["high"] >= float(pivots.get("r3"))).any()
                 target_3 = _calc_target_3(row, packet, trigger_price)
 
-                df.loc[idx, "hit_target_1"] = bool(hit_target_1)
-                df.loc[idx, "hit_target_2"] = bool(hit_target_2)
-                df.loc[idx, "hit_pivot_r1"] = bool(hit_r1)
-                df.loc[idx, "hit_pivot_r2"] = bool(hit_r2)
-                df.loc[idx, "hit_pivot_r3"] = bool(hit_r3)
+                _set_signal_value(df, idx, "hit_target_1", bool(hit_target_1))
+                _set_signal_value(df, idx, "hit_target_2", bool(hit_target_2))
+                _set_signal_value(df, idx, "hit_pivot_r1", bool(hit_r1))
+                _set_signal_value(df, idx, "hit_pivot_r2", bool(hit_r2))
+                _set_signal_value(df, idx, "hit_pivot_r3", bool(hit_r3))
 
                 sequence = _evaluate_trade_sequence(
                     active,
@@ -526,15 +535,15 @@ def backfill_outcomes(lookback_days: int = 14) -> int:
                     ],
                 )
                 for key, value in sequence.items():
-                    df.loc[idx, key] = value
+                    _set_signal_value(df, idx, key, value)
 
                 resistances, supports = _build_level_catalog(row, packet, trigger_price)
-                df.loc[idx, "first_resistance"] = _first_level_touched(
+                _set_signal_value(df, idx, "first_resistance", _first_level_touched(
                     active, trigger_date, resistances, "resistance"
-                )
-                df.loc[idx, "first_support"] = _first_level_touched(
+                ))
+                _set_signal_value(df, idx, "first_support", _first_level_touched(
                     active, trigger_date, supports, "support"
-                )
+                ))
 
         db.upsert_signal(df.loc[idx].to_dict())
 
