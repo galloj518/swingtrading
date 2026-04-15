@@ -160,6 +160,11 @@ def _score_color(score):
         return "#6b7280", "#111"
 
 
+def _trade_score(pkt: dict) -> float:
+    sc = pkt.get("score", {})
+    return sc.get("tradeability", {}).get("score", sc.get("confidence_adjusted_score", sc.get("score", 0)))
+
+
 def _as_bool(val) -> bool:
     """Normalize booleans that may arrive as strings from saved reports."""
     if isinstance(val, bool):
@@ -242,11 +247,12 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
     group_strength = pkt.get("group_strength", {})
     calibration = pkt.get("calibration", {})
 
-    score = sc.get("score", 0)
+    score = _trade_score(pkt)
     confidence_adjusted_score = sc.get("confidence_adjusted_score", score)
     confidence_score = sc.get("confidence_score")
     idea_score = sc.get("idea_quality_score", score)
     timing_score = sc.get("entry_timing_score", score)
+    tradeability = sc.get("tradeability", {})
     color, bg = _score_color(score)
     price = d.get("last_close", 0)
     action = _build_actionability(pkt, cl)
@@ -403,7 +409,7 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
             <span class="sym-name">{sym}</span>
             <span style="color:{color};font-weight:700;font-size:1.3em;margin-left:8px;">{score}</span>
             <span style="color:#888;">/ 100</span>
-            <span style="color:{color};margin-left:8px;">{sc.get('quality', '')}</span>
+            <span style="color:{color};margin-left:8px;">{tradeability.get('label', sc.get('quality', ''))}</span>
             <span style="display:inline-block;margin-left:10px;padding:3px 8px;border-radius:999px;background:#101923;color:#8eb8ff;font-size:0.82em;font-weight:700;">
               IDEA {idea_score:.1f}
             </span>
@@ -430,6 +436,7 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
           {sc.get('decision_summary', '')}
         </div>
         <div style="color:#8ea2b8;margin-top:5px;font-size:0.86em;">
+          Tradeability: <span style="color:#fff;">{tradeability.get('label', '--')}</span> |
           Institutional quality: <span style="color:#fff;">{sc.get('idea_quality', sc.get('quality', '--'))}</span> |
           Entry timing: <span style="color:#fff;">{sc.get('entry_timing', '--')}</span> |
           Confidence-adjusted score: <span style="color:#fff;">{_fmt(confidence_adjusted_score, 1)}</span>
@@ -685,7 +692,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
     all_watchlist_candidates = [s for s in packets if s in cfg.WATCHLIST]
     wl_candidates = [
         s for s in all_watchlist_candidates
-        if packets[s].get("score", {}).get("score", 0) >= min_report_score
+        if _trade_score(packets[s]) >= min_report_score or packets[s].get("score", {}).get("idea_quality_score", 0) >= 55
     ]
     wl_meta = {}
     for sym in wl_candidates:
@@ -694,17 +701,17 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
         action = _build_actionability(pkt, cl)
         wl_meta[sym] = {
             "action": action,
-            "score": pkt.get("score", {}).get("score", 0),
+            "score": _trade_score(pkt),
             "confidence_adjusted_score": pkt.get("score", {}).get("confidence_adjusted_score", pkt.get("score", {}).get("score", 0)),
         }
     wl_syms = sorted(
         wl_candidates,
         key=lambda s: (
             wl_meta[s]["action"]["rank"],
+            -wl_meta[s]["score"],
             -wl_meta[s]["confidence_adjusted_score"],
             -packets[s].get("score", {}).get("idea_quality_score", 0),
             -packets[s].get("score", {}).get("entry_timing_score", 0),
-            -wl_meta[s]["score"],
             s,
         ),
     )
@@ -717,7 +724,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
         sc = pkt.get("score", {})
         ez = pkt.get("entry_zone", {})
         setup = pkt.get("setup", {})
-        score = sc.get("score", 0)
+        score = _trade_score(pkt)
         idea_score = sc.get("idea_quality_score", score)
         timing_score = sc.get("entry_timing_score", score)
         color, bg = _score_color(score)
@@ -768,7 +775,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
             ez = pkt.get("entry_zone", {})
             setup = pkt.get("setup", {})
             price = pkt.get("daily", {}).get("last_close")
-            score = pkt.get("score", {}).get("score", 0)
+            score = _trade_score(pkt)
             idea_score = pkt.get("score", {}).get("idea_quality_score", score)
             timing_score = pkt.get("score", {}).get("entry_timing_score", score)
             action = wl_meta[sym]["action"]

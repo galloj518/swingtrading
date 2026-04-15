@@ -31,6 +31,8 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
     data_quality = packet.get("data_quality", {})
     data_quality_score = float(data_quality.get("score", 0) or 0)
     idea_score = float(sc.get("idea_quality_score", sc.get("score", 0)) or 0)
+    tradeability = sc.get("tradeability", {})
+    tradeability_score = float(tradeability.get("score", sc.get("score", 0)) or 0)
 
     failed_items = {
         c["item"] for c in (checks or []) if not c.get("passed", False)
@@ -118,6 +120,8 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
     setup = packet["setup"]
     ps = packet["position_sizing"]
     rs = packet["relative_strength"]
+    tradeability = sc.get("tradeability", {})
+    tradeability_score = float(tradeability.get("score", sc.get("score", 0)) or 0)
 
     price = ez.get("price", 0)
 
@@ -148,11 +152,12 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
     checks.append({
         "item": "Score",
         "value": (
+            f"Tradeability {tradeability_score}/100 ({tradeability.get('label', '--')}) | "
             f"Composite {sc['score']}/100 ({sc['quality']}) | "
             f"Idea {sc.get('idea_quality_score', sc['score'])}/100 ({sc.get('idea_quality', sc['quality'])}) | "
             f"Timing {sc.get('entry_timing_score', sc['score'])}/100 ({sc.get('entry_timing', sc['quality'])})"
         ),
-        "passed": sc["score"] >= 55,
+        "passed": tradeability_score >= 55,
     })
 
     checks.append({

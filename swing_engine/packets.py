@@ -182,6 +182,9 @@ def build_packet(symbol: str, data: dict,
         entry_zone=entry_zone, pivots=pivots,
         event_risk=event_ctx, weekly_state=weekly_state,
     )
+    score_result["tradeability"] = scoring.calc_tradeability(
+        score_result, entry_zone, setup, data_quality=data_quality
+    )
 
     # --- Position sizing ---
     pos_size = {}

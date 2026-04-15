@@ -218,6 +218,16 @@ def _build_confidence_context(idea_score: float, timing_score: float,
     }
 
 
+def _tradeability_label(score: float) -> str:
+    return (
+        "A - actionable" if score >= 80 else
+        "B - nearly actionable" if score >= 65 else
+        "C - watchlist" if score >= 50 else
+        "D - weak timing" if score >= 35 else
+        "F - do not act"
+    )
+
+
 def _score_trend_quality(state: dict, timeframe: str) -> tuple[float, str]:
     """Collapse overlapping MA facts into a smaller structural factor."""
     if timeframe == "weekly":
@@ -541,10 +551,17 @@ def _score_entry_timing(daily_state: dict, intra_state: dict,
     ])
 
     rvol = _safe_float(daily_state.get("rvol"), 1.0)
-    low_volume_pullback = _band_ratio(rvol, 0.35, 0.55, 0.95, 1.45) * _band_ratio(dist20, -5.0, -2.5, 0.5, 5.0)
+    low_volume_pullback = _band_ratio(rvol, 0.30, 0.50, 1.00, 1.60) * _band_ratio(dist20, -5.0, -2.5, 0.8, 5.0)
     breakout_volume = _band_ratio(rvol, 0.8, 1.1, 1.9, 2.8) * _band_ratio(dist20, -0.5, 0.0, 4.5, 8.0)
     distribution_penalty = _band_ratio(rvol, 1.3, 1.8, 3.2, 4.2) * _band_ratio(-dist20, -1.0, 1.5, 5.5, 8.0)
-    volume_score = _clamp(100.0 * (0.55 * low_volume_pullback + 0.45 * breakout_volume) - 35.0 * distribution_penalty)
+    neutral_volume = _band_ratio(rvol, 0.45, 0.7, 1.15, 1.7)
+    volume_score = _clamp(
+        45.0 +
+        30.0 * low_volume_pullback +
+        25.0 * breakout_volume +
+        12.0 * neutral_volume -
+        30.0 * distribution_penalty
+    )
 
     intraday_score, intraday_reason = _score_intraday_timing(intra_state)
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
@@ -1119,6 +1136,81 @@ def classify_setup(daily_state: dict, score: int, action_bias: str,
         "type": "no_setup",
         "description": "No actionable pattern",
         "trigger": None, "watch_for": None, "invalidation": None,
+    }
+
+
+def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_quality: dict | None = None) -> dict:
+    """
+    Execution-focused score: how tradable is this setup now?
+    Separates "good stock" from "good swing entry."
+    """
+    data_quality = data_quality or {}
+    action_bias = score_result.get("action_bias", "")
+    setup_type = setup.get("type", "no_setup")
+    idea_score = _safe_float(score_result.get("idea_quality_score"), _safe_float(score_result.get("score"), 0.0))
+    timing_score = _safe_float(score_result.get("entry_timing_score"), _safe_float(score_result.get("score"), 0.0))
+    confidence_adj = _safe_float(score_result.get("confidence_adjusted_score"), _safe_float(score_result.get("score"), 0.0))
+    rr_t1 = _safe_float(entry_zone.get("rr_t1"), 0.0)
+    in_zone = bool(entry_zone.get("in_zone"))
+    data_quality_score = _safe_float(data_quality.get("score"), 0.0)
+
+    if action_bias == "unavailable" or setup_type == "data_unavailable" or data_quality_score <= 15:
+        return {
+            "score": 0.0,
+            "label": "Data unavailable",
+            "detail": data_quality.get("detail", "Fresh market data unavailable"),
+        }
+
+    if action_bias == "avoid" or setup_type == "no_setup":
+        score = min(confidence_adj, 20.0)
+        return {
+            "score": round(score, 1),
+            "label": _tradeability_label(score),
+            "detail": "Not tradable in the current condition set",
+        }
+
+    base_score = 0.45 * timing_score + 0.35 * confidence_adj + 0.20 * idea_score
+    detail_parts = []
+
+    if setup_type in ("extended_wait", "above_zone_wait"):
+        base_score = min(base_score, 54.0)
+        detail_parts.append("Extended above value; wait for pullback")
+    elif setup_type == "breakout":
+        base_score = min(max(base_score, 58.0), 74.0)
+        detail_parts.append("Needs breakout confirmation")
+    elif setup_type in ("pullback_developing", "reclaim", "watch"):
+        base_score = min(base_score, 62.0)
+        detail_parts.append("Constructive, but still developing")
+
+    if in_zone:
+        base_score += 14.0
+        detail_parts.append("Inside entry zone")
+    else:
+        base_score -= 6.0
+
+    if rr_t1 >= 2.0:
+        base_score += 6.0
+        detail_parts.append("Reward path is attractive")
+    elif rr_t1 >= 1.5:
+        base_score += 3.0
+    elif rr_t1 > 0:
+        base_score -= 6.0
+        detail_parts.append("Reward to first target is mediocre")
+
+    if action_bias == "buy":
+        base_score += 6.0
+    elif action_bias == "lean_buy":
+        base_score += 2.0
+    elif action_bias == "wait":
+        base_score -= 2.0
+
+    score = round(_clamp(base_score), 1)
+    label = _tradeability_label(score)
+    detail = "; ".join(detail_parts) if detail_parts else "Tradeability derived from setup quality, timing, and reward path"
+    return {
+        "score": score,
+        "label": label,
+        "detail": detail,
     }
 
 

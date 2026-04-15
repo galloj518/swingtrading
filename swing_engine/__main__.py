@@ -137,7 +137,7 @@ def run_daily(force: bool = False):
     for sym in cfg.WATCHLIST:
         cl = checklist.generate_checklist(all_packets[sym], regime_result)
         all_checklists[sym] = cl
-        sc_val = all_packets[sym]["score"]["score"]
+        sc_val = all_packets[sym]["score"].get("tradeability", {}).get("score", all_packets[sym]["score"]["score"])
         if sc_val >= 60:
             checklist.print_checklist(cl)
 
@@ -145,6 +145,7 @@ def run_daily(force: bool = False):
         cfg.WATCHLIST,
         key=lambda sym: (
             all_checklists[sym].get("actionability", {}).get("rank", 99),
+            -all_packets[sym].get("score", {}).get("tradeability", {}).get("score", all_packets[sym].get("score", {}).get("confidence_adjusted_score", all_packets[sym].get("score", {}).get("score", 0))),
             -all_packets[sym].get("score", {}).get("confidence_adjusted_score", all_packets[sym].get("score", {}).get("score", 0)),
             -all_packets[sym].get("score", {}).get("idea_quality_score", 0),
             -all_packets[sym].get("calibration", {}).get("score", 50),
@@ -157,7 +158,7 @@ def run_daily(force: bool = False):
     top_execution = ranked_watchlist[:cfg.TOP_EXECUTION_COUNT]
     top_execution_intraday = [
         sym for sym in top_execution
-        if all_packets[sym].get("score", {}).get("score", 0) >= 65
+        if all_packets[sym].get("score", {}).get("tradeability", {}).get("score", all_packets[sym].get("score", {}).get("score", 0)) >= 60
     ][:cfg.TOP_EXECUTION_INTRADAY_COUNT]
     narrative_candidates = ranked_watchlist[:cfg.TOP_NARRATIVE_COUNT]
     top_chart_symbols = ranked_watchlist[:cfg.TOP_CHART_COUNT]
