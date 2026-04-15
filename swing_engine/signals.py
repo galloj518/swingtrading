@@ -42,6 +42,39 @@ JOURNAL_COLUMNS = [
     "r_multiple", "pnl_dollars", "notes",
 ]
 
+SIGNAL_BOOL_COLUMNS = [
+    "triggered",
+    "hit_target_1", "hit_target_2",
+    "hit_pivot_r1", "hit_pivot_r2", "hit_pivot_r3",
+    "stop_hit", "stop_before_target_1", "target_1_before_stop",
+    "target_2_before_stop", "target_3_before_stop",
+]
+
+
+def _coerce_nullable_bool(series: pd.Series) -> pd.Series:
+    """Normalize mixed CSV boolean columns into pandas' nullable boolean dtype."""
+    def _convert(value):
+        if pd.isna(value):
+            return pd.NA
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            if value in (0, 0.0):
+                return False
+            if value in (1, 1.0):
+                return True
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in ("true", "1", "yes", "y"):
+                return True
+            if normalized in ("false", "0", "no", "n"):
+                return False
+            if normalized in ("", "nan", "none", "null", "<na>"):
+                return pd.NA
+        return pd.NA
+
+    return series.map(_convert).astype("boolean")
+
 
 def _ensure_log(path: Path, columns: list) -> pd.DataFrame:
     """Load or create a log CSV."""
@@ -52,10 +85,19 @@ def _ensure_log(path: Path, columns: list) -> pd.DataFrame:
             if col not in df.columns:
                 df[col] = None
                 changed = True
+        for col in SIGNAL_BOOL_COLUMNS:
+            if col in df.columns:
+                coerced = _coerce_nullable_bool(df[col])
+                if not df[col].dtype == coerced.dtype or not df[col].equals(coerced):
+                    df[col] = coerced
+                    changed = True
         if changed:
             df.to_csv(path, index=False)
         return df
     df = pd.DataFrame(columns=columns)
+    for col in SIGNAL_BOOL_COLUMNS:
+        if col in df.columns:
+            df[col] = pd.Series(dtype="boolean")
     df.to_csv(path, index=False)
     return df
 
