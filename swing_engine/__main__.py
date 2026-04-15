@@ -145,6 +145,7 @@ def run_daily(force: bool = False):
         cfg.WATCHLIST,
         key=lambda sym: (
             all_checklists[sym].get("actionability", {}).get("rank", 99),
+            -all_packets[sym].get("score", {}).get("confidence_adjusted_score", all_packets[sym].get("score", {}).get("score", 0)),
             -all_packets[sym].get("score", {}).get("idea_quality_score", 0),
             -all_packets[sym].get("calibration", {}).get("score", 50),
             -all_packets[sym].get("score", {}).get("entry_timing_score", 0),

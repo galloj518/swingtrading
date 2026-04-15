@@ -152,6 +152,69 @@ def _decision_summary(action_bias: str, idea_score: float, timing_score: float,
     return "Good swing candidate, but execution still matters."
 
 
+def _build_confidence_context(idea_score: float, timing_score: float,
+                              idea_factors: dict | None = None,
+                              timing_factors: dict | None = None) -> dict:
+    """
+    Estimate how trustworthy the composite score is.
+    High scores with conflicted internals should not rank like clean consensus setups.
+    """
+    idea_factors = idea_factors or {}
+    timing_factors = timing_factors or {}
+
+    core = [
+        idea_score,
+        timing_score,
+        _safe_float(idea_factors.get("chart_quality"), 50.0),
+        _safe_float(idea_factors.get("base_quality"), 55.0),
+        _safe_float(idea_factors.get("group_strength"), 55.0),
+        _safe_float(idea_factors.get("clean_air"), 50.0),
+        _safe_float(idea_factors.get("historical_evidence"), 50.0),
+        _safe_float(idea_factors.get("breakout_integrity"), 55.0),
+        _safe_float(timing_factors.get("zone_fit"), 50.0),
+    ]
+    core = [float(v) for v in core if v is not None]
+    spread = (max(core) - min(core)) if core else 50.0
+    consensus = round(max(0.0, min(100.0, 100.0 - spread)), 1)
+
+    evidence_samples = int(idea_factors.get("historical_evidence_samples", 0) or 0)
+    if evidence_samples >= 30:
+        evidence_conf = 100.0
+    elif evidence_samples >= 20:
+        evidence_conf = 85.0
+    elif evidence_samples >= 12:
+        evidence_conf = 70.0
+    elif evidence_samples >= 6:
+        evidence_conf = 55.0
+    elif evidence_samples > 0:
+        evidence_conf = 40.0
+    else:
+        evidence_conf = 25.0
+
+    confidence = round(0.70 * consensus + 0.30 * evidence_conf, 1)
+    confidence_penalty = max(0.0, min(18.0, (65.0 - confidence) * 0.35))
+    confidence_adjusted_score = round(_clamp((0.68 * idea_score + 0.32 * timing_score) - confidence_penalty), 1)
+
+    if confidence >= 80:
+        label = "High confidence"
+    elif confidence >= 65:
+        label = "Good confidence"
+    elif confidence >= 50:
+        label = "Mixed confidence"
+    else:
+        label = "Low confidence"
+
+    detail = f"{label}: factor consensus {consensus:.0f}/100, evidence support {evidence_conf:.0f}/100"
+    return {
+        "score": confidence,
+        "label": label,
+        "consensus_score": consensus,
+        "evidence_support_score": evidence_conf,
+        "confidence_adjusted_score": confidence_adjusted_score,
+        "detail": detail,
+    }
+
+
 def _score_trend_quality(state: dict, timeframe: str) -> tuple[float, str]:
     """Collapse overlapping MA facts into a smaller structural factor."""
     if timeframe == "weekly":
@@ -690,6 +753,10 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         summary = "Blocked: weekly structure is broken, so there is no long swing setup yet."
         return {
             "score": 20,
+            "confidence_adjusted_score": 20,
+            "confidence_score": 20,
+            "confidence_label": "Low confidence",
+            "confidence_detail": "Weekly gate failed",
             "quality": "F - weekly trend broken",
             "composite_score": 20,
             "composite_quality": "F - weekly trend broken",
@@ -713,6 +780,10 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         summary = "Wait: weekly trend is intact, but the daily trend has not repaired enough yet."
         return {
             "score": 40,
+            "confidence_adjusted_score": 40,
+            "confidence_score": 35,
+            "confidence_label": "Low confidence",
+            "confidence_detail": "Daily gate failed",
             "quality": "D - daily trend broken",
             "composite_score": 40,
             "composite_quality": "D - daily trend broken",
@@ -861,6 +932,13 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     idea_score = round(_clamp(idea_score), 1)
     timing_score = round(_clamp(timing_score), 1)
     score = round(_clamp(0.68 * idea_score + 0.32 * timing_score), 1)
+    confidence_ctx = _build_confidence_context(
+        idea_score,
+        timing_score,
+        idea.get("factors", {}),
+        timing.get("factors", {}),
+    )
+    confidence_adjusted_score = confidence_ctx["confidence_adjusted_score"]
 
     quality = _quality_label(score)
     reasons = [wg["detail"], dg["detail"]] + idea["reasons"] + timing["reasons"] + adjustment_notes
@@ -876,9 +954,16 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         timing_score,
         idea.get("factors", {}),
     )
+    if confidence_ctx["score"] < 50 and action_bias in {"buy", "lean_buy"}:
+        action_bias = "wait"
+        decision_summary = "Wait: the raw score is decent, but the setup lacks enough consensus to trust it yet."
 
     return {
         "score": score,
+        "confidence_adjusted_score": confidence_adjusted_score,
+        "confidence_score": confidence_ctx["score"],
+        "confidence_label": confidence_ctx["label"],
+        "confidence_detail": confidence_ctx["detail"],
         "quality": quality,
         "composite_score": score,
         "composite_quality": quality,
