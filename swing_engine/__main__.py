@@ -9,6 +9,10 @@ Usage:
     python -m swing_engine dashboard    # Regenerate dashboard only
     python -m swing_engine backfill     # Backfill signal outcomes
     python -m swing_engine db-sync      # Sync CSV history into SQLite
+    python -m swing_engine exits        # Evaluate all open positions
+    python -m swing_engine exits NVDA   # Evaluate one open position
+    python -m swing_engine portfolio    # Show portfolio exposure / Greeks
+    python -m swing_engine backtest     # Run walk-forward backtest
 """
 import sys
 import json
@@ -31,6 +35,10 @@ from . import narrative
 from . import leveraged
 from . import db
 from . import calibration
+from . import alerts
+from . import correlation
+from . import exits
+from . import portfolio
 
 
 def _load_spy(force: bool = False):
@@ -49,6 +57,25 @@ def _load_vix(force: bool = False):
     return None
 
 
+def _open_position_risk_map() -> dict[str, float]:
+    """Return open risk dollars by symbol for live correlation-aware sizing."""
+    try:
+        open_trades = db.get_open_trades()
+    except Exception:
+        return {}
+
+    risk_map: dict[str, float] = {}
+    for trade in open_trades:
+        symbol = str(trade.get("symbol", "")).upper()
+        entry = float(trade.get("entry_price") or 0)
+        stop = float(trade.get("current_stop") or 0) or float(trade.get("stop_price") or 0)
+        shares = int(trade.get("shares") or 0)
+        if not symbol or entry <= 0 or stop <= 0 or shares <= 0:
+            continue
+        risk_map[symbol] = risk_map.get(symbol, 0.0) + abs(entry - stop) * shares
+    return risk_map
+
+
 def run_daily(force: bool = False):
     """
     Full daily analysis pipeline.
@@ -64,7 +91,7 @@ def run_daily(force: bool = False):
     mdata.clean_old_cache()
 
     # --- Load benchmark data ---
-    print("\n[1/6] Loading benchmark data...")
+    print("\n[1/8] Loading benchmark data...")
     spy_daily = _load_spy(force)
     vix_close = _load_vix(force)
 
@@ -83,8 +110,19 @@ def run_daily(force: bool = False):
         )
         print(f"({len(data['daily'])} bars)")
 
-    # --- Regime ---
-    print("\n[2/6] Calculating market regime...")
+    # --- Macro signals (VIX term structure, credit spreads, yield curve) ---
+    print("  Loading macro signals...", end=" ")
+    try:
+        macro_signals = mdata.load_macro_signals(force=force)
+        print(f"VIX3M/VIX={macro_signals.get('vix_term_structure', '?')} | "
+              f"Credit={macro_signals.get('credit_signal', '?')} | "
+              f"Curve inv={macro_signals.get('curve_inverted', '?')}")
+    except Exception as e:
+        macro_signals = {}
+        print(f"(unavailable: {e})")
+
+    # --- Regime (with macro overlay) ---
+    print("\n[2/8] Calculating market regime...")
     regime_result = regime_mod.calc_regime(
         spy=bench_states.get("SPY", {}),
         qqq=bench_states.get("QQQ", {}),
@@ -92,27 +130,60 @@ def run_daily(force: bool = False):
         dia=bench_states.get("DIA", {}),
         vix_close=vix_close,
         event_risk=events.get_event_context(),
+        macro_signals=macro_signals,
     )
     regime_line = regime_mod.regime_summary_text(regime_result)
     print(f"  {regime_line}")
 
     # --- Load watchlist data ---
-    print("\n[3/8] Loading watchlist data...")
+    print("\n[3/8] Loading watchlist data...")  # step numbers reflow handled below
     all_packets = {}
     data_store = dict(bench_data)  # start with benchmark data
+    watchlist_data = {}
     for sym in cfg.WATCHLIST:
         print(f"  {sym}...", end=" ")
         data = mdata.load_all(sym, force=force)
         data_store[sym] = data
-        pkt = packets.build_packet(sym, data, spy_daily, regime=regime_result)
+        watchlist_data[sym] = data
+        print(f"({len(data.get('daily', []))} bars)")
+
+    # Also build benchmark packets for the dashboard
+    print("  Building dynamic correlation matrix...", end=" ")
+    corr_matrix = None
+    corr_summary = {}
+    if getattr(cfg, "USE_DYNAMIC_CORRELATION", False):
+        try:
+            corr_matrix = correlation.build_dynamic_correlation_matrix(data_store)
+            if corr_matrix is not None:
+                corr_summary = correlation.correlation_summary(corr_matrix, cfg.WATCHLIST)
+                n_pairs = corr_summary.get("high_correlation_pairs", 0)
+                print(f"{n_pairs} high-correlation pairs (>{cfg.DYNAMIC_CORR_THRESHOLD})")
+            else:
+                print("insufficient data")
+        except Exception as e:
+            print(f"(unavailable: {e})")
+    else:
+        print("disabled")
+
+    open_position_risk = _open_position_risk_map()
+
+    print("  Building watchlist packets...")
+    for sym in cfg.WATCHLIST:
+        pkt = packets.build_packet(
+            sym,
+            watchlist_data[sym],
+            spy_daily,
+            corr_matrix=corr_matrix,
+            open_positions=open_position_risk,
+            regime=regime_result,
+        )
         all_packets[sym] = pkt
         sc = pkt["score"]
-        print(f"score={sc['score']}/100 ({sc['quality']}), "
+        print(f"    {sym}: score={sc['score']}/100 ({sc['quality']}), "
               f"bias={sc['action_bias']}, "
               f"setup={pkt['setup']['type']}")
         packets.save_packet(sym, pkt)
 
-    # Also build benchmark packets for the dashboard
     for sym in cfg.BENCHMARKS:
         pkt = packets.build_packet(sym, bench_data[sym], spy_daily, regime=regime_result)
         all_packets[sym] = pkt
@@ -168,6 +239,36 @@ def run_daily(force: bool = False):
     print(f"    Intraday ladder: {', '.join(top_execution_intraday) if top_execution_intraday else 'None'}")
     print(f"    Narrative set: {', '.join(narrative_candidates) if narrative_candidates else 'None'}")
     print(f"    Chart set: {', '.join(top_chart_symbols) if top_chart_symbols else 'None'}")
+
+    # --- Exit scan: evaluate all open positions ---
+    print("\n[6/8] Exit scan (open positions)...")
+    try:
+        exit_recs = exits.run_exit_scan(data_store=data_store)
+        if exit_recs:
+            exits.print_exit_report(exit_recs)
+    except Exception as e:
+        print(f"  Exit scan error: {e}")
+
+    # --- Portfolio exposure / Greeks ---
+    print("[6b] Portfolio exposure...")
+    portfolio_exposure = {}
+    try:
+        open_trades = db.get_open_trades()
+        portfolio_exposure = portfolio.calc_portfolio_exposure(
+            open_trades, all_packets, spy_daily, data_store=data_store
+        )
+        portfolio.print_exposure_report(portfolio_exposure)
+        if portfolio_exposure.get("open_positions", 0) > 0:
+            db.save_portfolio_snapshot(portfolio_exposure)
+    except Exception as e:
+        print(f"  Portfolio exposure error: {e}")
+
+    # --- Alerts ---
+    print("[6c] Dispatching alerts...")
+    try:
+        alerts.dispatch_alerts(all_packets, regime_result)
+    except Exception as e:
+        print(f"  Alert dispatch error: {e}")
 
     # --- SOXX tactical ---
     soxx_dec = None
@@ -402,6 +503,56 @@ def main():
             signals.close_trade(args[1].upper(), float(args[2]), args[3])
         else:
             print("  Usage: close-trade SYMBOL exit_price reason")
+
+    elif args[0] == "exits":
+        # python -m swing_engine exits [SYMBOL]
+        symbol_filter = args[1].upper() if len(args) >= 2 else None
+        recs = exits.run_exit_scan(symbol_filter=symbol_filter)
+        exits.print_exit_report(recs)
+
+    elif args[0] == "portfolio":
+        spy_daily = _load_spy()
+        data = {}  # lazy load only needed symbols
+        open_trades = db.get_open_trades()
+        if open_trades:
+            for t in open_trades:
+                sym = t.get("symbol", "")
+                if sym and sym not in data:
+                    data[sym] = mdata.load_all(sym)
+        exposure = portfolio.calc_portfolio_exposure(open_trades, {}, spy_daily, data_store=data)
+        portfolio.print_exposure_report(exposure)
+
+    elif args[0] == "backtest":
+        from . import backtest as bt_mod
+        force = "--force" in args
+        start = None
+        for i, a in enumerate(args):
+            if a == "--start" and i + 1 < len(args):
+                start = args[i + 1]
+        symbols_arg = [a.upper() for a in args[1:] if not a.startswith("-") and a != "--start"]
+        symbols_to_run = symbols_arg or cfg.WATCHLIST
+
+        print(f"\n  Running walk-forward backtest on {len(symbols_to_run)} symbol(s)...")
+        spy_daily = _load_spy(force)
+        data_store = {}
+        for sym in symbols_to_run:
+            data_store[sym] = mdata.load_all(sym, force=force)
+
+        engine = bt_mod.WalkForwardEngine(
+            symbols=symbols_to_run,
+            daily_data_store=data_store,
+            spy_df=spy_daily,
+            start_date=start,
+        )
+        results = engine.run()
+        report_path = engine.save_report(results)
+        summary = engine.summary(results)
+        if not summary.empty:
+            print("\n  Walk-forward summary:")
+            print(summary[["window", "is_start", "oos_start",
+                            "in_sample_win_rate", "out_of_sample_win_rate",
+                            "in_sample_avg_r", "out_of_sample_avg_r"]].to_string(index=False))
+        print(f"\n  Full report: {report_path}")
 
     else:
         print(__doc__)

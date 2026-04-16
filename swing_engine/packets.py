@@ -78,6 +78,8 @@ def _data_quality(data: dict) -> dict:
 def build_packet(symbol: str, data: dict,
                  spy_daily: pd.DataFrame = None,
                  existing_group_risk: float = 0.0,
+                 corr_matrix: pd.DataFrame | None = None,
+                 open_positions: dict | None = None,
                  regime: dict = None) -> dict:
     """
     Build complete analysis packet for a symbol.
@@ -200,6 +202,10 @@ def build_packet(symbol: str, data: dict,
             avg_volume=daily_state.get("avg_volume", 0),
             avg_dollar_volume=daily_state.get("avg_dollar_volume", 0),
             rvol=daily_state.get("rvol", 1.0),
+            corr_matrix=corr_matrix,
+            open_positions=open_positions,
+            target_1=entry_zone.get("target_1"),
+            target_2=entry_zone.get("target_2"),
         )
 
     return {

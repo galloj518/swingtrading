@@ -14,6 +14,8 @@ from typing import Optional
 import pandas as pd
 
 from . import config as cfg
+from .utils import _band_ratio, _linear_ratio, _clamp
+from .constants import ThresholdRegistry as TR
 
 
 def _check_weekly_gate(weekly_state: dict) -> dict:
@@ -89,10 +91,6 @@ def _check_daily_gate(daily_state: dict) -> dict:
     }
 
 
-def _clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
-    return max(low, min(high, value))
-
-
 def _safe_float(value, default: float = 0.0) -> float:
     try:
         if value is None:
@@ -100,23 +98,6 @@ def _safe_float(value, default: float = 0.0) -> float:
         return float(value)
     except (TypeError, ValueError):
         return default
-
-
-def _linear_ratio(value: float, low: float, high: float) -> float:
-    if high == low:
-        return 0.0
-    return _clamp((value - low) / (high - low), 0.0, 1.0)
-
-
-def _band_ratio(value: float, outer_low: float, ideal_low: float,
-                ideal_high: float, outer_high: float) -> float:
-    if value <= outer_low or value >= outer_high:
-        return 0.0
-    if ideal_low <= value <= ideal_high:
-        return 1.0
-    if value < ideal_low:
-        return _linear_ratio(value, outer_low, ideal_low)
-    return _linear_ratio(outer_high - value, 0.0, outer_high - ideal_high)
 
 
 def _avg(values: list[float]) -> float:
@@ -530,26 +511,42 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     evidence_score, evidence_reason = _score_evidence(calibration_context)
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
 
+    # Dynamic evidence weight: increases as we accumulate matured-outcome history.
+    # Redistributes weight from data_quality (which matters less as calibration matures).
+    # Tier thresholds from ThresholdRegistry (CALIB_WEIGHT_TIER_*).
+    evidence_samples = int(calibration_context.get("sample_size", 0) or 0)
+    if evidence_samples < TR.CALIB_MIN_SAMPLES:
+        evidence_w = TR.CALIB_WEIGHT_TIER_1        # 0.02 — almost no history
+    elif evidence_samples < 15:
+        evidence_w = TR.CALIB_WEIGHT_TIER_2        # 0.06 — early evidence
+    elif evidence_samples < 30:
+        evidence_w = TR.CALIB_WEIGHT_TIER_3        # 0.10 — maturing
+    else:
+        evidence_w = TR.CALIB_WEIGHT_TIER_4        # 0.12 — well-calibrated
+    data_quality_w = max(0.01, 0.03 - (evidence_w - 0.02))
+
+    # Fixed factors sum to 0.87; dynamic evidence + data_quality fill the rest
+    # (total ranges from 0.92 at low-evidence to 1.00 at high-evidence).
     raw_score = (
-        0.12 * weekly_score +
-        0.10 * daily_score +
-        0.10 * rs_score +
-        0.07 * avwap_score +
-        0.06 * liquidity_score +
-        0.06 * support_score +
-        0.07 * chart_score +
-        0.07 * base_score +
+        0.11 * weekly_score +
+        0.09 * daily_score +
+        0.09 * rs_score +
+        0.06 * avwap_score +
+        0.05 * liquidity_score +
+        0.05 * support_score +
+        0.06 * chart_score +
+        0.06 * base_score +
         0.05 * continuation_score +
         0.05 * sponsorship_score +
         0.04 * overhead_score +
         0.04 * breakout_score +
-        0.06 * group_score +
-        0.04 * clean_air_score +
-        0.03 * weekly_close_score +
-        0.02 * catalyst_score +
-        0.02 * failed_memory_score +
-        0.03 * data_quality_score +
-        0.02 * evidence_score
+        0.05 * group_score +
+        0.03 * clean_air_score +
+        0.02 * weekly_close_score +
+        0.01 * catalyst_score +
+        0.01 * failed_memory_score +
+        data_quality_w * data_quality_score +
+        evidence_w * evidence_score
     )
     score = round(_clamp(raw_score - penalty), 1)
     reasons = [
@@ -635,18 +632,17 @@ def _score_short_term_posture(daily_state: dict) -> tuple[float, str]:
     sma10_bias = daily_state.get("sma_10_tomorrow_bias", "unknown")
 
     score = (
-        0.18 * _bool_score(close_above_5) +
+        0.16 * _bool_score(close_above_5) +
         0.12 * _bool_score(close_above_10) +
         0.06 * _bool_score(close_above_20) +
-        0.18 * _direction_score(sma5_dir) +
+        0.16 * _direction_score(sma5_dir) +
         0.12 * _direction_score(sma10_dir) +
         0.06 * _direction_score(sma20_dir) +
-        0.15 * _tomorrow_bias_score(sma5_bias) +
+        0.12 * _tomorrow_bias_score(sma5_bias) +
         0.08 * _tomorrow_bias_score(sma10_bias) +
         0.05 * _bool_score(daily_state.get("sma5_above_sma10")) +
-        0.00 * _bool_score(daily_state.get("sma10_above_sma20"))
+        0.07 * _bool_score(daily_state.get("sma10_above_sma20"))
     )
-    score += 0.10 * _bool_score(daily_state.get("sma10_above_sma20"))
 
     if not close_above_5 and sma5_dir == "falling":
         score = min(score, 22.0)
@@ -705,10 +701,10 @@ def _score_entry_timing(daily_state: dict, intra_state: dict,
     penalty, penalty_reason = _event_penalty(event_risk, earnings)
 
     raw_score = (
-        0.30 * zone_score +
-        0.45 * short_term_score +
-        0.10 * volume_score +
-        0.15 * intraday_score
+        0.35 * zone_score +
+        0.35 * short_term_score +
+        0.12 * volume_score +
+        0.18 * intraday_score
     )
     score = round(_clamp(raw_score - 0.35 * penalty), 1)
     reasons = [
@@ -947,6 +943,11 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         idea_score = min(idea_score, 58)
         timing_score = min(timing_score, 58)
         adjustment_notes.append("Idea/timing capped: similar setups have weak historical evidence")
+    elif evidence_samples >= 15 and evidence_score >= 70:
+        # Strong calibration support: symmetric lift (mirrors the cap logic above)
+        idea_score = min(100.0, idea_score + 5.0)
+        timing_score = min(100.0, timing_score + 3.0)
+        adjustment_notes.append("Idea/timing lifted: strong historical calibration support")
     elif evidence_samples >= 12 and evidence_score >= 60:
         idea_score = min(100.0, idea_score + 2.0)
         adjustment_notes.append("Idea boosted slightly: historical evidence is supportive")
@@ -1039,9 +1040,15 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     quality = _quality_label(score)
     reasons = [wg["detail"], dg["detail"]] + idea["reasons"] + timing["reasons"] + adjustment_notes
     action_bias = (
-        "buy" if idea_score >= 74 and timing_score >= 78 and score >= 74 and short_term_posture >= 75 else
-        "lean_buy" if idea_score >= 68 and timing_score >= 62 and score >= 64 and short_term_posture >= 58 else
-        "wait" if idea_score >= 55 else
+        "buy" if (idea_score >= TR.BUY_IDEA_SCORE_MIN and
+                  timing_score >= TR.BUY_TIMING_SCORE_MIN and
+                  score >= TR.BUY_COMPOSITE_SCORE_MIN and
+                  short_term_posture >= 75) else
+        "lean_buy" if (idea_score >= TR.LEAN_BUY_IDEA_SCORE_MIN and
+                       timing_score >= TR.LEAN_BUY_TIMING_SCORE_MIN and
+                       score >= TR.LEAN_BUY_COMPOSITE_SCORE_MIN and
+                       short_term_posture >= 58) else
+        "wait" if idea_score >= TR.WATCH_IDEA_SCORE_MIN else
         "avoid"
     )
     if short_term_posture < 45 and action_bias in {"buy", "lean_buy"}:

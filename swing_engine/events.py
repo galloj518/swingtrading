@@ -64,26 +64,60 @@ def get_event_context(as_of: str = None) -> dict:
     }
 
 
-def get_earnings_flag(symbol: str) -> dict:
+def get_earnings_flag(symbol: str, auto_fetch: bool = True) -> dict:
     """
     Check earnings proximity for non-benchmark symbols.
-    Benchmarks always return has_earnings=False.
+
+    Lookup order:
+      1. Benchmarks → always has_earnings=False
+      2. Manual cfg.EARNINGS_CALENDAR override (highest trust)
+      3. Auto-fetched from yfinance (if AUTO_FETCH_EARNINGS=True)
+
+    Args:
+        symbol: Ticker symbol.
+        auto_fetch: Whether to attempt live yfinance lookup on cache miss.
+
+    Returns:
+        Dict with keys: has_earnings, earnings_date, days_to_earnings,
+        warning, note, source.
     """
     if symbol.upper() in cfg.BENCHMARK_SET:
-        return {"has_earnings": False, "note": "Benchmark - skip"}
+        return {"has_earnings": False, "note": "Benchmark - skip", "source": "benchmark"}
 
+    # Manual override
     earn_date = cfg.EARNINGS_CALENDAR.get(symbol.upper())
+    source = "manual_config"
+
+    # Auto-fetch if no manual override
+    if not earn_date and auto_fetch:
+        try:
+            from . import data as _mdata
+            earn_date = _mdata.fetch_earnings_date(symbol)
+            if earn_date:
+                source = "yfinance_auto"
+        except Exception:
+            pass
+
     if not earn_date:
-        return {"has_earnings": False, "note": "Earnings date not configured"}
+        return {
+            "has_earnings": False,
+            "note": "No earnings date available",
+            "source": "none",
+        }
 
     days_to = (pd.Timestamp(earn_date) - pd.Timestamp.now().normalize()).days
     if days_to < 0:
-        return {"has_earnings": False, "note": f"Passed ({earn_date})"}
+        return {
+            "has_earnings": False,
+            "note": f"Passed ({earn_date})",
+            "source": source,
+        }
 
     return {
         "has_earnings": True,
         "earnings_date": earn_date,
         "days_to_earnings": days_to,
         "warning": days_to <= 5,
-        "note": f"Earnings in {days_to}d" + (" - HIGH RISK" if days_to <= 5 else ""),
+        "note": f"Earnings in {days_to}d ({earn_date})" + (" — HIGH RISK" if days_to <= 5 else ""),
+        "source": source,
     }
