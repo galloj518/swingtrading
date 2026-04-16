@@ -367,8 +367,8 @@ class WalkForwardEngine:
 
         for i, (is_start, is_end, oos_start, oos_end) in enumerate(windows):
             print(f"  WF window {i+1}/{len(windows)}: "
-                  f"IS {is_start.date()} → {is_end.date()} | "
-                  f"OOS {oos_start.date()} → {oos_end.date()}")
+                  f"IS {is_start.date()} -> {is_end.date()} | "
+                  f"OOS {oos_start.date()} -> {oos_end.date()}")
 
             # In-sample backtest
             is_signals = run_backtest(

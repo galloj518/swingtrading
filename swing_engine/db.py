@@ -153,19 +153,44 @@ def _now_iso() -> str:
 
 
 def _ensure_signal_columns(conn: sqlite3.Connection) -> None:
-    """Add new learning columns to an existing signals table."""
+    """Add any missing columns required by the current signals schema."""
     existing = {
         row["name"]
         for row in conn.execute("PRAGMA table_info(signals)").fetchall()
     }
     desired = {
+        "score": "REAL",
+        "quality": "TEXT",
         "idea_quality_score": "REAL",
         "idea_quality": "TEXT",
         "entry_timing_score": "REAL",
         "entry_timing": "TEXT",
+        "action_bias": "TEXT",
+        "setup_type": "TEXT",
+        "weekly_gate": "INTEGER",
+        "daily_gate": "INTEGER",
+        "entry_low": "REAL",
+        "entry_high": "REAL",
+        "stop": "REAL",
+        "target_1": "REAL",
+        "target_2": "REAL",
+        "price_at_signal": "REAL",
+        "atr": "REAL",
+        "rs_20d": "REAL",
+        "regime": "TEXT",
+        "event_risk": "INTEGER",
+        "rvol": "REAL",
         "slippage_est_bps": "REAL",
         "cost_dollars_est": "REAL",
         "net_rr_t1_est": "REAL",
+        "triggered": "INTEGER",
+        "trigger_date": "TEXT",
+        "trigger_price": "REAL",
+        "fwd_1d_ret": "REAL",
+        "fwd_3d_ret": "REAL",
+        "fwd_5d_ret": "REAL",
+        "outcome_r": "REAL",
+        "outcome_status": "TEXT",
         "hit_target_1": "INTEGER",
         "hit_target_2": "INTEGER",
         "hit_pivot_r1": "INTEGER",
@@ -181,6 +206,9 @@ def _ensure_signal_columns(conn: sqlite3.Connection) -> None:
         "first_support": "TEXT",
         "max_favorable_excursion_pct": "REAL",
         "max_adverse_excursion_pct": "REAL",
+        "packet_json": "TEXT",
+        "created_at": "TEXT",
+        "updated_at": "TEXT",
     }
     for column, col_type in desired.items():
         if column not in existing:

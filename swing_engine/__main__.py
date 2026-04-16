@@ -530,6 +530,24 @@ def main():
             if a == "--start" and i + 1 < len(args):
                 start = args[i + 1]
         symbols_arg = [a.upper() for a in args[1:] if not a.startswith("-") and a != "--start"]
+        symbols_arg = []
+        i = 1
+        while i < len(args):
+            arg = args[i]
+            if arg == "--start":
+                if i + 1 < len(args):
+                    start = args[i + 1]
+                    i += 2
+                    continue
+                break
+            if arg == "--force":
+                i += 1
+                continue
+            if arg.startswith("-"):
+                i += 1
+                continue
+            symbols_arg.append(arg.upper())
+            i += 1
         symbols_to_run = symbols_arg or cfg.WATCHLIST
 
         print(f"\n  Running walk-forward backtest on {len(symbols_to_run)} symbol(s)...")

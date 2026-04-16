@@ -13,6 +13,7 @@ from . import features as feat
 from . import scoring
 from . import events
 from . import sizing
+from . import checklist
 
 
 def _find_group_name(symbol: str) -> str | None:
@@ -73,6 +74,44 @@ def _data_quality(data: dict) -> dict:
         "intraday_age_days": intra_age,
         "detail": detail,
     }
+
+
+def _harmonize_setup_with_actionability(packet: dict) -> None:
+    """Keep displayed setup text aligned with the final actionability verdict."""
+    action = checklist.evaluate_actionability(packet)
+    packet["actionability"] = action
+
+    setup = packet.get("setup", {}) or {}
+    raw_trigger = setup.get("raw_trigger", setup.get("trigger"))
+    if raw_trigger is not None:
+        setup["raw_trigger"] = raw_trigger
+
+    if action.get("actionable_now"):
+        setup["display_trigger"] = raw_trigger or action.get("detail") or "Actionable now"
+        setup["trigger"] = setup["display_trigger"]
+        return
+
+    label = action.get("label", "")
+    detail = action.get("detail") or "Wait for the setup to improve"
+    neutral_trigger_map = {
+        "WATCH BREAKOUT": "Needs breakout confirmation before entry",
+        "WATCH CONTINUATION": "Strong continuation candidate, but still needs confirmation",
+        "WAIT PULLBACK": "Wait for a pullback back into value before entry",
+        "WAIT ZONE": packet.get("entry_zone", {}).get("price_vs_zone") or "Wait for price to move back into the entry zone",
+        "WAIT SETUP": "Pattern is still developing and not actionable yet",
+        "BLOCK": "Do not enter while trend, risk, or quality gates are failing",
+        "DATA UNAVAILABLE": "Do not trade from this read until fresh data is available",
+    }
+    detail_is_aggressive = isinstance(detail, str) and any(word in detail.upper() for word in ("BUY ", "ENTER ", "ADD "))
+    display_trigger = neutral_trigger_map.get(label, detail if not detail_is_aggressive else "Wait for the setup to improve")
+    if not display_trigger:
+        display_trigger = "Wait for the setup to improve"
+
+    if raw_trigger and raw_trigger != display_trigger:
+        setup["watch_for"] = setup.get("watch_for") or raw_trigger
+
+    setup["display_trigger"] = display_trigger
+    setup["trigger"] = display_trigger
 
 
 def build_packet(symbol: str, data: dict,
@@ -208,7 +247,7 @@ def build_packet(symbol: str, data: dict,
             target_2=entry_zone.get("target_2"),
         )
 
-    return {
+    packet = {
         "symbol": symbol,
         "generated_at": datetime.now().isoformat(),
         "daily": daily_state,
@@ -244,6 +283,8 @@ def build_packet(symbol: str, data: dict,
         "entry_zone": entry_zone,
         "position_sizing": pos_size,
     }
+    _harmonize_setup_with_actionability(packet)
+    return packet
 
 
 def save_packet(symbol: str, packet: dict) -> Path:
@@ -277,6 +318,7 @@ def _refresh_trade_plan(packet: dict) -> None:
         packet.get("setup", {}),
         data_quality=packet.get("data_quality", {}),
     )
+    _harmonize_setup_with_actionability(packet)
 
 
 def enrich_group_strength(packets: dict, regime: dict | None = None) -> None:

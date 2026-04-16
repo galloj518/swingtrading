@@ -191,6 +191,8 @@ def _build_actionability(pkt: dict, cl: dict | None) -> dict:
     """Build a normalized actionability object for dashboard rendering."""
     action = (cl or {}).get("actionability")
     if not action:
+        action = pkt.get("actionability")
+    if not action:
         action = checklist.evaluate_actionability(pkt, (cl or {}).get("checks"))
     return action
 
@@ -522,7 +524,7 @@ def _build_symbol_card(sym, pkt, cl, narrative_text=None, chart_data=None):
         </div>
         <div style="margin-top:6px;padding:8px;background:#0d1117;border:1px solid #333;border-radius:4px;">
           <div style="color:#22c55e;font-size:0.9em;margin-bottom:4px;">
-            TRIGGER: {setup.get('trigger') or 'None'}
+            TRIGGER: {setup.get('display_trigger') or setup.get('trigger') or 'None'}
           </div>
           <div style="color:#eab308;font-size:0.85em;margin-bottom:4px;">
             WATCH: {setup.get('watch_for') or 'None'}
@@ -777,7 +779,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
     action_board = ""
     for title, syms in (
         ("BUY NOW", buy_now_syms[:6]),
-        ("WATCH BREAKOUT", watch_syms[:6]),
+        ("WATCH TRIGGERS", watch_syms[:6]),
         ("WAIT", wait_syms[:6]),
     ):
         label_color, label_bg = _action_style(title)
@@ -837,7 +839,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
         _build_metric_tile("Data Issues", str(len(unavailable_syms)), "bad" if unavailable_syms else "neutral", "Names withheld for weak data"),
         _build_metric_tile("Watchlist Avg", str(avg_watchlist_score), "info", f"{len(wl_syms)} names tracked"),
         _build_metric_tile("Hidden <50", str(hidden_low_score_count), "neutral", "Trimmed from web report"),
-        _build_metric_tile("Watch Breakouts", str(len(watch_syms)), "info", "Needs trigger"),
+        _build_metric_tile("Watch Triggers", str(len(watch_syms)), "info", "Breakout or continuation stalks"),
         _build_metric_tile("Wait / Pullback", str(len(wait_syms)), "warn", "Timing not there yet"),
         _build_metric_tile("Risk Flags", str(len(regime.get('caution_flags', []))), "bad" if regime.get("caution_flags") else "neutral", "Macro and breadth"),
     ])
@@ -1092,7 +1094,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict,
 <div class="section">
   <h2>ACTION BOARD</h2>
   <div style="color:#888;margin-bottom:10px;">
-    Buy now: {len(buy_now_syms)} | Watch breakout: {len(watch_syms)} | Wait: {len(wait_syms)} | Blocked: {len(block_syms)} | Data unavailable: {len(unavailable_syms)} | Hidden below 50: {hidden_low_score_count}
+  Buy now: {len(buy_now_syms)} | Watch triggers: {len(watch_syms)} | Wait: {len(wait_syms)} | Blocked: {len(block_syms)} | Data unavailable: {len(unavailable_syms)} | Hidden below 50: {hidden_low_score_count}
   </div>
   <div class="action-grid">
     {action_board}
