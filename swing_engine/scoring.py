@@ -105,13 +105,6 @@ def _avg(values: list[float]) -> float:
     return sum(vals) / len(vals) if vals else 0.0
 
 
-def _linear_penalty(value: float, threshold: float, slope: float, max_penalty: float) -> float:
-    """Smooth penalty instead of brittle hard cliffs."""
-    if value >= threshold:
-        return 0.0
-    return min(max_penalty, max(0.0, (threshold - value) * slope))
-
-
 def _stack_score(stack: str) -> float:
     return {"bullish": 100.0, "mixed": 55.0, "bearish": 10.0}.get(stack, 50.0)
 
@@ -214,12 +207,12 @@ def _build_confidence_context(idea_score: float, timing_score: float,
         idea_score,
         timing_score,
         _safe_float(idea_factors.get("chart_quality"), 50.0),
+        _safe_float(idea_factors.get("base_quality"), 55.0),
+        _safe_float(idea_factors.get("group_strength"), 55.0),
+        _safe_float(idea_factors.get("clean_air"), 50.0),
         _safe_float(idea_factors.get("historical_evidence"), 50.0),
         _safe_float(idea_factors.get("breakout_integrity"), 55.0),
-        _safe_float(idea_factors.get("continuation_pattern"), 55.0),
-        _safe_float(idea_factors.get("institutional_sponsorship"), 55.0),
         _safe_float(timing_factors.get("zone_fit"), 50.0),
-        _safe_float(timing_factors.get("short_term_posture"), timing_score),
     ]
     core = [float(v) for v in core if v is not None]
     spread = (max(core) - min(core)) if core else 50.0
@@ -229,18 +222,18 @@ def _build_confidence_context(idea_score: float, timing_score: float,
     if evidence_samples >= 30:
         evidence_conf = 100.0
     elif evidence_samples >= 20:
-        evidence_conf = 80.0
+        evidence_conf = 85.0
     elif evidence_samples >= 12:
-        evidence_conf = 68.0
+        evidence_conf = 70.0
     elif evidence_samples >= 6:
-        evidence_conf = 60.0
+        evidence_conf = 55.0
     elif evidence_samples > 0:
-        evidence_conf = 55.0
+        evidence_conf = 40.0
     else:
-        evidence_conf = 55.0
+        evidence_conf = 25.0
 
     confidence = round(0.70 * consensus + 0.30 * evidence_conf, 1)
-    confidence_penalty = max(0.0, min(10.0, (55.0 - confidence) * 0.20))
+    confidence_penalty = max(0.0, min(18.0, (65.0 - confidence) * 0.35))
     confidence_adjusted_score = round(_clamp((0.68 * idea_score + 0.32 * timing_score) - confidence_penalty), 1)
 
     if confidence >= 80:
@@ -377,8 +370,14 @@ def _score_liquidity(daily_state: dict) -> tuple[float, str]:
 def _score_support_integrity(daily_state: dict, confluence: dict) -> tuple[float, str]:
     dist20 = _safe_float(daily_state.get("dist_from_sma_20_pct"), 0.0)
     dist50 = _safe_float(daily_state.get("dist_from_sma_50_pct"), 0.0)
-    near_20 = _band_ratio(dist20, -8.0, -2.0, 2.5, 8.0)
-    near_50 = _band_ratio(dist50, -12.0, -3.0, 6.0, 16.0)
+    price = _safe_float(daily_state.get("last_close"), 0.0)
+    atr = _safe_float(daily_state.get("atr"), 0.0)
+    atr_pct = (atr / price) * 100.0 if price > 0 and atr > 0 else 2.0
+    # ATR-normalize: a 5% ATR stock 10% from 20 SMA = same as a 2% stock 4% away
+    dist20_n = dist20 / max(atr_pct, 0.5) * 2.0
+    dist50_n = dist50 / max(atr_pct, 0.5) * 2.0
+    near_20 = _band_ratio(dist20_n, -8.0, -2.0, 2.5, 8.0)
+    near_50 = _band_ratio(dist50_n, -12.0, -3.0, 6.0, 16.0)
     confluence_score = _linear_ratio(_safe_float(confluence.get("score"), 0.0), 0.0, 4.0)
     score = round(100.0 * (0.50 * near_20 + 0.25 * near_50 + 0.25 * confluence_score), 1)
     return score, f"Support integrity and {int(_safe_float(confluence.get('score'), 0.0))} clustered levels"
@@ -536,24 +535,24 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     # (total ranges from 0.92 at low-evidence to 1.00 at high-evidence).
     raw_score = (
         0.10 * weekly_score +
-        0.10 * daily_score +
-        0.10 * rs_score +
+        0.08 * daily_score +
+        0.12 * rs_score +
         0.06 * avwap_score +
-        0.06 * liquidity_score +
+        0.05 * liquidity_score +
         0.05 * support_score +
-        0.08 * chart_score +
-        0.05 * base_score +
-        0.10 * continuation_score +
-        0.09 * sponsorship_score +
+        0.06 * chart_score +
+        0.06 * base_score +
+        0.05 * continuation_score +
+        0.05 * sponsorship_score +
         0.04 * overhead_score +
-        0.07 * breakout_score +
-        0.03 * group_score +
-        0.02 * clean_air_score +
-        0.01 * weekly_close_score +
+        0.04 * breakout_score +
+        0.04 * group_score +
+        0.03 * clean_air_score +
+        0.02 * weekly_close_score +
         0.01 * catalyst_score +
-        0.02 * failed_memory_score +
-        0.02 * data_quality_score +
-        0.01 * evidence_score
+        0.01 * failed_memory_score +
+        data_quality_w * data_quality_score +
+        evidence_w * evidence_score
     )
     score = round(_clamp(raw_score - penalty), 1)
     reasons = [
@@ -684,9 +683,15 @@ def _score_entry_timing(daily_state: dict, intra_state: dict,
 
     dist10 = _safe_float(daily_state.get("dist_from_sma_10_pct"), 0.0)
     dist20 = _safe_float(daily_state.get("dist_from_sma_20_pct"), 0.0)
+    atr = _safe_float(daily_state.get("atr"), 0.0)
+    atr_pct = (atr / price) * 100.0 if price > 0 and atr > 0 else 2.0
+    # Normalize distances by ATR so high-volatility leaders aren't penalized
+    # for being at normal distances from their MAs.  Baseline: 2% ATR stock.
+    dist20_n = dist20 / max(atr_pct, 0.5) * 2.0
+    dist10_n = dist10 / max(atr_pct, 0.5) * 2.0
     zone_score = 100.0 * (
-        0.65 * _band_ratio(dist20, -7.0, -2.2, 1.0, 7.0) +
-        0.35 * _band_ratio(dist10, -5.0, -1.0, 2.0, 9.0)
+        0.65 * _band_ratio(dist20_n, -7.0, -2.2, 1.0, 7.0) +
+        0.35 * _band_ratio(dist10_n, -5.0, -1.0, 2.0, 9.0)
     )
 
     short_term_score, short_term_reason = _score_short_term_posture(daily_state)
@@ -715,7 +720,7 @@ def _score_entry_timing(daily_state: dict, intra_state: dict,
     )
     score = round(_clamp(raw_score - 0.35 * penalty), 1)
     reasons = [
-        f"Entry zone fit {zone_score:.0f}/100 (dist20 {dist20:+.1f}%, dist10 {dist10:+.1f}%)",
+        f"Entry zone fit {zone_score:.0f}/100 (dist20 {dist20:+.1f}% / {dist20_n:+.1f} ATR-norm, dist10 {dist10:+.1f}%)",
         short_term_reason,
         f"Volume context {volume_score:.0f}/100 at {rvol:.1f}x RVOL",
         intraday_reason,
@@ -888,8 +893,25 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     catalyst_score = _safe_float(idea["factors"].get("catalyst_context"), 55.0)
     failed_memory_score = _safe_float(idea["factors"].get("failed_breakout_memory"), 60.0)
     rs_score = _safe_float(idea["factors"].get("relative_strength"), 50.0)
-    dist_from_10 = _safe_float(daily_state.get("dist_from_sma_10_pct"), 0.0)
-    dist_from_20 = _safe_float(daily_state.get("dist_from_sma_20_pct"), 0.0)
+    rvol = _safe_float(daily_state.get("rvol"), 1.0)
+
+    # --- RVOL hard penalties: no volume = no institutional participation ---
+    if rvol <= 0.05:
+        idea_score = min(idea_score, 45)
+        timing_score = min(timing_score, 30)
+        adjustment_notes.append(f"Idea/timing capped: RVOL {rvol:.2f} — virtually no volume")
+    elif rvol < 0.35:
+        idea_score = min(idea_score, 58)
+        timing_score = min(timing_score, 48)
+        adjustment_notes.append(f"Idea/timing capped: RVOL {rvol:.2f} — very thin participation")
+
+    # --- Relative strength adjustments: leaders and laggards ---
+    if rs_score < 25:
+        idea_score = min(idea_score, 62)
+        adjustment_notes.append(f"Idea capped at 62: lagging SPY badly (RS {rs_score:.0f}/100)")
+    elif rs_score >= 80:
+        idea_score = min(100.0, idea_score + 5.0)
+        adjustment_notes.append(f"Idea boosted: strong relative strength leader (RS {rs_score:.0f}/100)")
 
     if chart_score < 35:
         idea_score = min(idea_score, 52)
@@ -900,9 +922,8 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         adjustment_notes.append("Idea capped at 68: chart quality is mediocre")
 
     if overhead_score < 35:
-        idea_score = min(idea_score, 58)
         timing_score = min(timing_score, 55)
-        adjustment_notes.append("Idea/timing capped: heavy overhead supply nearby")
+        adjustment_notes.append("Timing capped at 55: heavy overhead supply nearby")
     elif overhead_score < 50:
         timing_score = min(timing_score, 66)
         adjustment_notes.append("Timing capped at 66: nearby overhead supply")
@@ -917,9 +938,8 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         adjustment_notes.append("Idea/timing trimmed: breakout integrity is weak")
 
     if base_score < 40:
-        idea_score = min(idea_score, 55)
         timing_score = min(timing_score, 52)
-        adjustment_notes.append("Idea/timing capped: base quality is weak")
+        adjustment_notes.append("Timing capped at 52: base quality is weak")
     elif continuation_score >= 78 and short_term_posture >= 70 and chart_score >= 60:
         idea_score = max(idea_score, min(90.0, idea_score + 4.0))
         timing_score = max(timing_score, 72)
@@ -928,44 +948,32 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         timing_score = max(timing_score, 82)
         adjustment_notes.append("Timing boosted: elite continuation pattern")
 
-    if group_score < 45:
-        penalty = _linear_penalty(group_score, 45.0, 0.40, 14.0)
-        idea_score = max(35.0, idea_score - penalty)
-        timing_score = max(32.0, timing_score - 0.45 * penalty)
-        adjustment_notes.append(f"Idea/timing -{penalty:.1f}: peer group is not confirming")
-    elif group_score < 60:
-        penalty = _linear_penalty(group_score, 60.0, 0.18, 4.5)
-        idea_score = max(40.0, idea_score - penalty)
-        adjustment_notes.append(f"Idea -{penalty:.1f}: group support is only moderate")
+    if group_score < 40:
+        idea_score = min(idea_score, 60)
+        adjustment_notes.append("Idea capped at 60: peer group is not confirming")
 
     if sponsorship_score < 35:
-        idea_score = min(idea_score, 56)
-        timing_score = min(timing_score, 58)
-        adjustment_notes.append("Idea/timing capped: sponsorship quality is weak")
+        # For RS leaders, profit-taking after a big run looks like distribution
+        # on a 20-day window — relax the cap for genuine momentum leaders.
+        if rs_score >= 75:
+            timing_score = min(timing_score, 65)
+            adjustment_notes.append(f"Timing capped at 65: sponsorship weak, but RS leader — likely digestion")
+        else:
+            idea_score = min(idea_score, 56)
+            timing_score = min(timing_score, 58)
+            adjustment_notes.append("Idea/timing capped: sponsorship quality is weak")
     elif sponsorship_score >= 78 and continuation_score >= 70:
         idea_score = max(idea_score, min(90.0, idea_score + 3.0))
         adjustment_notes.append("Idea boosted: accumulation and continuation are aligned")
 
-    if data_quality_score < 50:
-        penalty = _linear_penalty(data_quality_score, 50.0, 0.65, 20.0) + 4.0
-        idea_score = max(30.0, idea_score - penalty)
-        timing_score = max(28.0, timing_score - penalty)
-        adjustment_notes.append(f"Idea/timing -{penalty:.1f}: data quality is too weak to trust")
+    if data_quality_score < 45:
+        idea_score = min(idea_score, 50)
+        timing_score = min(timing_score, 50)
+        adjustment_notes.append("Idea/timing capped: data quality is too weak to trust")
     elif data_quality_score < 60:
-        penalty = _linear_penalty(data_quality_score, 60.0, 0.35, 7.0)
-        idea_score = max(40.0, idea_score - penalty)
-        timing_score = max(36.0, timing_score - penalty)
-        adjustment_notes.append(f"Idea/timing -{penalty:.1f}: data freshness/coverage is mediocre")
-
-    if rs_score < 45:
-        penalty = _linear_penalty(rs_score, 45.0, 0.32, 12.0) + 1.5
-        idea_score = max(35.0, idea_score - penalty)
-        timing_score = max(32.0, timing_score - 0.45 * penalty)
-        adjustment_notes.append(f"Idea/timing -{penalty:.1f}: relative strength is not confirming")
-    elif rs_score < 55:
-        penalty = _linear_penalty(rs_score, 55.0, 0.12, 3.0)
-        idea_score = max(40.0, idea_score - penalty)
-        adjustment_notes.append(f"Idea -{penalty:.1f}: relative strength is only moderate")
+        idea_score = min(idea_score, 62)
+        timing_score = min(timing_score, 60)
+        adjustment_notes.append("Idea/timing trimmed: data freshness/coverage is mediocre")
 
     if evidence_samples >= 8 and evidence_score < 45:
         idea_score = min(idea_score, 58)
@@ -1019,45 +1027,36 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         timing_score = min(timing_score, 65)
         adjustment_notes.append("Idea/timing capped at 65: daily 20 SMA falling")
 
-    extension_bias = max(dist_from_10 - 1.8, dist_from_20 - 1.2, 0.0)
-
     if (
         close_above_5 and close_above_10 and close_above_20 and
         sma5_dir == "rising" and sma10_dir == "rising" and sma20_dir == "rising" and
         sma5_bias == "will_rise" and sma10_bias != "will_fall"
     ):
-        if extension_bias <= 1.5:
-            timing_score = max(timing_score, 84)
-            idea_score = max(idea_score, min(90.0, idea_score + 5.0))
-            adjustment_notes.append("Idea/timing boosted: 5/10/20 structure and next-day bias are aligned")
-        elif extension_bias <= 3.5:
-            timing_score = max(timing_score, 76)
-            idea_score = max(idea_score, min(86.0, idea_score + 2.5))
-            adjustment_notes.append("Timing boosted modestly: 5/10/20 aligned, but price is already stretched from value")
-        else:
-            timing_score = max(timing_score, 68)
-            adjustment_notes.append("Timing held below elite: 5/10/20 aligned, but extension is too large to score as ready")
+        timing_score = max(timing_score, 84)
+        idea_score = max(idea_score, min(90.0, idea_score + 5.0))
+        adjustment_notes.append("Idea/timing boosted: 5/10/20 structure and next-day bias are aligned")
     elif (
         close_above_5 and close_above_10 and
         sma5_dir == "rising" and sma10_dir == "rising" and
         sma5_bias == "will_rise"
     ):
-        if extension_bias <= 2.2:
-            timing_score = max(timing_score, 72)
-            adjustment_notes.append("Timing boosted: 5/10 structure is improving")
-        else:
-            timing_score = max(timing_score, 64)
-            adjustment_notes.append("Timing boosted only slightly: 5/10 structure is improving, but price is already extended")
+        timing_score = max(timing_score, 72)
+        adjustment_notes.append("Timing boosted: 5/10 structure is improving")
 
     price = daily_state.get("last_close", 0)
     sma10 = daily_state.get("sma_10", price)
     sma20 = daily_state.get("sma_20", price)
+    atr = _safe_float(daily_state.get("atr"), 0.0)
     entry_high = max(sma10, sma20) if sma10 and sma20 else price
     if price and entry_high and price > entry_high:
         chase_pct = (price / entry_high - 1) * 100
-        penalty = min(22.0, 4.0 + 3.4 * chase_pct)
-        timing_score = max(0.0, timing_score - penalty)
-        adjustment_notes.append(f"Timing -{penalty:.1f}: price {chase_pct:.1f}% above entry zone")
+        # ATR-normalize: for a 5% ATR stock, 3% above zone = 0.6 ATRs (fine)
+        atr_pct = (atr / price) * 100.0 if price > 0 and atr > 0 else 2.0
+        chase_atrs = chase_pct / max(atr_pct, 0.3)
+        penalty = 20 if chase_atrs > 1.5 else 10 if chase_atrs > 0.7 else 5 if chase_atrs > 0.3 else 0
+        if penalty > 0:
+            timing_score = max(0.0, timing_score - penalty)
+            adjustment_notes.append(f"Timing -{penalty}: price {chase_pct:.1f}% ({chase_atrs:.1f} ATRs) above entry zone")
 
     if regime_label in ("bearish", "lean_bearish") and risk_appetite in ("defensive", "minimal"):
         idea_score = min(idea_score, 60)
@@ -1101,7 +1100,10 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
         timing_score,
         idea.get("factors", {}),
     )
-    if confidence_ctx["score"] < 50 and action_bias in {"buy", "lean_buy"}:
+    if confidence_ctx["score"] < 40 and action_bias == "buy":
+        action_bias = "lean_buy"
+        decision_summary = "Lean buy: score is strong but internal factors are polarized — reduce size."
+    elif confidence_ctx["score"] < 35 and action_bias == "lean_buy":
         action_bias = "wait"
         decision_summary = "Wait: the raw score is decent, but the setup lacks enough consensus to trust it yet."
 
@@ -1458,18 +1460,11 @@ def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_qu
     idea_score = _safe_float(score_result.get("idea_quality_score"), _safe_float(score_result.get("score"), 0.0))
     timing_score = _safe_float(score_result.get("entry_timing_score"), _safe_float(score_result.get("score"), 0.0))
     confidence_adj = _safe_float(score_result.get("confidence_adjusted_score"), _safe_float(score_result.get("score"), 0.0))
-    confidence_score = _safe_float(score_result.get("confidence_score"), confidence_adj)
     rr_t1 = _safe_float(entry_zone.get("rr_t1"), 0.0)
     in_zone = bool(entry_zone.get("in_zone"))
     data_quality_score = _safe_float(data_quality.get("score"), 0.0)
     timing_factors = score_result.get("timing_factors", {}) or {}
-    idea_factors = score_result.get("idea_factors", {}) or {}
     short_term_posture = _safe_float(timing_factors.get("short_term_posture"), timing_score)
-    zone_fit = _safe_float(timing_factors.get("zone_fit"), timing_score)
-    continuation_score = _safe_float(idea_factors.get("continuation_pattern"), 55.0)
-    sponsorship_score = _safe_float(idea_factors.get("institutional_sponsorship"), 55.0)
-    group_score = _safe_float(idea_factors.get("group_strength"), 55.0)
-    rs_score = _safe_float(idea_factors.get("relative_strength"), 50.0)
 
     if action_bias == "unavailable" or setup_type == "data_unavailable" or data_quality_score <= 15:
         return {
@@ -1486,51 +1481,41 @@ def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_qu
             "detail": "Not tradable in the current condition set",
         }
 
-    base_score = (
-        0.34 * timing_score +
-        0.22 * confidence_adj +
-        0.16 * idea_score +
-        0.14 * short_term_posture +
-        0.08 * continuation_score +
-        0.04 * sponsorship_score +
-        0.02 * group_score
-    )
+    base_score = 0.55 * timing_score + 0.25 * confidence_adj + 0.20 * idea_score
     detail_parts = []
 
     if setup_type in ("extended_wait", "above_zone_wait"):
-        extension_penalty = 16.0 if setup_type == "above_zone_wait" else 20.0
-        base_score -= extension_penalty
+        base_score = min(base_score, 52.0)
         detail_parts.append("Extended above value; wait for pullback")
     elif setup_type == "breakout":
-        base_score += 4.0
+        base_score = min(max(base_score, 62.0), 88.0)
         detail_parts.append("Needs breakout confirmation, but strong breakouts can still be actionable")
     elif setup_type == "tight_continuation":
-        base_score += 8.0
+        base_score = min(max(base_score, 72.0), 92.0)
         detail_parts.append("Tight continuation / secondary-buy structure")
     elif setup_type in ("pullback_developing", "reclaim", "watch", "below_10dma_wait"):
-        base_score -= 8.0
+        base_score = min(base_score, 62.0)
         detail_parts.append("Constructive, but still developing")
     elif setup_type == "below_5dma_wait":
-        base_score -= 26.0
+        base_score = min(base_score, 36.0)
         detail_parts.append("Below declining 5-day momentum; let the short-term trend repair first")
 
     if short_term_posture < 30:
-        base_score -= 18.0
+        base_score = min(base_score, 34.0)
         detail_parts.append("Short-term posture is too weak")
     elif short_term_posture < 45:
-        base_score -= 10.0
+        base_score = min(base_score, 50.0)
         detail_parts.append("Short-term posture is not ready")
     elif short_term_posture >= 85:
-        elite_boost = 2.0 if setup_type in ("extended_wait", "above_zone_wait") else 6.0
-        base_score += elite_boost
+        base_score = max(base_score, 82.0)
         detail_parts.append("Short-term posture is elite")
 
     if in_zone:
-        base_score += 10.0
+        base_score += 14.0
         detail_parts.append("Inside entry zone")
     else:
-        if setup_type in ("breakout", "tight_continuation") and short_term_posture >= 75:
-            base_score += 1.5
+        if setup_type == "breakout" and short_term_posture >= 75:
+            base_score += 2.0
         else:
             base_score -= 6.0
 
@@ -1549,34 +1534,6 @@ def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_qu
         base_score += 2.0
     elif action_bias == "wait":
         base_score -= 4.0
-
-    if confidence_score < 42:
-        penalty = _linear_penalty(confidence_score, 42.0, 0.30, 8.0)
-        base_score -= penalty
-        detail_parts.append("Confidence is too low for aggressive action")
-
-    if data_quality_score < 40:
-        penalty = _linear_penalty(data_quality_score, 40.0, 0.25, 8.0)
-        base_score -= penalty
-        detail_parts.append("Data quality reduces trust")
-
-    if group_score < 20 and rs_score < 55:
-        penalty = _linear_penalty(group_score, 20.0, 0.20, 4.0)
-        base_score -= penalty
-        detail_parts.append("Peer group is not confirming")
-
-    if rs_score < 35:
-        penalty = _linear_penalty(rs_score, 35.0, 0.20, 6.0)
-        base_score -= penalty
-        detail_parts.append("Relative strength is too soft")
-
-    if setup_type in ("above_zone_wait", "extended_wait") and continuation_score >= 72 and sponsorship_score >= 62 and short_term_posture >= 72:
-        base_score += 4.0
-        detail_parts.append("Continuation quality keeps this on active watch")
-
-    if zone_fit < 45 and setup_type not in ("breakout", "tight_continuation"):
-        base_score -= 4.0
-        detail_parts.append("Location versus value is not ideal")
 
     score = round(_clamp(base_score), 1)
     label = _tradeability_label(score)
