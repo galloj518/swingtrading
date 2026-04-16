@@ -7,21 +7,7 @@ import pandas as pd
 from typing import Optional
 
 from . import config as cfg
-
-
-# =============================================================================
-# STANDARD INDICATORS (pure pandas — no dependencies)
-# =============================================================================
-
-def _band_ratio(value: float, outer_low: float, ideal_low: float,
-                ideal_high: float, outer_high: float) -> float:
-    if value <= outer_low or value >= outer_high:
-        return 0.0
-    if ideal_low <= value <= ideal_high:
-        return 1.0
-    if value < ideal_low:
-        return max(0.0, min(1.0, (value - outer_low) / (ideal_low - outer_low))) if ideal_low != outer_low else 0.0
-    return max(0.0, min(1.0, (outer_high - value) / (outer_high - ideal_high))) if outer_high != ideal_high else 0.0
+from .utils import _band_ratio, _linear_ratio, _clamp  # noqa: F401 — re-exported for callers
 
 
 def add_smas(df: pd.DataFrame, periods: list) -> pd.DataFrame:

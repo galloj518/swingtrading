@@ -526,6 +526,10 @@ def main():
         from . import backtest as bt_mod
         force = "--force" in args
         start = None
+        for i, a in enumerate(args):
+            if a == "--start" and i + 1 < len(args):
+                start = args[i + 1]
+        symbols_arg = [a.upper() for a in args[1:] if not a.startswith("-") and a != "--start"]
         symbols_arg = []
         i = 1
         while i < len(args):
