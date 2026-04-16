@@ -480,11 +480,17 @@ def assess_overhead_supply(price: float, daily_df: pd.DataFrame, pivots: dict,
         if val:
             levels.append((label, float(val)))
 
+    # ATR-normalize: for high-ATR stocks, levels within < 1 ATR are noise
+    atr_col = daily_df["atr"] if "atr" in daily_df.columns else None
+    atr_val = float(atr_col.iloc[-1]) if atr_col is not None and not atr_col.empty and pd.notna(atr_col.iloc[-1]) else price * 0.02
+    atr_pct = (atr_val / price) * 100.0 if price > 0 else 2.0
+    min_meaningful = max(0.35, 0.5 * atr_pct)
+
     above = []
     for name, level in levels:
         if level > price:
             pct = ((level / price) - 1.0) * 100.0
-            if pct < 0.35:
+            if pct < min_meaningful:
                 continue
             above.append((name, level, pct))
 
@@ -506,9 +512,12 @@ def assess_overhead_supply(price: float, daily_df: pd.DataFrame, pivots: dict,
     within_3 = [item for item in unique_values if item[2] <= 3.0]
     within_8 = [item for item in unique_values if item[2] <= 8.0]
 
-    nearest_ratio = min(max((nearest[2] - 0.75) / 7.25, 0.0), 1.0)
+    # ATR-normalize nearest distance: measure in ATRs, not raw %
+    nearest_atrs = nearest[2] / atr_pct if atr_pct > 0 else nearest[2] / 2.0
+    nearest_ratio = min(max((nearest_atrs - 0.5) / 3.0, 0.0), 1.0)
+    # Density windows stay in raw % (the min_meaningful filter already removes noise)
     density_ratio = 1.0 - min(len(within_8) / 6.0, 1.0)
-    crowd_penalty = 0.10 if len(within_3) >= 2 else 0.0
+    crowd_penalty = 0.10 if len(within_3) >= 3 else 0.05 if len(within_3) >= 2 else 0.0
     score = float(round(100.0 * max(0.0, min(1.0, 0.60 * nearest_ratio + 0.40 * density_ratio - crowd_penalty)), 1))
 
     return {
@@ -604,7 +613,14 @@ def assess_base_quality(daily_df: pd.DataFrame) -> dict:
     prior = daily_df.iloc[-50:-25].copy() if len(daily_df) >= 50 else recent
     close = float(recent["close"].iloc[-1])
     base_range_pct = ((float(recent["high"].max()) - float(recent["low"].min())) / close) * 100 if close else 0.0
-    compression_score = 100.0 * max(0.0, 1.0 - min(base_range_pct / 22.0, 1.0))
+    # ATR-normalize: measure base range in ATR-widths, not raw %.
+    # A 5% ATR stock with 25% range = 5 ATR-widths (orderly).
+    # A 0.3% ATR stock with 2% range = 6.7 ATR-widths (also orderly).
+    atr_col = recent["atr"] if "atr" in recent.columns else None
+    atr_val = float(atr_col.iloc[-1]) if atr_col is not None and not atr_col.empty and pd.notna(atr_col.iloc[-1]) else close * 0.02
+    atr_pct = (atr_val / close) * 100.0 if close > 0 else 2.0
+    base_range_atrs = base_range_pct / max(atr_pct, 0.3)
+    compression_score = 100.0 * max(0.0, 1.0 - min(base_range_atrs / 10.0, 1.0))
 
     recent_vol = float(recent["volume"].mean()) if not recent.empty else 0.0
     prior_vol = float(prior["volume"].mean()) if not prior.empty else recent_vol
