@@ -44,9 +44,9 @@ def _prepare_watchlists(packets: dict, checklists: dict) -> dict:
         state = packet.get("score", {}).get("setup_state")
         if state in {"ACTIONABLE_BREAKOUT", "ACTIONABLE_RETEST", "ACTIONABLE_RECLAIM"}:
             triggered.append(row)
-        elif state in {"FAILED", "BLOCKED"}:
+        elif state in {"FAILED", "BLOCKED", "DATA_UNAVAILABLE", "EXTENDED"}:
             failed.append(row)
-        elif packet.get("score", {}).get("breakout_readiness_score", 0) >= cfg.BREAKOUT_WATCH_MIN_SCORE:
+        elif state in {"POTENTIAL_BREAKOUT", "TRIGGER_WATCH"} or packet.get("score", {}).get("breakout_readiness_score", 0) >= cfg.BREAKOUT_WATCH_MIN_SCORE:
             breakout.append(row)
         else:
             structural.append(row)
@@ -80,6 +80,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict, soxx_decis
     narratives = narratives or {}
     sections = _prepare_watchlists(packets, checklists)
     chart_payload = _normalize_chart_images(chart_images, output_path)
+    setup_families = sorted({packet.get("score", {}).get("setup_family", "none") for symbol, packet in packets.items() if symbol not in cfg.BENCHMARKS})
     env = Environment(loader=FileSystemLoader(str(cfg.TEMPLATES_DIR)), autoescape=select_autoescape(["html", "xml"]))
     template = env.get_template("dashboard.html")
     html = template.render(
@@ -90,6 +91,8 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict, soxx_decis
         packets=packets,
         checklists=checklists,
         chart_images=chart_payload,
+        setup_states=cfg.SETUP_STATES,
+        setup_families=setup_families,
         narratives=narratives,
         benchmarks=[packets[symbol] for symbol in cfg.BENCHMARKS if symbol in packets],
     )

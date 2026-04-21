@@ -40,7 +40,7 @@ def calc_position_size(entry: float, stop: float, symbol: str = "", existing_gro
     setup_multiplier = 1.0
     if setup_state in {"ACTIONABLE_RETEST", "ACTIONABLE_RECLAIM"}:
         setup_multiplier *= 0.85
-    elif setup_state in {"TRIGGER_WATCH", "BREAKOUT_WATCH", "FORMING"}:
+    elif setup_state in {"TRIGGER_WATCH", "POTENTIAL_BREAKOUT", "FORMING", "EXTENDED"}:
         setup_multiplier *= 0.60
 
     if freshness_label == "mildly_stale":

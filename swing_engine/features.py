@@ -439,10 +439,12 @@ def assess_breakout_integrity(daily_df: pd.DataFrame) -> dict:
     failed = close < prior_20_high * 0.98 and float(daily_df["close"].tail(10).max()) > prior_20_high * 1.01
     if failed:
         state, score = "failed_breakout", 20.0
-    elif dist_atr > 1.2:
-        state, score = "active_breakout", 78.0
-    elif 0.1 <= dist_atr <= 1.2:
-        state, score = "breakout_watch", 72.0
+    elif dist_atr > cfg.MAX_BREAKOUT_EXTENSION_ATR:
+        state, score = "extended_breakout", 28.0
+    elif 0.1 <= dist_atr <= 0.65:
+        state, score = "active_breakout", 82.0
+    elif -0.15 <= dist_atr < 0.1:
+        state, score = "breakout_watch", 76.0
     elif -0.4 <= dist_atr < 0.1 and held_breakout:
         state, score = "retest_holding", 76.0
     else:
@@ -453,6 +455,64 @@ def assess_breakout_integrity(daily_df: pd.DataFrame) -> dict:
         "pivot_level": round(prior_20_high, 2),
         "distance_atr": round(dist_atr, 2),
         "detail": f"State {state}, pivot {prior_20_high:.2f}, distance {dist_atr:.2f} ATR",
+    }
+
+
+def _pivot_position(close: float, pivot: float, atr: float) -> dict:
+    if close <= 0 or pivot <= 0:
+        return {
+            "classification": "unavailable",
+            "distance_pct": None,
+            "extension_atr": None,
+            "rr_to_support": None,
+        }
+    distance_pct = ((close / pivot) - 1.0) * 100.0
+    extension_atr = (close - pivot) / atr if atr > 0 else 0.0
+    if extension_atr < -0.6:
+        classification = "far_below_pivot"
+    elif extension_atr < -0.1:
+        classification = "below_pivot_but_near"
+    elif extension_atr <= 0.15:
+        classification = "at_pivot"
+    elif extension_atr <= 0.7:
+        classification = "just_through_pivot"
+    else:
+        classification = "too_far_through_pivot"
+    return {
+        "classification": classification,
+        "distance_pct": round(distance_pct, 2),
+        "extension_atr": round(extension_atr, 2),
+    }
+
+
+def _avwap_support_context(close: float, avwap_map: dict) -> dict:
+    context = summarize_avwap_context(close, avwap_map)
+    support = context.get("nearest_below")
+    resistance = context.get("nearest_above")
+    support_dist = abs(float(support.get("dist_pct"))) if support and support.get("dist_pct") is not None else None
+    resistance_dist = abs(float(resistance.get("dist_pct"))) if resistance and resistance.get("dist_pct") is not None else None
+    supportive = support_dist is not None and support_dist <= 2.5
+    overhead = resistance_dist is not None and resistance_dist <= 3.5
+    support_score = (
+        _linear_ratio(2.8 - support_dist, 0.0, 2.8) * 100.0
+        if support_dist is not None
+        else 0.0
+    )
+    resistance_penalty = (
+        _linear_ratio(3.5 - resistance_dist, 0.0, 3.5) * 100.0
+        if resistance_dist is not None
+        else 0.0
+    )
+    return {
+        "supportive": supportive,
+        "overhead_resistance": overhead,
+        "support_score": round(_clamp(support_score), 1),
+        "resistance_penalty": round(_clamp(resistance_penalty), 1),
+        "nearest_support_label": support.get("label") if support else None,
+        "nearest_support_dist_pct": round(support_dist, 2) if support_dist is not None else None,
+        "nearest_resistance_label": resistance.get("label") if resistance else None,
+        "nearest_resistance_dist_pct": round(resistance_dist, 2) if resistance_dist is not None else None,
+        "detail": context.get("detail"),
     }
 
 
@@ -634,9 +694,10 @@ def calc_confluence(price: float, daily_state: dict, pivots: dict, avwap_map: di
     }
 
 
-def compute_breakout_context(daily_df: pd.DataFrame, weekly_df: pd.DataFrame, intraday_df: pd.DataFrame, spy_daily: pd.DataFrame | None = None) -> dict:
+def compute_breakout_context(daily_df: pd.DataFrame, weekly_df: pd.DataFrame, intraday_df: pd.DataFrame, spy_daily: pd.DataFrame | None = None, avwap_map: dict | None = None) -> dict:
     if daily_df.empty:
         return {}
+    avwap_map = avwap_map or {}
     close = float(daily_df["close"].iloc[-1])
     atr = float(daily_df["atr"].iloc[-1]) if "atr" in daily_df.columns and pd.notna(daily_df["atr"].iloc[-1]) else max(close * 0.02, 0.01)
     volume = float(daily_df["volume"].iloc[-1])
@@ -662,6 +723,19 @@ def compute_breakout_context(daily_df: pd.DataFrame, weekly_df: pd.DataFrame, in
     pivot_width_pct = ((pivot_high_10 - pivot_low_10) / close) * 100.0 if close else None
     prior_levels = get_prior_session_levels(daily_df)
     intraday_context = calc_session_vwap(intraday_df) if not intraday_df.empty else {}
+    short_ma = float(daily_df["sma_10"].iloc[-1]) if "sma_10" in daily_df.columns and pd.notna(daily_df["sma_10"].iloc[-1]) else close
+    large_ma = float(daily_df["sma_20"].iloc[-1]) if "sma_20" in daily_df.columns and pd.notna(daily_df["sma_20"].iloc[-1]) else close
+    larger_ma_50 = float(daily_df["sma_50"].iloc[-1]) if "sma_50" in daily_df.columns and pd.notna(daily_df["sma_50"].iloc[-1]) else large_ma
+    short_ma_rising = bool(len(daily_df) >= 2 and "sma_10" in daily_df.columns and pd.notna(daily_df["sma_10"].iloc[-2]) and short_ma >= float(daily_df["sma_10"].iloc[-2]))
+    larger_ma_supportive = bool(larger_ma_50 >= float(daily_df["sma_50"].iloc[-2]) if len(daily_df) >= 2 and "sma_50" in daily_df.columns and pd.notna(daily_df["sma_50"].iloc[-2]) else large_ma >= short_ma * 0.98)
+    dist_to_short_ma_pct = ((close / short_ma) - 1.0) * 100.0 if short_ma else 0.0
+    dist_to_large_ma_pct = ((close / large_ma) - 1.0) * 100.0 if large_ma else 0.0
+    tightening_into_short_ma = abs(dist_to_short_ma_pct) <= 2.5 and close >= short_ma * 0.992
+    pivot_position = _pivot_position(close, pivot_high_10, atr)
+    avwap_context = _avwap_support_context(close, avwap_map)
+    support_anchor = max(short_ma, large_ma, larger_ma_50, pivot_low_10)
+    rr_to_support = ((pivot_high_10 - close) / max(close - support_anchor, atr * 0.5)) if close > support_anchor else 0.0
+    orderliness = round(_clamp(contraction_score * 0.42 + tight_close_score * 0.33 + volume_dryup_score * 0.25), 1)
     return {
         "near_high": {
             "dist_20d_high_pct": round(dist20, 2) if dist20 is not None else None,
@@ -687,6 +761,11 @@ def compute_breakout_context(daily_df: pd.DataFrame, weekly_df: pd.DataFrame, in
             "pivot_low_10d": round(pivot_low_10, 2),
             "pivot_width_pct": round(pivot_width_pct, 2) if pivot_width_pct is not None else None,
         },
+        "pivot_position": {
+            **pivot_position,
+            "pivot_level": round(pivot_high_10, 2),
+            "risk_reward_now": round(rr_to_support, 2),
+        },
         "momentum": {
             "rs_20d": rs.get("rs_20d"),
             "rs_60d": rs.get("rs_60d"),
@@ -694,6 +773,17 @@ def compute_breakout_context(daily_df: pd.DataFrame, weekly_df: pd.DataFrame, in
             "turnover_proxy": round(turnover_proxy, 0),
             "turnover_score": round(turnover_score, 1),
             "volume_vs_average": round(volume / avg_volume, 2) if avg_volume else None,
+        },
+        "avwap": avwap_context,
+        "early_setup": {
+            "short_ma_rising": short_ma_rising,
+            "tightening_into_short_ma": tightening_into_short_ma,
+            "larger_ma_supportive": larger_ma_supportive,
+            "avwap_supportive": avwap_context.get("supportive", False),
+            "orderly_contraction_score": orderliness,
+            "dist_to_short_ma_pct": round(dist_to_short_ma_pct, 2),
+            "dist_to_large_ma_pct": round(dist_to_large_ma_pct, 2),
+            "risk_reward_now": round(rr_to_support, 2),
         },
         "intraday_context": {
             **intraday_context,

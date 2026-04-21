@@ -6,7 +6,7 @@
 <title>Swing Engine</title>
 <style>
   body { font-family: "IBM Plex Sans", "Segoe UI", sans-serif; background: linear-gradient(180deg, #08111b, #03070c); color: #e6edf5; margin: 0; padding: 20px; }
-  .shell { max-width: 1400px; margin: 0 auto; }
+  .shell { max-width: 1800px; margin: 0 auto; }
   .hero, .section, .card { background: rgba(10, 18, 27, 0.92); border: 1px solid rgba(112, 142, 170, 0.24); border-radius: 16px; }
   .hero { padding: 18px; margin-bottom: 16px; }
   .section { padding: 16px; margin-bottom: 16px; }
@@ -16,12 +16,17 @@
   .muted { color: #90a4b7; }
   .grid { display: grid; gap: 12px; }
   .summary-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-  .card-grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .card-grid { grid-template-columns: 1fr; }
   .metric { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(131, 158, 182, 0.18); }
   .metric .label { color: #7f93a8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; }
   .metric .value { font-size: 1.4rem; font-weight: 700; margin-top: 6px; }
   .card { padding: 14px; }
-  .chart-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 12px; }
+  .controls-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: end; }
+  .control label { display: block; color: #8da4bb; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .control input, .control select { width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.04); border: 1px solid rgba(131, 158, 182, 0.18); color: #e6edf5; border-radius: 10px; padding: 10px 12px; }
+  .control.toggle { display: flex; align-items: center; gap: 8px; padding-top: 22px; }
+  .control.toggle input { width: auto; }
+  .chart-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); margin-top: 14px; }
   .chart-panel { background: rgba(255,255,255,0.025); border: 1px solid rgba(131, 158, 182, 0.14); border-radius: 12px; padding: 10px; }
   .chart-panel img { display: block; width: 100%; border-radius: 8px; border: 1px solid rgba(131, 158, 182, 0.18); }
   .chart-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #8da4bb; margin-bottom: 8px; }
@@ -35,7 +40,11 @@
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid rgba(106, 132, 156, 0.16); font-size: 0.9rem; }
   .mono { font-family: "IBM Plex Mono", Consolas, monospace; }
-  @media (max-width: 700px) { body { padding: 12px; } }
+  .card[hidden] { display: none !important; }
+  @media (max-width: 900px) {
+    body { padding: 12px; }
+    .chart-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -72,6 +81,56 @@
   </div>
 
   <div class="section">
+    <h2>Dashboard Controls</h2>
+    <div class="grid controls-grid">
+      <div class="control">
+        <label for="tickerSearch">Ticker Search</label>
+        <input id="tickerSearch" type="search" placeholder="Search symbol">
+      </div>
+      <div class="control">
+        <label for="stateFilter">Setup State</label>
+        <select id="stateFilter">
+          <option value="">All states</option>
+          {% for state in setup_states %}
+          <option value="{{ state }}">{{ state }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="control">
+        <label for="familyFilter">Setup Family</label>
+        <select id="familyFilter">
+          <option value="">All families</option>
+          {% for family in setup_families %}
+          <option value="{{ family }}">{{ family }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="control">
+        <label for="freshnessFilter">Freshness</label>
+        <select id="freshnessFilter">
+          <option value="">All freshness</option>
+          <option value="fresh">fresh</option>
+          <option value="mildly_stale">mildly_stale</option>
+          <option value="stale">stale</option>
+          <option value="missing">missing</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="sortBy">Sort By</label>
+        <select id="sortBy">
+          <option value="structural">Structural score</option>
+          <option value="breakout">Breakout readiness</option>
+          <option value="trigger">Trigger readiness</option>
+        </select>
+      </div>
+      <label class="control toggle"><input id="hideExtended" type="checkbox" checked> Hide EXTENDED</label>
+      <label class="control toggle"><input id="hideBlocked" type="checkbox" checked> Hide BLOCKED / DATA_UNAVAILABLE</label>
+      <label class="control toggle"><input id="onlyPotential" type="checkbox"> Show only POTENTIAL_BREAKOUT</label>
+      <label class="control toggle"><input id="onlyActionable" type="checkbox"> Show only actionable setups</label>
+    </div>
+  </div>
+
+  <div class="section">
     <h2>Desk Snapshot</h2>
     <div class="grid summary-grid">
       <div class="metric"><div class="label">Structural Leaders</div><div class="value">{{ sections.structural|length }}</div></div>
@@ -103,7 +162,15 @@
       {% for row in rows %}
       {% set packet = row.packet %}
       {% set charts = chart_images.get(row.symbol, {}) %}
-      <div class="card">
+      <div class="card symbol-card"
+           data-symbol="{{ row.symbol }}"
+           data-state="{{ packet.score.setup_state }}"
+           data-family="{{ packet.score.setup_family }}"
+           data-freshness="{{ packet.data_quality.intraday_freshness_label }}"
+           data-structural="{{ packet.score.structural_score }}"
+           data-breakout="{{ packet.score.breakout_readiness_score }}"
+           data-trigger="{{ packet.score.trigger_readiness_score }}"
+           data-actionable="{{ 'true' if row.action.actionable_now else 'false' }}">
         <div class="row">
           <div>
             <h3>{{ row.symbol }}</h3>
@@ -125,10 +192,13 @@
           <tr><th>Pivot</th><td class="mono">{{ packet.setup.pivot_level }}</td></tr>
           <tr><th>Trigger</th><td>{{ packet.intraday_trigger.primary.trigger_type }}</td></tr>
           <tr><th>Trigger Level</th><td class="mono">{{ packet.intraday_trigger.primary.trigger_level }}</td></tr>
+          <tr><th>Extension vs Pivot</th><td>{{ packet.score.pivot_position.classification }} | {{ packet.score.pivot_position.distance_pct }}% | {{ packet.score.pivot_position.extension_atr }} ATR</td></tr>
           <tr><th>Entry Zone</th><td class="mono">{{ packet.entry_zone.entry_low }} - {{ packet.entry_zone.entry_high }}</td></tr>
           <tr><th>Stop</th><td class="mono">{{ packet.entry_zone.stop }}</td></tr>
           <tr><th>Freshness</th><td>{{ packet.data_quality.intraday_freshness_minutes }} min old</td></tr>
           <tr><th>RS20</th><td>{{ packet.relative_strength.rs_20d }}</td></tr>
+          <tr><th>Reason Surfaced</th><td>{{ packet.score.decision_summary }}</td></tr>
+          <tr><th>AVWAP Context</th><td>{{ packet.avwap_context.detail }}</td></tr>
         </table>
         <div class="chart-grid">
           {% if charts.daily_url %}
@@ -174,5 +244,58 @@
   </div>
   {% endfor %}
 </div>
+<script>
+(() => {
+  const cards = Array.from(document.querySelectorAll('.symbol-card'));
+  const grids = Array.from(document.querySelectorAll('.card-grid'));
+  const controls = {
+    search: document.getElementById('tickerSearch'),
+    state: document.getElementById('stateFilter'),
+    family: document.getElementById('familyFilter'),
+    freshness: document.getElementById('freshnessFilter'),
+    sortBy: document.getElementById('sortBy'),
+    hideExtended: document.getElementById('hideExtended'),
+    hideBlocked: document.getElementById('hideBlocked'),
+    onlyPotential: document.getElementById('onlyPotential'),
+    onlyActionable: document.getElementById('onlyActionable'),
+  };
+
+  function visibleByFilters(card) {
+    const symbol = card.dataset.symbol || '';
+    const state = card.dataset.state || '';
+    const family = card.dataset.family || '';
+    const freshness = card.dataset.freshness || '';
+    const actionable = card.dataset.actionable === 'true';
+    if (controls.search.value && !symbol.toLowerCase().includes(controls.search.value.toLowerCase())) return false;
+    if (controls.state.value && state !== controls.state.value) return false;
+    if (controls.family.value && family !== controls.family.value) return false;
+    if (controls.freshness.value && freshness !== controls.freshness.value) return false;
+    if (controls.hideExtended.checked && state === 'EXTENDED') return false;
+    if (controls.hideBlocked.checked && ['BLOCKED', 'DATA_UNAVAILABLE'].includes(state)) return false;
+    if (controls.onlyPotential.checked && state !== 'POTENTIAL_BREAKOUT') return false;
+    if (controls.onlyActionable.checked && !actionable) return false;
+    return true;
+  }
+
+  function scoreFor(card) {
+    const sortBy = controls.sortBy.value;
+    if (sortBy === 'breakout') return parseFloat(card.dataset.breakout || '0');
+    if (sortBy === 'trigger') return parseFloat(card.dataset.trigger || '0');
+    return parseFloat(card.dataset.structural || '0');
+  }
+
+  function applyControls() {
+    cards.forEach(card => { card.hidden = !visibleByFilters(card); });
+    grids.forEach(grid => {
+      const ordered = Array.from(grid.querySelectorAll('.symbol-card')).sort((a, b) => scoreFor(b) - scoreFor(a));
+      ordered.forEach(card => grid.appendChild(card));
+    });
+  }
+
+  Object.values(controls).forEach(control => control && control.addEventListener('input', applyControls));
+  Object.values(controls).forEach(control => control && control.addEventListener('change', applyControls));
+  applyControls();
+})();
+</script>
 </body>
 </html>

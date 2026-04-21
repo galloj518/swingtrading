@@ -101,6 +101,15 @@ def evaluate_intraday_triggers(intraday_df: pd.DataFrame, daily_refs: dict, pivo
 
         prior_day_high = _safe_float(daily_refs.get("prior_day_high"), 0.0) or 0.0
         pivot_level = _safe_float(pivot_level, prior_day_high) or prior_day_high or 0.0
+        opening_width = max(opening_high - opening_low, 0.01)
+        pivot_extension_atr = ((latest_close - pivot_level) / opening_width) if pivot_level > 0 else 0.0
+        proximity_label = (
+            "too_far_through_pivot" if pivot_extension_atr > 1.0 else
+            "just_through_pivot" if pivot_extension_atr > 0.2 else
+            "at_pivot" if pivot_extension_atr >= -0.1 else
+            "below_pivot_but_near" if pivot_extension_atr >= -0.7 else
+            "far_below_pivot"
+        )
 
         orb_triggered = latest_close > opening_high and latest_high >= opening_high
         above_vwap_now = latest_vwap is not None and latest_close > latest_vwap
@@ -195,6 +204,8 @@ def evaluate_intraday_triggers(intraday_df: pd.DataFrame, daily_refs: dict, pivo
             "opening_range_high": round(opening_high, 2),
             "opening_range_low": round(opening_low, 2),
             "prior_day_high": round(prior_day_high, 2) if prior_day_high > 0 else None,
+            "pivot_extension_atr": round(pivot_extension_atr, 2),
+            "pivot_proximity_label": proximity_label,
             "trigger_state": trigger_state,
             "freshness_sensitive": True,
         }

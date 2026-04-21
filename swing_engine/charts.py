@@ -92,24 +92,24 @@ def _add_hlines(ax, avwap_map, pivots, session_vwaps, price, n_bars):
         for label, data in avwap_map.items():
             v = data.get("avwap")
             if v and price and abs(v / price - 1) < 0.20:
-                ax.axhline(y=v, color=AVWAP_COLOR, linewidth=0.7, linestyle=":", alpha=0.6)
+                ax.axhline(y=v, color=AVWAP_COLOR, linewidth=1.4, linestyle=":", alpha=0.85)
                 ax.text(n_bars + 0.3, v, f" {label}: {v:.1f}",
-                        fontsize=5, color=AVWAP_COLOR, alpha=0.8, va="center")
+                        fontsize=7, color=AVWAP_COLOR, alpha=0.95, va="center")
 
     # Pivots
     if pivots:
         for k in ("r1", "r2", "r3"):
             v = pivots.get(k)
             if v:
-                ax.axhline(y=v, color="#22c55e", linewidth=0.5, linestyle="-.", alpha=0.3)
+                ax.axhline(y=v, color="#22c55e", linewidth=0.7, linestyle="-.", alpha=0.4)
                 ax.text(n_bars + 0.3, v, f" {k.upper()}: {v:.1f}",
-                        fontsize=5, color="#22c55e", alpha=0.6, va="center")
+                        fontsize=6, color="#22c55e", alpha=0.7, va="center")
         for k in ("s1", "s2", "s3"):
             v = pivots.get(k)
             if v:
-                ax.axhline(y=v, color="#ef4444", linewidth=0.5, linestyle="-.", alpha=0.3)
+                ax.axhline(y=v, color="#ef4444", linewidth=0.7, linestyle="-.", alpha=0.4)
                 ax.text(n_bars + 0.3, v, f" {k.upper()}: {v:.1f}",
-                        fontsize=5, color="#ef4444", alpha=0.6, va="center")
+                        fontsize=6, color="#ef4444", alpha=0.7, va="center")
         if pivots.get("pivot"):
             ax.axhline(y=pivots["pivot"], color="#eab308", linewidth=0.5,
                        linestyle="-.", alpha=0.3)
@@ -118,9 +118,9 @@ def _add_hlines(ax, avwap_map, pivots, session_vwaps, price, n_bars):
     if session_vwaps:
         dv = session_vwaps.get("daily_vwap")
         if dv:
-            ax.axhline(y=dv, color="#eab308", linewidth=0.8, linestyle="--", alpha=0.6)
+            ax.axhline(y=dv, color="#eab308", linewidth=1.0, linestyle="--", alpha=0.8)
             ax.text(n_bars + 0.3, dv, f" VWAP: {dv:.1f}",
-                    fontsize=5, color="#eab308", alpha=0.8, va="center")
+                    fontsize=7, color="#eab308", alpha=0.9, va="center")
 
 
 def _style_axis(ax):
@@ -157,7 +157,7 @@ def _make_chart(symbol, df_raw, sma_periods, state, avwap_map, pivots,
     dates = df["date"].values
 
     fig, (ax_price, ax_vol) = plt.subplots(
-        2, 1, figsize=(12, 5.5), gridspec_kw={"height_ratios": [3, 1]},
+        2, 1, figsize=(16, 8.6), gridspec_kw={"height_ratios": [4.4, 1.2]},
         facecolor=BG)
 
     _style_axis(ax_price)
@@ -169,11 +169,14 @@ def _make_chart(symbol, df_raw, sma_periods, state, avwap_map, pivots,
     # SMAs
     _add_smas(ax_price, df, sma_periods, state, n)
 
-    # Horizontal lines (only on daily, skip on weekly to avoid clutter)
-    if "daily" in title_suffix.lower():
-        _add_hlines(ax_price, avwap_map, pivots, session_vwaps, price, n)
-    else:
-        _add_hlines(ax_price, avwap_map, {}, {}, price, n)
+    _add_hlines(
+        ax_price,
+        avwap_map,
+        pivots if ("daily" in title_suffix.lower() or "execution" in title_suffix.lower()) else {},
+        session_vwaps if ("daily" in title_suffix.lower() or "execution" in title_suffix.lower()) else {},
+        price,
+        n,
+    )
 
     # Volume
     _draw_volume(ax_vol, dates, v, o, c, width=0.6)
@@ -188,7 +191,7 @@ def _make_chart(symbol, df_raw, sma_periods, state, avwap_map, pivots,
     ax_price.set_xticks([])
 
     # Title and legend
-    ax_price.set_title(f"{symbol} {title_suffix}", color=TXT, fontsize=10, loc="left", pad=8)
+    ax_price.set_title(f"{symbol} {title_suffix}", color=TXT, fontsize=14, loc="left", pad=10)
     ax_price.set_xlim(-1, n + 5)
     ax_vol.set_xlim(-1, n + 5)
 
@@ -202,6 +205,10 @@ def _make_chart(symbol, df_raw, sma_periods, state, avwap_map, pivots,
             ls = "--" if d == "falling" else "-"
             handles.append(plt.Line2D([0], [0], color=SMA_COLORS.get(p, "#888"),
                                        linewidth=1, linestyle=ls, label=lbl))
+    if avwap_map:
+        handles.append(plt.Line2D([0], [0], color=AVWAP_COLOR, linewidth=1.4, linestyle=":", label="AVWAP"))
+    if session_vwaps and session_vwaps.get("daily_vwap"):
+        handles.append(plt.Line2D([0], [0], color="#eab308", linewidth=1.0, linestyle="--", label="VWAP"))
     if handles:
         ax_price.legend(handles=handles, fontsize=6, loc="upper left",
                         framealpha=0.3, facecolor=FACE, edgecolor=GRID, labelcolor=TXT)
@@ -212,7 +219,7 @@ def _make_chart(symbol, df_raw, sma_periods, state, avwap_map, pivots,
     # Save
     fname = f"{symbol}_{title_suffix.lower().replace(' ', '_')}_{date.today().isoformat()}.png"
     path = output_dir / fname
-    fig.savefig(path, dpi=120, facecolor=BG, bbox_inches="tight")
+    fig.savefig(path, dpi=150, facecolor=BG, bbox_inches="tight")
     b64 = _fig_to_b64(fig)
     plt.close(fig)
 
@@ -256,7 +263,7 @@ def generate_chart(symbol, daily_df, weekly_df, daily_state=None, weekly_state=N
             state = feat.extract_ma_state(resampled, periods, f"intraday_{label}")
             path, b64 = _make_chart(
                 symbol, resampled, periods, state,
-                {}, {}, {}, bars, f"{label} Execution", output_dir
+                avwap_map or {}, {}, session_vwaps or {}, bars, f"{label} Execution", output_dir
             )
             results[f"intra_{label}_path"] = path
             results[f"intra_{label}_b64"] = b64
