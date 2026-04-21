@@ -174,7 +174,7 @@ def build_packet(symbol: str, data: dict, spy_daily: pd.DataFrame | None = None,
     failed_breakout_memory = feat.assess_failed_breakout_memory(daily)
     catalyst_context = feat.assess_catalyst_context(daily_state, event_ctx, earnings, breakout_integrity, base_quality)
     clean_air = feat.assess_clean_air(daily_state.get("last_close", 0), daily_state, pivots, avwap_map, reference_levels, overhead_supply)
-    breakout_features = feat.compute_breakout_context(daily, weekly, intraday, spy_daily=spy_daily)
+    breakout_features = feat.compute_breakout_context(daily, weekly, intraday, spy_daily=spy_daily, avwap_map=avwap_map)
     pattern_block = breakout_patterns.evaluate_breakout_patterns(daily, daily_state, breakout_features, breakout_integrity, continuation_pattern)
     try:
         trigger_block = intraday_triggers.evaluate_intraday_triggers(

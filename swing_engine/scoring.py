@@ -88,7 +88,25 @@ def _structural_score(daily_state: dict, weekly_state: dict, rs: dict, chart_qua
 def _breakout_score(breakout_patterns: dict, breakout_features: dict, breakout_integrity: dict, base_quality: dict, continuation_pattern: dict, failed_breakout_memory: dict, catalyst_context: dict) -> tuple[float, dict]:
     near_high = breakout_features.get("near_high", {})
     contraction = breakout_features.get("contraction", {})
+    pivot_position = breakout_features.get("pivot_position", {})
+    early_setup = breakout_features.get("early_setup", {})
+    avwap = breakout_features.get("avwap", {})
     primary = breakout_patterns.get("primary", {})
+    pivot_class = str(pivot_position.get("classification", "unavailable"))
+    pivot_proximity = {
+        "below_pivot_but_near": 88.0,
+        "at_pivot": 92.0,
+        "just_through_pivot": 78.0,
+        "too_far_through_pivot": 12.0,
+        "far_below_pivot": 22.0,
+    }.get(pivot_class, 40.0)
+    early_setup_score = _avg([
+        100.0 if early_setup.get("short_ma_rising") else 20.0,
+        100.0 if early_setup.get("tightening_into_short_ma") else 25.0,
+        100.0 if (early_setup.get("larger_ma_supportive") or early_setup.get("avwap_supportive")) else 35.0,
+        _safe_float(early_setup.get("orderly_contraction_score"), 0.0),
+    ])
+    avwap_score = _clamp(_safe_float(avwap.get("support_score"), 0.0) - _safe_float(avwap.get("resistance_penalty"), 0.0) * 0.6 + (12.0 if avwap.get("supportive") else 0.0))
     factors = {
         "primary_pattern": _safe_float(primary.get("score"), 0.0),
         "near_high_context": _safe_float(near_high.get("score"), 0.0),
@@ -97,6 +115,9 @@ def _breakout_score(breakout_patterns: dict, breakout_features: dict, breakout_i
             _safe_float(contraction.get("tight_close_score"), 0.0),
             _safe_float(contraction.get("volume_dryup_score"), 0.0),
         ]),
+        "pivot_proximity": pivot_proximity,
+        "early_setup_quality": early_setup_score,
+        "avwap_support": avwap_score,
         "base_quality": _safe_float(base_quality.get("score"), 50.0),
         "continuation_pattern": _safe_float(continuation_pattern.get("score"), 50.0),
         "breakout_integrity": _safe_float(breakout_integrity.get("score"), 50.0),
@@ -107,6 +128,9 @@ def _breakout_score(breakout_patterns: dict, breakout_features: dict, breakout_i
         factors["primary_pattern"] * 1.25,
         factors["near_high_context"],
         factors["contraction_quality"] * 1.1,
+        factors["pivot_proximity"] * 1.15,
+        factors["early_setup_quality"] * 1.1,
+        factors["avwap_support"] * 0.9,
         factors["base_quality"],
         factors["continuation_pattern"],
         factors["breakout_integrity"] * 1.15,
@@ -122,9 +146,10 @@ def _trigger_score(intraday_trigger: dict, breakout_features: dict, data_quality
     freshness_score = 100.0 if freshness == "fresh" else 72.0 if freshness == "mildly_stale" else 42.0 if freshness == "stale" else 10.0
     close = _safe_float(daily_state.get("last_close"), 0.0)
     atr = _safe_float(daily_state.get("atr"), close * 0.02 if close else 0.0)
-    pivot = _safe_float(breakout_features.get("pattern", {}).get("pivot_high_10d"), 0.0)
-    extension_atr = ((close - pivot) / atr) if atr > 0 and pivot > 0 else 0.0
-    extension_score = 100.0 - max(0.0, extension_atr - (0.7 if setup_family in {"breakout_retest", "reclaim_and_go"} else 1.0)) * 35.0
+    pivot_info = breakout_features.get("pivot_position", {})
+    pivot = _safe_float(pivot_info.get("pivot_level"), _safe_float(breakout_features.get("pattern", {}).get("pivot_high_10d"), 0.0))
+    extension_atr = _safe_float(pivot_info.get("extension_atr"), ((close - pivot) / atr) if atr > 0 and pivot > 0 else 0.0)
+    extension_score = 100.0 - max(0.0, extension_atr - (0.35 if setup_family in {"breakout_retest", "reclaim_and_go"} else 0.7)) * 65.0
     factors = {
         "primary_trigger": _safe_float(primary.get("score"), 0.0),
         "trigger_freshness": freshness_score,
@@ -135,24 +160,49 @@ def _trigger_score(intraday_trigger: dict, breakout_features: dict, data_quality
     return round(_clamp(score), 1), factors
 
 
-def _state_from_scores(structural_score: float, breakout_score: float, breakout_patterns: dict, intraday_trigger: dict, breakout_integrity: dict, data_quality: dict) -> str:
+def _state_from_scores(structural_score: float, breakout_score: float, breakout_patterns: dict, intraday_trigger: dict, breakout_integrity: dict, data_quality: dict, breakout_features: dict, overhead_supply: dict) -> str:
     if _safe_float(data_quality.get("score"), 0.0) < 20 or data_quality.get("intraday_freshness_label") == "missing":
         return "DATA_UNAVAILABLE"
     if breakout_integrity.get("state") == "failed_breakout" or intraday_trigger.get("trigger_state") == "failed":
         return "FAILED"
     if structural_score < 45:
         return "BLOCKED"
-    if intraday_trigger.get("primary", {}).get("triggered_now"):
+    pivot_position = breakout_features.get("pivot_position", {})
+    pivot_class = str(pivot_position.get("classification", "unavailable"))
+    extension_atr = _safe_float(pivot_position.get("extension_atr"), 0.0)
+    rr_now = _safe_float(pivot_position.get("risk_reward_now"), 0.0)
+    early_setup = breakout_features.get("early_setup", {})
+    pattern_stage = breakout_patterns.get("primary", {}).get("stage", "forming")
+    fresh_enough = str(data_quality.get("intraday_freshness_label", "missing")) in {"fresh", "mildly_stale"}
+    overhead_ok = _safe_float(overhead_supply.get("score"), 0.0) >= 55.0
+    orderly = _safe_float(early_setup.get("orderly_contraction_score"), 0.0) >= 58.0
+    early_support = all([
+        bool(early_setup.get("short_ma_rising")),
+        bool(early_setup.get("tightening_into_short_ma")),
+        bool(early_setup.get("larger_ma_supportive") or early_setup.get("avwap_supportive")),
+    ])
+    if pivot_class == "too_far_through_pivot" or extension_atr > cfg.MAX_BREAKOUT_EXTENSION_ATR or rr_now < 1.0 or breakout_integrity.get("state") == "extended_breakout":
+        return "EXTENDED"
+    if intraday_trigger.get("primary", {}).get("triggered_now") and fresh_enough and pivot_class in {"at_pivot", "just_through_pivot"} and rr_now >= 1.15:
         trigger_type = intraday_trigger.get("primary", {}).get("trigger_type", "")
         if trigger_type == "vwap_reclaim_hold":
             return "ACTIONABLE_RECLAIM"
         if breakout_integrity.get("state") == "retest_holding":
             return "ACTIONABLE_RETEST"
         return "ACTIONABLE_BREAKOUT"
-    if breakout_score >= cfg.TRIGGER_WATCH_MIN_SCORE and breakout_patterns.get("primary", {}).get("stage") in {"trigger_watch", "breakout_watch"}:
+    if breakout_score >= cfg.TRIGGER_WATCH_MIN_SCORE and pivot_class in {"at_pivot", "just_through_pivot"} and pattern_stage == "trigger_watch":
         return "TRIGGER_WATCH"
-    if breakout_score >= cfg.BREAKOUT_WATCH_MIN_SCORE:
-        return "BREAKOUT_WATCH"
+    if (
+        structural_score >= cfg.STRUCTURAL_MIN_SCORE
+        and breakout_score >= cfg.BREAKOUT_WATCH_MIN_SCORE
+        and pivot_class == "below_pivot_but_near"
+        and early_support
+        and orderly
+        and overhead_ok
+        and rr_now >= 1.35
+        and pattern_stage in {"potential_breakout", "trigger_watch"}
+    ):
+        return "POTENTIAL_BREAKOUT"
     if structural_score >= cfg.STRUCTURAL_MIN_SCORE:
         return "FORMING"
     return "BLOCKED"
@@ -165,7 +215,7 @@ def _action_bias(state: str, total_score: float) -> str:
         return "avoid"
     if state.startswith("ACTIONABLE"):
         return "buy"
-    if state in {"TRIGGER_WATCH", "BREAKOUT_WATCH"}:
+    if state in {"TRIGGER_WATCH", "POTENTIAL_BREAKOUT"}:
         return "lean_buy" if total_score >= 68 else "wait"
     return "wait"
 
@@ -181,10 +231,12 @@ def _decision_summary(setup_family: str, state: str, freshness_label: str) -> st
         return f"{setup_family.replace('_', ' ')} is aligned across structure, readiness, and trigger quality."
     if freshness_label != "fresh":
         return f"{setup_family.replace('_', ' ')} is constructive, but trigger trust is reduced by {freshness_label} intraday data."
+    if state == "EXTENDED":
+        return f"{setup_family.replace('_', ' ')} is extended through the pivot and no longer offers attractive reward/risk."
     if state == "TRIGGER_WATCH":
         return f"{setup_family.replace('_', ' ')} is close to actionable and should stay on the active trigger board."
-    if state == "BREAKOUT_WATCH":
-        return f"{setup_family.replace('_', ' ')} has constructive structure but still needs more tightening or pivot pressure."
+    if state == "POTENTIAL_BREAKOUT":
+        return f"{setup_family.replace('_', ' ')} is tightening near a valid pivot with support underneath, but the clean trigger is not live yet."
     return "Structure is constructive, but this setup is still forming."
 
 
@@ -217,7 +269,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict, avwap
     elif not daily_gate["passed"]:
         raw_total = min(raw_total, cfg.SCORE_CAP_DAILY_FAIL)
 
-    state = _state_from_scores(structural_score, breakout_score, breakout_patterns, intraday_trigger, breakout_integrity, data_quality)
+    state = _state_from_scores(structural_score, breakout_score, breakout_patterns, intraday_trigger, breakout_integrity, data_quality, breakout_features, overhead_supply)
     action_bias = _action_bias(state, raw_total)
     return {
         "score": raw_total,
@@ -232,6 +284,7 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict, avwap
         "setup_family": setup_family,
         "setup_stage": breakout_patterns.get("setup_stage", "forming"),
         "setup_state": state,
+        "pivot_position": breakout_features.get("pivot_position", {}),
         "action_bias": action_bias,
         "weekly_gate": weekly_gate,
         "daily_gate": daily_gate,
@@ -315,9 +368,9 @@ def classify_setup(packet: dict) -> dict:
         "ACTIONABLE_RETEST": "retest",
         "ACTIONABLE_RECLAIM": "reclaim",
         "TRIGGER_WATCH": "trigger_watch",
-        "BREAKOUT_WATCH": "breakout_watch",
+        "POTENTIAL_BREAKOUT": "potential_breakout",
         "FORMING": "forming",
-        "EXTENDED_WAIT": "extended_wait",
+        "EXTENDED": "extended",
         "FAILED": "failed",
         "BLOCKED": "blocked",
         "DATA_UNAVAILABLE": "data_unavailable",
@@ -332,6 +385,7 @@ def classify_setup(packet: dict) -> dict:
         "raw_trigger": primary_trigger.get("trigger_type") if primary_trigger else None,
         "pivot_level": primary_pattern.get("pivot_level"),
         "trigger_level": primary_trigger.get("trigger_level"),
+        "pivot_position": score.get("pivot_position", {}),
         "invalidation": primary_trigger.get("invalidation_level") or primary_pattern.get("invalidation_level") or entry_zone.get("stop"),
     }
 

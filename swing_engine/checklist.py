@@ -32,6 +32,8 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
         return {"label": "DATA UNAVAILABLE", "detail": dq.get("detail", "Fresh data unavailable"), "rank": 8, "actionable_now": False}
     if setup_state in {"FAILED", "BLOCKED"} or structural < 45:
         return {"label": "BLOCK", "detail": "Structure, failure state, or risk gates block action", "rank": 7, "actionable_now": False}
+    if setup_state == "EXTENDED":
+        return {"label": "WAIT PULLBACK", "detail": score.get("decision_summary") or "Setup is too extended through the pivot to buy now", "rank": 6, "actionable_now": False}
 
     if setup_state == "ACTIONABLE_BREAKOUT":
         return {"label": "BUY BREAKOUT", "detail": setup.get("trigger") or "Breakout trigger is live now", "rank": 0, "actionable_now": True}
@@ -42,8 +44,8 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
 
     if setup_state == "TRIGGER_WATCH":
         return {"label": "WATCH TRIGGER", "detail": setup.get("trigger") or "Setup is close to a live trigger", "rank": 1, "actionable_now": False}
-    if setup_state == "BREAKOUT_WATCH":
-        return {"label": "WATCH CONTINUATION", "detail": setup.get("description") or "Constructive breakout watch candidate", "rank": 2, "actionable_now": False}
+    if setup_state == "POTENTIAL_BREAKOUT":
+        return {"label": "WATCH CONTINUATION", "detail": setup.get("description") or score.get("decision_summary") or "Constructive early breakout candidate", "rank": 2, "actionable_now": False}
 
     if entry_zone and not _as_bool(entry_zone.get("in_zone")) and setup_family in {"breakout_retest", "reclaim_and_go"}:
         return {"label": "WAIT PULLBACK", "detail": entry_zone.get("price_vs_zone") or "Wait for price to pull back into support", "rank": 4, "actionable_now": False}
