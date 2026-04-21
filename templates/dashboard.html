@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swing Engine</title>
+<style>
+  body { font-family: "IBM Plex Sans", "Segoe UI", sans-serif; background: linear-gradient(180deg, #08111b, #03070c); color: #e6edf5; margin: 0; padding: 20px; }
+  .shell { max-width: 1400px; margin: 0 auto; }
+  .hero, .section, .card { background: rgba(10, 18, 27, 0.92); border: 1px solid rgba(112, 142, 170, 0.24); border-radius: 16px; }
+  .hero { padding: 18px; margin-bottom: 16px; }
+  .section { padding: 16px; margin-bottom: 16px; }
+  h1, h2, h3 { margin: 0 0 10px 0; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.12em; color: #8da4bb; }
+  .muted { color: #90a4b7; }
+  .grid { display: grid; gap: 12px; }
+  .summary-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .card-grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .metric { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(131, 158, 182, 0.18); }
+  .metric .label { color: #7f93a8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; }
+  .metric .value { font-size: 1.4rem; font-weight: 700; margin-top: 6px; }
+  .card { padding: 14px; }
+  .row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; margin-right: 6px; }
+  .state { background: #10253a; color: #8cc7ff; }
+  .fresh { background: #082114; color: #7ef0b8; }
+  .stale { background: #261603; color: #ffd66b; }
+  .bad { background: #2d0b10; color: #ff8a8a; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid rgba(106, 132, 156, 0.16); font-size: 0.9rem; }
+  .mono { font-family: "IBM Plex Mono", Consolas, monospace; }
+  @media (max-width: 700px) { body { padding: 12px; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="hero">
+    <div class="row">
+      <div>
+        <div class="muted">Deterministic Breakout Stack</div>
+        <h1>Swing Engine</h1>
+        <div class="muted">Structural scan, breakout-readiness scan, and intraday trigger monitor with freshness-aware yfinance data.</div>
+      </div>
+      <div class="muted">Generated {{ generated_at }}</div>
+    </div>
+    <div style="margin-top: 12px;" class="muted">
+      Regime {{ regime.regime|upper|replace('_', ' ') }} | Bias {{ regime.swing_bias }} | Risk {{ regime.risk_appetite }}
+      {% if regime.breakout_overlay %}| Breakout Environment {{ regime.breakout_overlay.breakout_environment }}{% endif %}
+    </div>
+    {% if run_summary %}
+    <div style="margin-top: 12px;" class="muted">
+      Run {{ run_summary.run_mode }} | Status {{ run_summary.overall_status|upper }} | Duration {{ run_summary.duration_seconds }}s
+      | Live {{ run_summary.symbols_loaded_live }} | Cache {{ run_summary.symbols_loaded_from_cache_fallback }} | Unavailable {{ run_summary.symbols_unavailable }}
+    </div>
+    {% endif %}
+    {% if run_summary and run_summary.overall_status != 'healthy' %}
+    <div style="margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(77, 19, 19, 0.55); border: 1px solid rgba(255, 146, 146, 0.28);">
+      <strong>Degraded Run</strong>
+      <div class="muted">
+        Benchmark availability {{ run_summary.benchmark_available_count }}/{{ run_summary.benchmark_symbols|length }},
+        packet failures {{ run_summary.packet_build_failures }},
+        trigger degraded {{ run_summary.intraday_trigger_degraded_count }}.
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Desk Snapshot</h2>
+    <div class="grid summary-grid">
+      <div class="metric"><div class="label">Structural Leaders</div><div class="value">{{ sections.structural|length }}</div></div>
+      <div class="metric"><div class="label">Breakout Watch</div><div class="value">{{ sections.breakout|length }}</div></div>
+      <div class="metric"><div class="label">Triggered Now</div><div class="value">{{ sections.triggered|length }}</div></div>
+      <div class="metric"><div class="label">Failed / Blocked</div><div class="value">{{ sections.failed|length }}</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Benchmarks</h2>
+    <table>
+      <tr><th>Symbol</th><th>Price</th><th>Stack</th><th>Score</th></tr>
+      {% for packet in benchmarks %}
+      <tr>
+        <td>{{ packet.symbol }}</td>
+        <td class="mono">{{ packet.daily.last_close }}</td>
+        <td>{{ packet.daily.ma_stack }}</td>
+        <td>{{ packet.score.score }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  {% for title, rows in [("Structural Leaders", sections.structural), ("Breakout Watchlist", sections.breakout), ("Actionable Triggers Now", sections.triggered), ("Failed / Avoid", sections.failed)] %}
+  <div class="section">
+    <h2>{{ title }}</h2>
+    <div class="grid card-grid">
+      {% for row in rows %}
+      {% set packet = row.packet %}
+      <div class="card">
+        <div class="row">
+          <div>
+            <h3>{{ row.symbol }}</h3>
+            <span class="badge state">{{ packet.score.setup_family }}</span>
+            <span class="badge state">{{ packet.score.setup_state }}</span>
+            {% set fresh_class = 'fresh' if packet.data_quality.intraday_freshness_label == 'fresh' else 'stale' if packet.data_quality.intraday_freshness_label in ['mildly_stale', 'stale'] else 'bad' %}
+            <span class="badge {{ fresh_class }}">{{ packet.data_quality.intraday_freshness_label }}</span>
+          </div>
+          <div class="mono">{{ packet.daily.last_close }}</div>
+        </div>
+        <div class="muted">{{ row.action.label }}: {{ row.action.detail }}</div>
+        <div style="margin-top: 10px;" class="grid summary-grid">
+          <div class="metric"><div class="label">Structural</div><div class="value">{{ packet.score.structural_score }}</div></div>
+          <div class="metric"><div class="label">Readiness</div><div class="value">{{ packet.score.breakout_readiness_score }}</div></div>
+          <div class="metric"><div class="label">Trigger</div><div class="value">{{ packet.score.trigger_readiness_score }}</div></div>
+        </div>
+        <table style="margin-top: 10px;">
+          <tr><th>Stage</th><td>{{ packet.setup.stage }}</td></tr>
+          <tr><th>Pivot</th><td class="mono">{{ packet.setup.pivot_level }}</td></tr>
+          <tr><th>Trigger</th><td>{{ packet.intraday_trigger.primary.trigger_type }}</td></tr>
+          <tr><th>Trigger Level</th><td class="mono">{{ packet.intraday_trigger.primary.trigger_level }}</td></tr>
+          <tr><th>Entry Zone</th><td class="mono">{{ packet.entry_zone.entry_low }} - {{ packet.entry_zone.entry_high }}</td></tr>
+          <tr><th>Stop</th><td class="mono">{{ packet.entry_zone.stop }}</td></tr>
+          <tr><th>Freshness</th><td>{{ packet.data_quality.intraday_freshness_minutes }} min old</td></tr>
+          <tr><th>RS20</th><td>{{ packet.relative_strength.rs_20d }}</td></tr>
+        </table>
+        {% if narratives.get(row.symbol) %}
+        <div style="margin-top: 10px;" class="muted">{{ narratives[row.symbol] }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+</body>
+</html>

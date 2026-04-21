@@ -68,7 +68,7 @@ def build_dynamic_correlation_matrix(
         return None
 
     price_df = pd.DataFrame(closes)
-    ret_df = price_df.pct_change().dropna(how="all")
+    ret_df = price_df.pct_change(fill_method=None).dropna(how="all")
 
     # Require at least 20 non-NaN observations per pair
     corr_matrix = ret_df.corr(min_periods=20)

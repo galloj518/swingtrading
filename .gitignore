@@ -1,6 +1,8 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+pytest-cache-files-*/
+.pytest_tmp/
 .mypy_cache/
 .ipynb_checkpoints/
 .venv/
@@ -18,5 +20,9 @@ data/*.sqlite3-shm
 data/*.sqlite3-wal
 reports/
 dashboard.html
+!templates/dashboard.html
+tmp_*/
+tmp_dbrd*/
+.claude/
 
 site/

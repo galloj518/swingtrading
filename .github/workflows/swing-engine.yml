@@ -2,8 +2,22 @@ name: Swing Engine
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Scan mode
+        required: false
+        default: run
+        type: choice
+        options:
+          - run
+          - run-structural
+          - run-breakout-watch
+          - run-triggers
+          - run-narratives
   schedule:
-    - cron: "30 13 * * 1-5"
+    - cron: "00 13 * * 1-5"
+    - cron: "45 14,16,18 * * 1-5"
+    - cron: "30 21 * * 1-5"
 
 permissions:
   pages: write
@@ -14,7 +28,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  run-and-publish:
+  run-scan:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +47,31 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Compile validation
+        run: python -m compileall swing_engine
+
+      - name: Run tests
+        run: python -m pytest -q tests
+
+      - name: Run offline smoke
+        run: python -m swing_engine smoke
+
+      - name: Resolve mode
+        id: mode
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MODE="${{ inputs.mode }}"
+          elif [ "${{ github.event.schedule }}" = "00 13 * * 1-5" ]; then
+            MODE="run-structural"
+          elif [ "${{ github.event.schedule }}" = "30 21 * * 1-5" ]; then
+            MODE="run-narratives"
+          else
+            MODE="run-triggers"
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Resolved mode: $MODE"
+
       - name: Run swing engine
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -40,10 +79,13 @@ jobs:
           SCHWAB_APP_SECRET: ${{ secrets.SCHWAB_APP_SECRET }}
           SCHWAB_REFRESH_TOKEN: ${{ secrets.SCHWAB_REFRESH_TOKEN }}
         run: |
-          python -m swing_engine run
-          python -m swing_engine backfill
+          python -m swing_engine ${{ steps.mode.outputs.mode }}
+          if [ "${{ steps.mode.outputs.mode }}" != "run-triggers" ]; then
+            python -m swing_engine backfill
+          fi
 
       - name: Prepare Pages site
+        if: success()
         shell: bash
         run: |
           rm -rf site
@@ -54,9 +96,11 @@ jobs:
           fi
 
       - name: Upload Pages artifact
+        if: success()
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
       - name: Deploy to GitHub Pages
+        if: success()
         uses: actions/deploy-pages@v4
