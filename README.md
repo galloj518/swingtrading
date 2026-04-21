@@ -1,115 +1,153 @@
 # Swing Engine
 
-A deterministic, price-action-first swing trading tool for personal use.
+Deterministic breakout-first swing scanning built around yfinance, cached market data, structured run health, and optional narrative post-processing.
 
-## Philosophy
+## Entry Point
 
-- **Price action dominates** — Brian Shannon / Alphtrends methodology
-- **Gated scoring** — weekly trend must pass before daily matters
-- **No LLM in the critical path** — all decisions are deterministic and repeatable
-- **Behavioral edge** — checklists and tracking enforce discipline
-- **Simplicity over cleverness** — every component must earn its place
+The authoritative CLI entrypoint is `swing_engine/__main__.py`.
+
+Run commands with:
+
+```bash
+python -m swing_engine --help
+```
+
+## Scan Modes
+
+```bash
+python -m swing_engine run
+python -m swing_engine run --with-narratives
+python -m swing_engine run-structural
+python -m swing_engine run-breakout-watch
+python -m swing_engine run-triggers
+python -m swing_engine run-narratives
+python -m swing_engine smoke
+```
+
+Mode behavior:
+
+- `run` is deterministic by default.
+- `run --with-narratives` explicitly opts into LLM post-processing.
+- `run-structural` is structural quality only and does not invoke narratives.
+- `run-breakout-watch` is deterministic and does not invoke narratives.
+- `run-triggers` is deterministic and does not invoke narratives.
+- `run-narratives` is the only frequent-scan-adjacent mode that may call the narrative layer.
+- `smoke` is a fully offline deterministic smoke run with synthetic market data.
 
 ## Architecture
 
-```
-yfinance (market data)
-    ↓
-pandas-ta (standard indicators) + custom (AVWAP, gated scoring, confluence)
-    ↓
-Gated Scoring Engine (weekly gate → daily gate → entry quality)
-    ↓
-Deterministic Regime Model (SPY/QQQ/SOXX/DIA/VIX)
-    ↓
-Pre-Trade Checklists + Signal/Trade Store (SQLite + CSV)
-    ↓
-Static HTML Dashboard → Vercel (mobile access)
-```
+The repo preserves the three-layer scan stack:
 
-## Setup
+1. Structural scan
+2. Breakout-readiness scan
+3. Deterministic intraday trigger monitor
+
+Frequent runs remain deterministic and do not require `OPENAI_API_KEY`.
+
+## Degraded Runs
+
+A run is marked degraded when the engine sees meaningful operational weakness, including:
+
+- benchmark data unavailable
+- cache fallback replacing live data
+- symbol-level unavailable packets
+- packet build fallback
+- trigger logic degraded by missing or stale intraday data
+
+Every scan run now emits machine-readable run health JSON under `reports/` with:
+
+- run mode
+- timestamp
+- duration
+- live / cache-fallback / unavailable symbol counts
+- packet failure counts
+- benchmark availability
+- regime degradation flag
+- trigger degradation counts
+- setup-state and actionability counts
+- overall status (`healthy`, `degraded`, `failed`)
+
+## Data and Failure Behavior
+
+The market-data layer is defensive against broken yfinance responses:
+
+- `None`, empty, malformed, and partial responses normalize to empty frames
+- symbols may fall back to cache
+- fully unavailable symbols degrade to structured unavailable packets
+- benchmark failures degrade regime and relative-strength quality instead of crashing the run
+- repeated provider failures trip a short cooldown to avoid hammering broken downloads
+
+## Outputs
+
+Source files:
+
+- `templates/dashboard.html`
+- `swing_engine/*.py`
+- `.github/workflows/swing-engine.yml`
+
+Generated/runtime artifacts:
+
+- `dashboard.html`
+- `reports/*.json`
+- `reports/offline_smoke_dashboard.html`
+- `reports/offline_smoke_report.json`
+- `data/cache/*`
+- `data/signals.csv`
+- `data/swing_engine.sqlite3`
+
+The generated root `dashboard.html` is intentionally not treated as source.
+
+## Local Verification
+
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Set environment variables (optional, for Schwab account data):
-```
-SCHWAB_APP_KEY=...
-SCHWAB_APP_SECRET=...
-SCHWAB_REFRESH_TOKEN=...
-```
-
-## Usage
+Run compile validation:
 
 ```bash
-# Morning pre-market run (full analysis)
-python -m swing_engine run
-
-# Single symbol check
-python -m swing_engine check NVDA
-
-# SOXX→SOXL tactical
-python -m swing_engine soxx
-
-# Weekly review of trade journal
-python -m swing_engine review
-
-# Sync legacy CSV history into the SQLite store
-python -m swing_engine db-sync
-
-# Generate HTML dashboard
-python -m swing_engine dashboard
+python -m compileall swing_engine
 ```
 
-## GitHub Travel Setup
+Run tests:
 
-This project can run on GitHub Actions while your home computer is off.
-
-- The workflow lives at `.github/workflows/swing-engine.yml`
-- It runs on weekdays and can also be started manually
-- It generates a fresh dashboard and publishes it to GitHub Pages for phone access
-- In a public-repo setup, generated trading data is not committed back into git
-
-Recommended repository settings:
-
-- Enable GitHub Pages and set the source to `GitHub Actions`
-- Add `OPENAI_API_KEY` only if you want AI narratives
-- Add `SCHWAB_APP_KEY`, `SCHWAB_APP_SECRET`, and `SCHWAB_REFRESH_TOKEN` only if you want Schwab-linked features
-
-Phone access pattern:
-
-- Open the GitHub Pages URL for the latest dashboard
-- Use GitHub Pages for the rendered dashboard only
-
-## File Outputs
-
-- `data/signals.csv` — daily signal log with outcome backfill
-- `data/journal.csv` — trade journal (manual entry + helpers)
-- `data/swing_engine.sqlite3` — durable signal/trade database
-- `data/cache/` — cached market data CSVs
-- `reports/` — daily JSON reports
-- `dashboard.html` — static dashboard for Vercel deployment
-
-## Project Structure
-
+```bash
+python -m pytest -q
 ```
-swing_engine/
-├── __init__.py
-├── __main__.py          # CLI entry points
-├── config.py            # All configuration
-├── data.py              # Market data loading + caching
-├── features.py          # SMAs, ATR, pivots, AVWAP, RS
-├── scoring.py           # Gated scoring engine
-├── regime.py            # Deterministic regime model
-├── sizing.py            # Position sizing + correlation groups
-├── packets.py           # Packet builder
-├── signals.py           # Signal logging + outcome tracking
-├── soxx_tactical.py     # SOXX→SOXL dedicated module
-├── checklist.py         # Pre-trade checklist generator
-├── dashboard.py         # Static HTML generator
-├── review.py            # Weekly review script
-templates/
-├── dashboard.html       # Jinja2 template for dashboard
-sandbox.ipynb            # Ad-hoc exploration notebook
-requirements.txt
+
+Run the deterministic offline smoke path:
+
+```bash
+python -m swing_engine smoke
 ```
+
+The smoke path verifies:
+
+- scan orchestration
+- packet / scoring / checklist flow
+- dashboard rendering
+- run-health reporting
+- deterministic no-LLM execution
+
+## CI / Scheduled Operation
+
+The GitHub Actions workflow now performs:
+
+- dependency install
+- compile validation
+- pytest
+- offline smoke verification
+- scheduled scan execution
+
+Pages publishing only proceeds when the workflow remains successful.
+
+## Environment Variables
+
+```bash
+OPENAI_API_KEY=...   # only used by run-narratives or run --with-narratives
+SWING_ENGINE_LOG_LEVEL=INFO
+```
+
+Legacy Schwab env vars may still exist in local environments, but market data remains yfinance-only.

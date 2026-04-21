@@ -1,23 +1,14 @@
 """
-Gated scoring engine.
-
-Hierarchical, not additive:
-  Gate 1: Weekly regime (pass/fail) - caps score at 30 if fail
-  Gate 2: Daily trend (pass/fail) - caps score at 50 if fail
-  Gate 3: Entry quality scoring - only matters if gates 1+2 pass
-
-This prevents the system from producing misleading scores on names
-with broken weekly structure.
+Three-layer scoring engine: structural quality, breakout readiness, and trigger readiness.
 """
-from typing import Optional
-
-import pandas as pd
+from __future__ import annotations
 
 from . import config as cfg
 from .utils import _band_ratio, _linear_ratio, _clamp
 from .constants import ThresholdRegistry as TR
 
 
+<<<<<<< HEAD
 def _check_weekly_gate(weekly_state: dict) -> dict:
     """
     Gate 1: Weekly trend must show constructive intermediate structure.
@@ -89,6 +80,10 @@ def _check_daily_gate(daily_state: dict) -> dict:
         "check": cfg.GATE_DAILY_REQUIRES,
         "detail": detail,
     }
+=======
+def _clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
+    return max(low, min(high, value))
+>>>>>>> 955d76f (Harden runtime reliability and add offline validation)
 
 
 def _safe_float(value, default: float = 0.0) -> float:
@@ -101,6 +96,7 @@ def _safe_float(value, default: float = 0.0) -> float:
 
 
 def _avg(values: list[float]) -> float:
+<<<<<<< HEAD
     vals = [v for v in values if v is not None]
     return sum(vals) / len(vals) if vals else 0.0
 
@@ -127,72 +123,46 @@ def _tomorrow_bias_score(bias: str) -> float:
 
 def _bool_score(flag) -> float:
     return 100.0 if bool(flag) else 0.0
+=======
+    usable = [value for value in values if value is not None]
+    return sum(usable) / len(usable) if usable else 0.0
+>>>>>>> 955d76f (Harden runtime reliability and add offline validation)
 
 
 def _quality_label(score: float) -> str:
-    return (
-        "A - strong" if score >= 80 else
-        "B - good" if score >= 65 else
-        "C - marginal" if score >= 50 else
-        "D - weak" if score >= 35 else
-        "F - avoid"
-    )
+    return "A - elite" if score >= 82 else "B - strong" if score >= 68 else "C - usable" if score >= 55 else "D - weak" if score >= 40 else "F - avoid"
 
 
 def _timing_label(score: float) -> str:
-    return (
-        "A - ready" if score >= 80 else
-        "B - close" if score >= 65 else
-        "C - developing" if score >= 50 else
-        "D - early" if score >= 35 else
-        "F - poor"
+    return "A - actionable" if score >= 80 else "B - close" if score >= 66 else "C - developing" if score >= 52 else "D - early" if score >= 38 else "F - poor"
+
+
+def _weekly_gate(weekly_state: dict) -> dict:
+    passed = bool(
+        weekly_state.get("close_above_sma_10") and
+        weekly_state.get("close_above_sma_20") and
+        weekly_state.get("sma10_above_sma20") and
+        weekly_state.get("sma_10_direction") != "falling" and
+        weekly_state.get("sma_20_direction") != "falling"
     )
+    return {"passed": passed, "check": cfg.GATE_WEEKLY_REQUIRES, "detail": "Weekly structure constructive" if passed else "FAILED: weekly structure not constructive"}
 
 
-def _decision_summary(action_bias: str, idea_score: float, timing_score: float,
-                      idea_factors: dict | None = None) -> str:
-    """
-    Short trader-style summary of what matters most right now.
-    """
-    idea_factors = idea_factors or {}
-    chart_score = _safe_float(idea_factors.get("chart_quality"), 50.0)
-    base_score = _safe_float(idea_factors.get("base_quality"), 55.0)
-    group_score = _safe_float(idea_factors.get("group_strength"), 55.0)
-    evidence_score = _safe_float(idea_factors.get("historical_evidence"), 50.0)
-    evidence_samples = int(idea_factors.get("historical_evidence_samples", 0) or 0)
-    clean_air_score = _safe_float(idea_factors.get("clean_air"), 50.0)
-    breakout_score = _safe_float(idea_factors.get("breakout_integrity"), 55.0)
-
-    if action_bias == "unavailable":
-        return "Data unavailable: hold judgment until fresh daily and intraday data are available."
-
-    if action_bias == "avoid":
-        if breakout_score < 40:
-            return "Avoid for now: recent breakout behavior is not trustworthy."
-        if chart_score < 40 or base_score < 40:
-            return "Avoid for now: the chart is too loose for a clean swing setup."
-        return "Avoid for now: structure and timing are not good enough."
-
-    if action_bias == "wait":
-        if timing_score < 55:
-            return "Wait for a better entry: the idea may be fine, but timing is not ready."
-        if clean_air_score < 40:
-            return "Wait for more room: resistance is too close for a clean swing."
-        if evidence_samples >= 8 and evidence_score < 45:
-            return "Wait: history for similar setups is weak, so demand better confirmation."
-        return "Wait for confirmation: quality is improving, but not actionable yet."
-
-    if group_score < 50:
-        return "Constructive, but group confirmation is weak."
-    if evidence_samples >= 10 and evidence_score < 50:
-        return "Constructive, but similar setups have not earned much trust historically."
-    if clean_air_score < 50:
-        return "Constructive, but reward path is tight into resistance."
-    if idea_score >= 75 and timing_score >= 75:
-        return "High-quality swing candidate with both structure and timing aligned."
-    return "Good swing candidate, but execution still matters."
+def _daily_gate(daily_state: dict) -> dict:
+    passed = bool(
+        daily_state.get("close_above_sma_20") and
+        daily_state.get("close_above_sma_50") and
+        daily_state.get("sma20_above_sma50") and
+        daily_state.get("sma_20_direction") != "falling"
+    ) or bool(
+        daily_state.get("close_above_sma_10") and
+        daily_state.get("close_above_sma_20") and
+        daily_state.get("sma_20_direction") == "rising"
+    )
+    return {"passed": passed, "check": cfg.GATE_DAILY_REQUIRES, "detail": "Daily backbone constructive" if passed else "FAILED: daily trend backbone not constructive"}
 
 
+<<<<<<< HEAD
 def _build_confidence_context(idea_score: float, timing_score: float,
                               idea_factors: dict | None = None,
                               timing_factors: dict | None = None) -> dict:
@@ -253,120 +223,140 @@ def _build_confidence_context(idea_score: float, timing_score: float,
         "evidence_support_score": evidence_conf,
         "confidence_adjusted_score": confidence_adjusted_score,
         "detail": detail,
+=======
+def _structural_score(daily_state: dict, weekly_state: dict, rs: dict, chart_quality: dict, overhead_supply: dict, institutional_sponsorship: dict, clean_air: dict, group_strength: dict | None, weekly_close_quality: dict, data_quality: dict) -> tuple[float, dict]:
+    factors = {
+        "weekly_trend": 100.0 if _weekly_gate(weekly_state)["passed"] else 30.0,
+        "daily_trend": 100.0 if _daily_gate(daily_state)["passed"] else 42.0,
+        "relative_strength": _clamp((_safe_float(rs.get("rs_20d"), 0.0) + 8.0) * 5.2),
+        "chart_quality": _safe_float(chart_quality.get("score"), 45.0),
+        "overhead_supply": _safe_float(overhead_supply.get("score"), 50.0),
+        "institutional_sponsorship": _safe_float(institutional_sponsorship.get("score"), 50.0),
+        "clean_air": _safe_float(clean_air.get("score"), 50.0),
+        "group_strength": _safe_float((group_strength or {}).get("score"), 55.0),
+        "weekly_close_quality": _safe_float(weekly_close_quality.get("score"), 55.0),
+        "data_quality": _safe_float(data_quality.get("score"), 50.0),
+>>>>>>> 955d76f (Harden runtime reliability and add offline validation)
     }
+    score = _avg([
+        factors["weekly_trend"] * 1.15,
+        factors["daily_trend"] * 1.15,
+        factors["relative_strength"],
+        factors["chart_quality"],
+        factors["overhead_supply"],
+        factors["institutional_sponsorship"],
+        factors["clean_air"],
+        factors["group_strength"],
+        factors["weekly_close_quality"],
+        factors["data_quality"],
+    ])
+    return round(_clamp(score), 1), factors
 
 
-def _tradeability_label(score: float) -> str:
-    return (
-        "A - actionable" if score >= 80 else
-        "B - nearly actionable" if score >= 65 else
-        "C - watchlist" if score >= 50 else
-        "D - weak timing" if score >= 35 else
-        "F - do not act"
-    )
+def _breakout_score(breakout_patterns: dict, breakout_features: dict, breakout_integrity: dict, base_quality: dict, continuation_pattern: dict, failed_breakout_memory: dict, catalyst_context: dict) -> tuple[float, dict]:
+    near_high = breakout_features.get("near_high", {})
+    contraction = breakout_features.get("contraction", {})
+    primary = breakout_patterns.get("primary", {})
+    factors = {
+        "primary_pattern": _safe_float(primary.get("score"), 0.0),
+        "near_high_context": _safe_float(near_high.get("score"), 0.0),
+        "contraction_quality": _avg([
+            _safe_float(contraction.get("contraction_score"), 0.0),
+            _safe_float(contraction.get("tight_close_score"), 0.0),
+            _safe_float(contraction.get("volume_dryup_score"), 0.0),
+        ]),
+        "base_quality": _safe_float(base_quality.get("score"), 50.0),
+        "continuation_pattern": _safe_float(continuation_pattern.get("score"), 50.0),
+        "breakout_integrity": _safe_float(breakout_integrity.get("score"), 50.0),
+        "failed_breakout_memory": _safe_float(failed_breakout_memory.get("score"), 60.0),
+        "catalyst_context": _safe_float(catalyst_context.get("score"), 55.0),
+    }
+    score = _avg([
+        factors["primary_pattern"] * 1.25,
+        factors["near_high_context"],
+        factors["contraction_quality"] * 1.1,
+        factors["base_quality"],
+        factors["continuation_pattern"],
+        factors["breakout_integrity"] * 1.15,
+        factors["failed_breakout_memory"],
+        factors["catalyst_context"],
+    ])
+    return round(_clamp(score), 1), factors
 
 
-def _score_trend_quality(state: dict, timeframe: str) -> tuple[float, str]:
-    """Institutional trend template using fewer, more orthogonal MA factors."""
-    if timeframe == "weekly":
-        sponsorship = _avg([
-            _bool_score(state.get("close_above_sma_10")),
-            _bool_score(state.get("close_above_sma_20")),
-            _bool_score(state.get("close_above_sma_30", state.get("close_above_sma_20"))),
-        ])
-        alignment = _avg([
-            _bool_score(state.get("sma5_above_sma10")),
-            _bool_score(state.get("sma10_above_sma20")),
-            _bool_score(state.get("sma20_above_sma30", True)),
-        ])
-        slope = _avg([
-            _direction_score(state.get("sma_10_direction", "unknown")),
-            _direction_score(state.get("sma_20_direction", "unknown")),
-            _direction_score(state.get("sma_30_direction", "unknown")) if "sma_30" in state else 55.0,
-        ])
-        score = 0.38 * sponsorship + 0.34 * alignment + 0.28 * slope
-    else:
-        sponsorship = _avg([
-            _bool_score(state.get("close_above_sma_20")),
-            _bool_score(state.get("close_above_sma_50")),
-            _bool_score(state.get("close_above_sma_150", state.get("close_above_sma_50"))),
-            _bool_score(state.get("close_above_sma_200")),
-        ])
-        alignment = _avg([
-            _bool_score(state.get("sma20_above_sma50")),
-            _bool_score(state.get("sma50_above_sma150", state.get("sma50_above_sma200"))),
-            _bool_score(state.get("sma150_above_sma200", True)),
-        ])
-        slope = _avg([
-            _direction_score(state.get("sma_20_direction", "unknown")),
-            _direction_score(state.get("sma_50_direction", "unknown")),
-            _direction_score(state.get("sma_150_direction", "unknown")) if "sma_150" in state else 55.0,
-            _direction_score(state.get("sma_200_direction", "unknown")),
-        ])
-        score = 0.38 * sponsorship + 0.34 * alignment + 0.28 * slope
-    score = round(score, 1)
-    return score, f"{timeframe.capitalize()} trend {score:.0f}/100"
+def _trigger_score(intraday_trigger: dict, breakout_features: dict, data_quality: dict, daily_state: dict, setup_family: str) -> tuple[float, dict]:
+    primary = intraday_trigger.get("primary", {})
+    freshness = str(data_quality.get("intraday_freshness_label", "missing"))
+    freshness_score = 100.0 if freshness == "fresh" else 72.0 if freshness == "mildly_stale" else 42.0 if freshness == "stale" else 10.0
+    close = _safe_float(daily_state.get("last_close"), 0.0)
+    atr = _safe_float(daily_state.get("atr"), close * 0.02 if close else 0.0)
+    pivot = _safe_float(breakout_features.get("pattern", {}).get("pivot_high_10d"), 0.0)
+    extension_atr = ((close - pivot) / atr) if atr > 0 and pivot > 0 else 0.0
+    extension_score = 100.0 - max(0.0, extension_atr - (0.7 if setup_family in {"breakout_retest", "reclaim_and_go"} else 1.0)) * 35.0
+    factors = {
+        "primary_trigger": _safe_float(primary.get("score"), 0.0),
+        "trigger_freshness": freshness_score,
+        "extension_control": _clamp(extension_score),
+        "triggered_now": 100.0 if primary.get("triggered_now") else 45.0,
+    }
+    score = _avg([factors["primary_trigger"] * 1.25, factors["trigger_freshness"], factors["extension_control"], factors["triggered_now"]])
+    return round(_clamp(score), 1), factors
 
 
-def _score_avwap_sponsorship(price: float, avwap_map: dict) -> tuple[float, str]:
-    levels = []
-    for label, data in avwap_map.items():
-        avwap = _safe_float(data.get("avwap"), 0.0)
-        if avwap > 0:
-            dist_pct = ((avwap / price) - 1.0) * 100.0 if price > 0 else 0.0
-            levels.append((label, avwap, dist_pct))
-    if not levels or price <= 0:
-        return 50.0, "AVWAP sponsorship unavailable"
-
-    below = sorted([item for item in levels if item[2] < 0], key=lambda item: abs(item[2]))
-    above = sorted([item for item in levels if item[2] >= 0], key=lambda item: item[2])
-    support_score = 45.0
-    resistance_penalty = 0.0
-
-    if below:
-        nearest_support = abs(below[0][2])
-        if nearest_support <= 1.5:
-            support_score = 95.0
-        elif nearest_support <= 3.0:
-            support_score = 80.0
-        elif nearest_support <= 5.0:
-            support_score = 65.0
-        else:
-            support_score = 50.0
-    if above:
-        nearest_resistance = above[0][2]
-        if nearest_resistance <= 1.0:
-            resistance_penalty = 18.0
-        elif nearest_resistance <= 2.5:
-            resistance_penalty = 10.0
-        elif nearest_resistance <= 4.0:
-            resistance_penalty = 5.0
-    breadth_bonus = min(sum(1 for _, _, dist in levels if dist < 0) * 4.0, 16.0)
-    score = round(_clamp(support_score + breadth_bonus - resistance_penalty), 1)
-
-    support_txt = below[0][0] if below else "none nearby"
-    resist_txt = above[0][0] if above else "none nearby"
-    return score, f"Nearest AVWAP support {support_txt}; nearest overhead AVWAP {resist_txt}"
+def _state_from_scores(structural_score: float, breakout_score: float, breakout_patterns: dict, intraday_trigger: dict, breakout_integrity: dict, data_quality: dict) -> str:
+    if _safe_float(data_quality.get("score"), 0.0) < 20 or data_quality.get("intraday_freshness_label") == "missing":
+        return "DATA_UNAVAILABLE"
+    if breakout_integrity.get("state") == "failed_breakout" or intraday_trigger.get("trigger_state") == "failed":
+        return "FAILED"
+    if structural_score < 45:
+        return "BLOCKED"
+    if intraday_trigger.get("primary", {}).get("triggered_now"):
+        trigger_type = intraday_trigger.get("primary", {}).get("trigger_type", "")
+        if trigger_type == "vwap_reclaim_hold":
+            return "ACTIONABLE_RECLAIM"
+        if breakout_integrity.get("state") == "retest_holding":
+            return "ACTIONABLE_RETEST"
+        return "ACTIONABLE_BREAKOUT"
+    if breakout_score >= cfg.TRIGGER_WATCH_MIN_SCORE and breakout_patterns.get("primary", {}).get("stage") in {"trigger_watch", "breakout_watch"}:
+        return "TRIGGER_WATCH"
+    if breakout_score >= cfg.BREAKOUT_WATCH_MIN_SCORE:
+        return "BREAKOUT_WATCH"
+    if structural_score >= cfg.STRUCTURAL_MIN_SCORE:
+        return "FORMING"
+    return "BLOCKED"
 
 
-def _score_relative_strength(rs: dict) -> tuple[float, str]:
-    rs20 = _safe_float(rs.get("rs_20d"), 0.0)
-    rs60 = _safe_float(rs.get("rs_60d"), 0.0)
-    rs20_ratio = _linear_ratio(rs20, -8.0, 10.0)
-    rs60_ratio = _linear_ratio(rs60, -10.0, 12.0)
-    score = round(100.0 * (0.70 * rs20_ratio + 0.30 * rs60_ratio), 1)
-    return score, f"RS20 {rs20:+.1f}, RS60 {rs60:+.1f}"
+def _action_bias(state: str, total_score: float) -> str:
+    if state == "DATA_UNAVAILABLE":
+        return "unavailable"
+    if state in {"FAILED", "BLOCKED"}:
+        return "avoid"
+    if state.startswith("ACTIONABLE"):
+        return "buy"
+    if state in {"TRIGGER_WATCH", "BREAKOUT_WATCH"}:
+        return "lean_buy" if total_score >= 68 else "wait"
+    return "wait"
 
 
-def _score_liquidity(daily_state: dict) -> tuple[float, str]:
-    adv = _safe_float(daily_state.get("avg_dollar_volume"), 0.0)
-    avg_volume = _safe_float(daily_state.get("avg_volume"), 0.0)
-    volume_ratio = _linear_ratio(avg_volume, cfg.MIN_AVG_DAILY_VOLUME * 0.5, cfg.MIN_AVG_DAILY_VOLUME * 2.0)
-    dollar_ratio = _linear_ratio(adv, cfg.MIN_AVG_DOLLAR_VOLUME, cfg.PREFERRED_AVG_DOLLAR_VOLUME * 2.0)
-    score = round(100.0 * (0.35 * volume_ratio + 0.65 * dollar_ratio), 1)
-    return score, f"ADV ${adv:,.0f}, volume {avg_volume:,.0f}"
+def _decision_summary(setup_family: str, state: str, freshness_label: str) -> str:
+    if state == "DATA_UNAVAILABLE":
+        return "Fresh intraday data is not available, so trigger decisions are withheld."
+    if state == "FAILED":
+        return "Recent breakout behavior failed, so the name stays in the avoid bucket until it repairs."
+    if state == "BLOCKED":
+        return "Higher-timeframe structure is not strong enough yet for breakout execution."
+    if state.startswith("ACTIONABLE"):
+        return f"{setup_family.replace('_', ' ')} is aligned across structure, readiness, and trigger quality."
+    if freshness_label != "fresh":
+        return f"{setup_family.replace('_', ' ')} is constructive, but trigger trust is reduced by {freshness_label} intraday data."
+    if state == "TRIGGER_WATCH":
+        return f"{setup_family.replace('_', ' ')} is close to actionable and should stay on the active trigger board."
+    if state == "BREAKOUT_WATCH":
+        return f"{setup_family.replace('_', ' ')} has constructive structure but still needs more tightening or pivot pressure."
+    return "Structure is constructive, but this setup is still forming."
 
 
+<<<<<<< HEAD
 def _score_support_integrity(daily_state: dict, confluence: dict) -> tuple[float, str]:
     dist20 = _safe_float(daily_state.get("dist_from_sma_20_pct"), 0.0)
     dist50 = _safe_float(daily_state.get("dist_from_sma_50_pct"), 0.0)
@@ -482,6 +472,9 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     if price <= 0:
         return {"score": 0.0, "label": "F - unavailable", "reasons": ["No valid price state"], "factors": {}}
 
+=======
+def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict, avwap_map: dict, rs: dict, confluence: dict, event_risk: dict, earnings: dict, regime: dict | None = None, chart_quality: dict | None = None, overhead_supply: dict | None = None, breakout_integrity: dict | None = None, base_quality: dict | None = None, continuation_pattern: dict | None = None, institutional_sponsorship: dict | None = None, weekly_close_quality: dict | None = None, failed_breakout_memory: dict | None = None, catalyst_context: dict | None = None, clean_air: dict | None = None, data_quality: dict | None = None, group_strength: dict | None = None, calibration_context: dict | None = None, breakout_features: dict | None = None, breakout_patterns: dict | None = None, intraday_trigger: dict | None = None) -> dict:
+>>>>>>> 955d76f (Harden runtime reliability and add offline validation)
     chart_quality = chart_quality or {}
     overhead_supply = overhead_supply or {}
     breakout_integrity = breakout_integrity or {}
@@ -493,30 +486,18 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     catalyst_context = catalyst_context or {}
     clean_air = clean_air or {}
     data_quality = data_quality or {}
-    group_strength = group_strength or {}
-    calibration_context = calibration_context or {}
+    breakout_features = breakout_features or {}
+    breakout_patterns = breakout_patterns or {}
+    intraday_trigger = intraday_trigger or {}
 
-    weekly_score, weekly_reason = _score_trend_quality(weekly_state, "weekly")
-    daily_score, daily_reason = _score_trend_quality(daily_state, "daily")
-    avwap_score, avwap_reason = _score_avwap_sponsorship(price, avwap_map)
-    rs_score, rs_reason = _score_relative_strength(rs)
-    liquidity_score, liquidity_reason = _score_liquidity(daily_state)
-    support_score, support_reason = _score_support_integrity(daily_state, confluence)
-    chart_score, chart_reason = _score_chart_quality(chart_quality)
-    overhead_score, overhead_reason = _score_overhead_supply(overhead_supply)
-    breakout_score, breakout_reason = _score_breakout_integrity(breakout_integrity)
-    base_score, base_reason = _score_base_quality(base_quality)
-    continuation_score, continuation_reason = _score_continuation_pattern(continuation_pattern)
-    sponsorship_score, sponsorship_reason = _score_institutional_sponsorship(institutional_sponsorship)
-    weekly_close_score, weekly_close_reason = _score_weekly_close_quality(weekly_close_quality)
-    failed_memory_score, failed_memory_reason = _score_failed_breakout_memory(failed_breakout_memory)
-    catalyst_score, catalyst_reason = _score_catalyst_context(catalyst_context)
-    clean_air_score, clean_air_reason = _score_clean_air(clean_air)
-    data_quality_score, data_quality_reason = _score_data_quality(data_quality)
-    group_score, group_reason = _score_group_strength(group_strength)
-    evidence_score, evidence_reason = _score_evidence(calibration_context)
-    penalty, penalty_reason = _event_penalty(event_risk, earnings)
+    weekly_gate = _weekly_gate(weekly_state)
+    daily_gate = _daily_gate(daily_state)
+    structural_score, idea_factors = _structural_score(daily_state, weekly_state, rs, chart_quality, overhead_supply, institutional_sponsorship, clean_air, group_strength, weekly_close_quality, data_quality)
+    breakout_score, breakout_factors = _breakout_score(breakout_patterns, breakout_features, breakout_integrity, base_quality, continuation_pattern, failed_breakout_memory, catalyst_context)
+    setup_family = breakout_patterns.get("setup_family", "none")
+    trigger_score, trigger_factors = _trigger_score(intraday_trigger, breakout_features, data_quality, daily_state, setup_family)
 
+<<<<<<< HEAD
     # Dynamic evidence weight: increases as we accumulate matured-outcome history.
     # Redistributes weight from data_quality (which matters less as calibration matures).
     # Tier thresholds from ThresholdRegistry (CALIB_WEIGHT_TIER_*).
@@ -578,38 +559,42 @@ def _score_idea_quality(daily_state: dict, weekly_state: dict,
     ]
     if penalty > 0:
         reasons.append(penalty_reason)
+=======
+    raw_total = round(_clamp(0.44 * structural_score + 0.34 * breakout_score + 0.22 * trigger_score), 1)
+    if not weekly_gate["passed"]:
+        raw_total = min(raw_total, cfg.SCORE_CAP_WEEKLY_FAIL)
+    elif not daily_gate["passed"]:
+        raw_total = min(raw_total, cfg.SCORE_CAP_DAILY_FAIL)
+>>>>>>> 955d76f (Harden runtime reliability and add offline validation)
 
+    state = _state_from_scores(structural_score, breakout_score, breakout_patterns, intraday_trigger, breakout_integrity, data_quality)
+    action_bias = _action_bias(state, raw_total)
     return {
-        "score": score,
-        "label": _quality_label(score),
-        "reasons": reasons,
-        "factors": {
-            "weekly_trend": weekly_score,
-            "daily_trend": daily_score,
-            "relative_strength": rs_score,
-            "avwap_sponsorship": avwap_score,
-            "liquidity": liquidity_score,
-            "support_integrity": support_score,
-            "chart_quality": chart_score,
-            "base_quality": base_score,
-            "continuation_pattern": continuation_score,
-            "institutional_sponsorship": sponsorship_score,
-            "overhead_supply": overhead_score,
-            "breakout_integrity": breakout_score,
-            "group_strength": group_score,
-            "data_quality": data_quality_score,
-            "historical_evidence": evidence_score,
-            "clean_air": clean_air_score,
-            "weekly_close_quality": weekly_close_score,
-            "catalyst_context": catalyst_score,
-            "failed_breakout_memory": failed_memory_score,
-            "historical_evidence_samples": calibration_context.get("sample_size", 0),
-            "historical_evidence_success_rate": calibration_context.get("success_rate"),
-            "event_penalty": penalty,
-        },
+        "score": raw_total,
+        "quality": _quality_label(raw_total),
+        "idea_quality_score": structural_score,
+        "idea_quality": _quality_label(structural_score),
+        "entry_timing_score": breakout_score,
+        "entry_timing": _timing_label(breakout_score),
+        "breakout_readiness_score": breakout_score,
+        "trigger_readiness_score": trigger_score,
+        "structural_score": structural_score,
+        "setup_family": setup_family,
+        "setup_stage": breakout_patterns.get("setup_stage", "forming"),
+        "setup_state": state,
+        "action_bias": action_bias,
+        "weekly_gate": weekly_gate,
+        "daily_gate": daily_gate,
+        "idea_factors": {**idea_factors, **breakout_factors},
+        "timing_factors": trigger_factors,
+        "confidence_score": round(_avg([structural_score, breakout_score, trigger_score]), 1),
+        "confidence_adjusted_score": raw_total,
+        "confidence_detail": f"Structure {structural_score:.0f}, readiness {breakout_score:.0f}, trigger {trigger_score:.0f}",
+        "decision_summary": _decision_summary(setup_family, state, str(data_quality.get("intraday_freshness_label", "missing"))),
     }
 
 
+<<<<<<< HEAD
 def _score_intraday_timing(intra_state: dict) -> tuple[float, str]:
     if intra_state.get("error") or not intra_state:
         return 55.0, "Intraday timing unavailable; using neutral score"
@@ -677,10 +662,21 @@ def _score_short_term_posture(daily_state: dict) -> tuple[float, str]:
 def _score_entry_timing(daily_state: dict, intra_state: dict,
                         event_risk: dict, earnings: dict) -> dict:
     """Execution timing: location, short-term posture, volume behavior, intraday alignment."""
+=======
+def calc_entry_zone(daily_state: dict, pivots: dict | None = None, setup_family: str | None = None, setup_state: str | None = None, breakout_patterns: dict | None = None) -> dict:
+    pivots = pivots or {}
+    breakout_patterns = breakout_patterns or {}
+>>>>>>> 955d76f (Harden runtime reliability and add offline validation)
     price = _safe_float(daily_state.get("last_close"), 0.0)
     if price <= 0:
-        return {"score": 0.0, "label": "F - unavailable", "reasons": ["No valid price state"], "factors": {}}
+        return {}
+    atr = _safe_float(daily_state.get("atr"), price * 0.02)
+    sma10 = _safe_float(daily_state.get("sma_10"), price)
+    sma20 = _safe_float(daily_state.get("sma_20"), price)
+    pivot = _safe_float((breakout_patterns.get("primary") or {}).get("pivot_level"), 0.0)
+    family = setup_family or "none"
 
+<<<<<<< HEAD
     dist10 = _safe_float(daily_state.get("dist_from_sma_10_pct"), 0.0)
     dist20 = _safe_float(daily_state.get("dist_from_sma_20_pct"), 0.0)
     atr = _safe_float(daily_state.get("atr"), 0.0)
@@ -727,43 +723,54 @@ def _score_entry_timing(daily_state: dict, intra_state: dict,
     ]
     if penalty > 0:
         reasons.append(f"Timing trimmed by events: {penalty_reason}")
+=======
+    if family in {"near_high_breakout", "volatility_contraction", "flat_base", "shelf_breakout", "flag_pennant"}:
+        trigger = pivot or max(price, _safe_float(pivots.get("r1"), price))
+        entry_low = trigger
+        entry_high = trigger + 0.6 * atr
+        stop = max(0.01, trigger - cfg.DEFAULT_ATR_STOP_MULT * atr)
+        style = "breakout"
+    elif family in {"breakout_retest", "reclaim_and_go"}:
+        support = max(sma10, sma20, pivot * 0.99 if pivot else 0.0)
+        entry_low = support - 0.15 * atr
+        entry_high = support + 0.45 * atr
+        stop = max(0.01, support - cfg.DEFAULT_ATR_STOP_MULT * atr)
+        style = "retest"
+    else:
+        entry_low = min(sma10, sma20)
+        entry_high = max(sma10, sma20)
+        stop = max(0.01, entry_low - cfg.DEFAULT_ATR_STOP_MULT * atr)
+        style = "pullback"
+>>>>>>> 955d76f (Harden runtime reliability and add offline validation)
 
+    entry_mid = round((entry_low + entry_high) / 2.0, 2)
+    target_1 = round(max(_safe_float(pivots.get("r1"), 0.0), entry_mid + 2.0 * abs(entry_mid - stop)), 2)
+    target_2 = round(max(_safe_float(pivots.get("r2"), 0.0), entry_mid + 3.5 * abs(entry_mid - stop)), 2)
+    risk_per_share = round(max(0.01, abs(entry_mid - stop)), 2)
+    in_zone = entry_low <= price <= entry_high
     return {
-        "score": score,
-        "label": _timing_label(score),
-        "reasons": reasons,
-        "factors": {
-            "zone_fit": round(zone_score, 1),
-            "short_term_posture": round(short_term_score, 1),
-            "volume_context": round(volume_score, 1),
-            "intraday_alignment": intraday_score,
-            "event_penalty": penalty,
-        },
+        "price": round(price, 2),
+        "entry_low": round(entry_low, 2),
+        "entry_high": round(entry_high, 2),
+        "entry_mid": entry_mid,
+        "in_zone": in_zone,
+        "stop": round(stop, 2),
+        "stop_ref": "Below breakout hold zone" if style == "breakout" else "Below reclaim support" if style == "retest" else "Below value zone",
+        "target_1": target_1,
+        "target_2": target_2,
+        "risk_per_share": risk_per_share,
+        "atr": round(atr, 2),
+        "rr_t1": round((target_1 - entry_mid) / risk_per_share, 1),
+        "rr_t2": round((target_2 - entry_mid) / risk_per_share, 1),
+        "price_vs_zone": "IN ZONE" if in_zone else f"ABOVE by {abs(price / entry_high - 1) * 100:.1f}%" if price > entry_high else f"BELOW by {abs(entry_low / price - 1) * 100:.1f}%",
+        "style": style,
     }
 
 
-def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
-                 avwap_map: dict, rs: dict, confluence: dict,
-                 event_risk: dict, earnings: dict,
-                 regime: dict = None,
-                 chart_quality: dict | None = None,
-                 overhead_supply: dict | None = None,
-                 breakout_integrity: dict | None = None,
-                 base_quality: dict | None = None,
-                 continuation_pattern: dict | None = None,
-                 institutional_sponsorship: dict | None = None,
-                 weekly_close_quality: dict | None = None,
-                 failed_breakout_memory: dict | None = None,
-                 catalyst_context: dict | None = None,
-                 clean_air: dict | None = None,
-                 data_quality: dict | None = None,
-                 group_strength: dict | None = None,
-                 calibration_context: dict | None = None) -> dict:
-    regime = regime or {}
-    regime_label = regime.get("regime", "neutral")
-    risk_appetite = regime.get("risk_appetite", "full")
-    data_quality = data_quality or {}
+def refine_entry_zone_for_setup(entry_zone: dict, setup: dict, daily_state: dict, recent_high: dict | None = None, reference_levels: dict | None = None, pivots: dict | None = None) -> dict:
+    return dict(entry_zone or {})
 
+<<<<<<< HEAD
     if daily_state.get("error") or weekly_state.get("error") or _safe_float(data_quality.get("score"), 0.0) <= 15.0:
         detail = data_quality.get("detail") or daily_state.get("error") or weekly_state.get("error") or "market data unavailable"
         summary = "Data unavailable: scoring withheld until fresh market data is available."
@@ -1106,355 +1113,46 @@ def score_symbol(daily_state: dict, weekly_state: dict, intra_state: dict,
     elif confidence_ctx["score"] < 35 and action_bias == "lean_buy":
         action_bias = "wait"
         decision_summary = "Wait: the raw score is decent, but the setup lacks enough consensus to trust it yet."
+=======
+>>>>>>> 955d76f (Harden runtime reliability and add offline validation)
 
+def classify_setup(packet: dict) -> dict:
+    score = packet.get("score", {})
+    patterns = packet.get("breakout_patterns", {})
+    trigger = packet.get("intraday_trigger", {})
+    entry_zone = packet.get("entry_zone", {})
+    primary_pattern = patterns.get("primary", {})
+    primary_trigger = trigger.get("primary", {})
+    setup_state = score.get("setup_state", "FORMING")
+    label_map = {
+        "ACTIONABLE_BREAKOUT": "breakout",
+        "ACTIONABLE_RETEST": "retest",
+        "ACTIONABLE_RECLAIM": "reclaim",
+        "TRIGGER_WATCH": "trigger_watch",
+        "BREAKOUT_WATCH": "breakout_watch",
+        "FORMING": "forming",
+        "EXTENDED_WAIT": "extended_wait",
+        "FAILED": "failed",
+        "BLOCKED": "blocked",
+        "DATA_UNAVAILABLE": "data_unavailable",
+    }
     return {
-        "score": score,
-        "confidence_adjusted_score": confidence_adjusted_score,
-        "confidence_score": confidence_ctx["score"],
-        "confidence_label": confidence_ctx["label"],
-        "confidence_detail": confidence_ctx["detail"],
-        "quality": quality,
-        "composite_score": score,
-        "composite_quality": quality,
-        "idea_quality_score": idea_score,
-        "idea_quality": _quality_label(idea_score),
-        "entry_timing_score": timing_score,
-        "entry_timing": _timing_label(timing_score),
-        "idea_reasons": idea["reasons"],
-        "timing_reasons": timing["reasons"] + adjustment_notes,
-        "idea_factors": {**idea["factors"], "adjustments_applied": adjustment_notes},
-        "timing_factors": {**timing["factors"], "adjustments_applied": adjustment_notes},
-        "weekly_gate": wg,
-        "daily_gate": dg,
-        "reasons": reasons,
-        "action_bias": action_bias,
-        "decision_summary": decision_summary,
-    }
-
-
-# =============================================================================
-# FULL TRADE PLAN GENERATOR
-# Merges the best of deterministic analysis with the notebook's rich fields:
-# gap plans, partial takes, max chase, time horizon, upgrade conditions
-# =============================================================================
-
-def classify_setup(daily_state: dict, score: int, action_bias: str,
-                   recent_high: dict, price: float,
-                   entry_zone: dict = None, pivots: dict = None,
-                   event_risk: dict = None, weekly_state: dict = None,
-                   continuation_pattern: dict | None = None) -> dict:
-    """
-    Generate a complete trade plan with specific triggers, gap scenarios,
-    partial take plan, max chase logic, and upgrade conditions.
-    """
-    entry_zone = entry_zone or {}
-    pivots = pivots or {}
-    event_risk = event_risk or {}
-    weekly_state = weekly_state or {}
-    continuation_pattern = continuation_pattern or {}
-
-    sma5 = daily_state.get("sma_5", 0)
-    sma10 = daily_state.get("sma_10", 0)
-    sma20 = daily_state.get("sma_20", 0)
-    sma50 = daily_state.get("sma_50", 0)
-    atr = daily_state.get("atr", price * 0.02 if price else 1)
-
-    dist_from_10 = daily_state.get("dist_from_sma_10_pct", 0)
-    dist_from_20 = daily_state.get("dist_from_sma_20_pct", 0)
-    sma5_dir = daily_state.get("sma_5_direction", "unknown")
-    sma10_dir = daily_state.get("sma_10_direction", "unknown")
-    sma20_dir = daily_state.get("sma_20_direction", "unknown")
-    rvol = daily_state.get("rvol", 1.0)
-
-    rh_price = recent_high.get("price", price * 1.2) if recent_high else price * 1.2
-    rl_price = entry_zone.get("stop", price * 0.95)
-
-    r1 = pivots.get("r1")
-    r2 = pivots.get("r2")
-    s1 = pivots.get("s1")
-    stop = entry_zone.get("stop", 0)
-    t1 = entry_zone.get("target_1", 0)
-    t2 = entry_zone.get("target_2", 0)
-    ez_low = entry_zone.get("entry_low", sma20)
-    ez_high = entry_zone.get("entry_high", sma10)
-    in_zone = entry_zone.get("in_zone", False)
-
-    has_event_risk = event_risk.get("high_risk_imminent") or event_risk.get("elevated_risk")
-    secondary_buy_candidate = bool(continuation_pattern.get("secondary_buy_candidate"))
-    continuation_trigger = continuation_pattern.get("buy_trigger")
-    continuation_range_high = continuation_pattern.get("buy_range_high")
-
-    # --- BASE fields every plan gets ---
-    base = {
-        "max_chase_pct": 0,
-        "time_horizon": "N/A",
-        "gap_up_plan": "N/A",
-        "gap_down_plan": "N/A",
-        "partial_take_plan": "N/A",
-        "position_size_guidance": "standard",
-        "upgrade_conditions": [],
-    }
-
-    if action_bias == "unavailable":
-        return {**base,
-            "type": "data_unavailable",
-            "description": "Market data unavailable. Do not trade from this read.",
-            "trigger": "Refresh daily and intraday data",
-            "watch_for": "Fresh daily and intraday bars with valid structure",
-            "invalidation": None,
-            "gap_up_plan": "No action until data quality is restored",
-            "gap_down_plan": "No action until data quality is restored",
-            "time_horizon": "Wait for next clean data refresh",
-            "upgrade_conditions": [
-                "Daily history reloads successfully",
-                "Intraday data reloads successfully",
-            ],
-        }
-
-    # === NO SETUP ===
-    if action_bias == "avoid":
-        return {**base,
-            "type": "no_setup",
-            "description": "Conditions not met — weekly or daily structure broken",
-            "trigger": None,
-            "watch_for": None,
-            "invalidation": None,
-            "upgrade_conditions": [
-                f"Weekly close back above weekly 20 SMA",
-                f"Daily close above {_fmt2(sma50)} (50 SMA)",
-            ],
-        }
-
-    if (not daily_state.get("close_above_sma_5", True) and
-        sma5_dir == "falling" and
-        daily_state.get("sma_5_tomorrow_bias") == "will_fall"):
-        return {**base,
-            "type": "below_5dma_wait",
-            "description": "Below a declining 5 SMA with a lower next-day bias. Not a long entry yet.",
-            "trigger": f"Wait for reclaim of {_fmt2(sma5)} with the 5 SMA flattening or turning up",
-            "watch_for": f"Daily close back above {_fmt2(sma5)} and improving 5/10 posture",
-            "invalidation": f"Continued rejection below {_fmt2(sma5)} and {_fmt2(sma10)}",
-            "gap_up_plan": "No chase; require hold above the 5 SMA after the open",
-            "gap_down_plan": "No action while the 5 SMA is still falling",
-            "time_horizon": "Wait for short-term momentum to repair",
-            "upgrade_conditions": [
-                "Daily close back above the 5 SMA",
-                "5 SMA stops falling",
-                "5 SMA next-day bias improves from will_fall",
-            ],
-        }
-
-    if (not daily_state.get("close_above_sma_10", True) and
-        sma10_dir == "falling"):
-        return {**base,
-            "type": "below_10dma_wait",
-            "description": "Below a declining 10 SMA. Trend quality may be intact, but timing is not.",
-            "trigger": f"Wait for reclaim of {_fmt2(sma10)} with support holding above {_fmt2(sma20)}",
-            "watch_for": f"5 SMA turning up and price recovering the {_fmt2(sma10)} area",
-            "invalidation": f"Loss of {_fmt2(sma20)} support",
-            "gap_up_plan": "Require acceptance back above the 10 SMA before acting",
-            "gap_down_plan": "No action while the 10 SMA is still declining",
-            "time_horizon": "Wait for 10-day trend repair",
-            "upgrade_conditions": [
-                "Price reclaims the 10 SMA",
-                "10 SMA stops falling",
-                "Short-term MA stack improves",
-            ],
-        }
-
-    # === EXTENDED: too far from MAs ===
-    if dist_from_10 and dist_from_10 > 5:
-        pullback_target = round(sma10 + 0.5 * atr, 2) if sma10 else None
-        return {**base,
-            "type": "extended_wait",
-            "description": f"Extended {dist_from_10:.1f}% above 10 SMA. Do NOT chase.",
-            "trigger": f"Wait for pullback to {_fmt2(pullback_target)}",
-            "watch_for": f"Price pulling back toward {_fmt2(sma10)} on declining volume (RVol < 0.8)",
-            "invalidation": f"10 SMA starts falling",
-            "gap_up_plan": "Absolutely do not chase a gap up from extended levels",
-            "gap_down_plan": f"If gaps to {_fmt2(sma10)} area, watch for intraday hold — could become entry",
-            "max_chase_pct": 0,
-            "time_horizon": "Wait 2-5 days for pullback",
-            "upgrade_conditions": [
-                f"Price pulls back to {_fmt2(sma10)} - {_fmt2(sma20)} zone on light volume",
-                f"5 SMA catches up to price (distance narrows to < 2%)",
-            ],
-        }
-
-    if (secondary_buy_candidate and continuation_trigger and
-        daily_state.get("close_above_sma_5") and
-        sma5_dir != "falling" and sma10_dir != "falling"):
-        return {**base,
-            "type": "tight_continuation",
-            "description": f"Tight continuation / secondary-buy structure near {_fmt2(continuation_trigger)}.",
-            "trigger": f"BUY while price holds above {_fmt2(sma5)} and can clear {_fmt2(continuation_trigger)}",
-            "watch_for": (
-                f"Tight closes, contained range, and volume dry-up. "
-                f"Buy range extends to {_fmt2(continuation_range_high)}"
-            ),
-            "invalidation": f"Loss of {_fmt2(sma10)} or a close below {_fmt2(sma20)}",
-            "gap_up_plan": f"If it opens above {_fmt2(continuation_trigger)}, buy only while it holds the breakout level intraday",
-            "gap_down_plan": f"If it opens near {_fmt2(sma5)} or {_fmt2(sma10)}, watch for support and reclaim",
-            "partial_take_plan": f"Take 1/3 at R1 ({_fmt2(r1)}), 1/3 at {_fmt2(t1)}, trail the rest with the 10 SMA",
-            "max_chase_pct": 3.0,
-            "time_horizon": "Act on the continuation window over the next 1-3 days",
-            "position_size_guidance": "half size" if has_event_risk else "full",
-            "upgrade_conditions": [
-                "Tight closes continue",
-                "Volume expands on the breakout day",
-                "Price keeps holding above the 5-day moving average",
-            ],
-        }
-
-    # === BREAKOUT: near recent high ===
-    if rh_price and price and abs(price / rh_price - 1) < 0.02 and score >= 55:
-        breakout_trigger = round(rh_price + 0.1 * atr, 2)
-        return {**base,
-            "type": "breakout",
-            "description": f"Testing recent high {_fmt2(rh_price)}",
-            "trigger": f"BUY on close above {_fmt2(breakout_trigger)}",
-            "watch_for": f"Volume expansion above {_fmt2(rh_price)} (need RVol > 1.3). Weak volume = false breakout.",
-            "invalidation": f"Rejection and close back below {_fmt2(sma10)}",
-            "gap_up_plan": f"If gaps above {_fmt2(breakout_trigger)}: buy half size on open, add on first pullback to hold breakout level",
-            "gap_down_plan": f"If gaps down: no action, setup is not triggered",
-            "partial_take_plan": f"Take 1/3 at R1 ({_fmt2(r1)}), 1/3 at R2 ({_fmt2(r2)}), trail last 1/3 with 10 SMA",
-            "max_chase_pct": round(0.5 * atr / price * 100, 1) if price else 0.5,
-            "time_horizon": "1-3 days for breakout confirmation, hold 5-10 days",
-            "position_size_guidance": "half size until breakout confirms" if has_event_risk else "standard",
-        }
-
-    # === PULLBACK TO RISING 20 SMA (classic Shannon) ===
-    if (daily_state.get("sma10_above_sma20") and
-        daily_state.get("sma20_above_sma50") and
-        sma20_dir == "rising" and
-        -3 <= dist_from_20 <= 1.5):
-
-        if sma5_dir == "falling":
-            return {**base,
-                "type": "pullback_developing",
-                "description": f"Pulling back to rising 20 SMA ({dist_from_20:.1f}%). 5 SMA still falling — not ready yet.",
-                "trigger": f"BUY when 5 SMA flattens/turns up AND price holds above {_fmt2(sma20)}",
-                "watch_for": f"5 SMA ({_fmt2(sma5)}) to stop falling. Declining volume on pullback = healthy. RVol now: {rvol}x",
-                "invalidation": f"Close below {_fmt2(sma20)} or {_fmt2(round(sma20 - atr, 2))}",
-                "gap_up_plan": f"If gaps above {_fmt2(sma10)}: do not chase, let it pull back to test",
-                "gap_down_plan": f"If gaps to {_fmt2(sma20)} area on light volume: WATCH for hold — this could trigger entry",
-                "partial_take_plan": f"Take 1/3 at {_fmt2(t1)} ({entry_zone.get('target_1_ref', '2R')}), 1/3 at {_fmt2(t2)}, trail rest",
-                "max_chase_pct": 0,
-                "time_horizon": "Wait 1-3 days for 5 SMA to flatten",
-                "position_size_guidance": "half size" if has_event_risk else "standard",
-                "upgrade_conditions": [
-                    "Daily 5 SMA turns flat or rising",
-                    f"Price holds above {_fmt2(sma20)} on 2 consecutive closes",
-                    f"Low volume pullback (RVol < 0.7) at {_fmt2(sma20)} = institutional holding",
-                ],
-            }
-        else:
-            return {**base,
-                "type": "pullback_to_ma",
-                "description": f"Pullback to rising 20 SMA with rising short MAs. Prime Shannon setup.",
-                "trigger": f"BUY at {_fmt2(ez_low)} - {_fmt2(ez_high)} on intraday strength",
-                "watch_for": f"Intraday bounce off {_fmt2(sma20)} with session VWAP reclaim. Volume expanding on bounce.",
-                "invalidation": f"Close below {_fmt2(sma20)}",
-                "gap_up_plan": f"If gaps above {_fmt2(ez_high)}: buy half on open if within {round(0.5 * atr, 2)} of zone top",
-                "gap_down_plan": f"If gaps into zone ({_fmt2(ez_low)}-{_fmt2(ez_high)}): strong entry if holds intraday",
-                "partial_take_plan": f"Take 1/3 at R1 ({_fmt2(r1)}), 1/3 at {_fmt2(t1)}, trail last 1/3 with 10 SMA",
-                "max_chase_pct": round(0.3 * atr / price * 100, 1) if price else 0.3,
-                "time_horizon": "Enter today/tomorrow, hold 3-7 days",
-                "position_size_guidance": "half size" if has_event_risk else "full",
-            }
-
-    # === PULLBACK TO 10 SMA in strong trend ===
-    if (daily_state.get("sma10_above_sma20") and
-        sma20_dir == "rising" and
-        sma10_dir == "rising" and
-        dist_from_20 is not None and dist_from_20 > 0 and
-        -1.5 <= dist_from_10 <= 0.5):
-        return {**base,
-            "type": "pullback_to_10sma",
-            "description": f"Shallow pullback to rising 10 SMA with 20 SMA still supporting. Strong trend — tactical entry.",
-            "trigger": f"BUY on intraday hold of {_fmt2(sma10)}",
-            "watch_for": f"Price finding support at {_fmt2(sma10)} with session VWAP bounce",
-            "invalidation": f"Close below {_fmt2(sma20)}",
-            "gap_up_plan": f"If gaps above {_fmt2(sma10)}: acceptable entry if within 1%",
-            "gap_down_plan": f"If gaps below {_fmt2(sma10)} to {_fmt2(sma20)}: watch for hold — deeper pullback entry",
-            "partial_take_plan": f"Take 1/3 at R1 ({_fmt2(r1)}), trail rest with 10 SMA",
-            "max_chase_pct": round(0.3 * atr / price * 100, 1) if price else 0.3,
-            "time_horizon": "Enter today, hold 3-5 days",
-            "position_size_guidance": "half size" if has_event_risk else "full",
-        }
-
-    # === RECLAIM: recovering key MA ===
-    if (daily_state.get("close_above_sma_20") and
-        dist_from_20 > 0 and dist_from_20 < 2 and
-        daily_state.get("ma_stack") == "mixed"):
-        return {**base,
-            "type": "reclaim",
-            "description": f"Reclaiming 20 SMA from below. Higher risk — needs confirmation.",
-            "trigger": f"BUY if holds above {_fmt2(sma20)} for 2 consecutive closes",
-            "watch_for": f"Volume increasing on reclaim. 5 SMA turning up. RVol now: {rvol}x",
-            "invalidation": f"Close back below {_fmt2(sma20)} = failed reclaim",
-            "gap_up_plan": f"If gaps above {_fmt2(sma10)}: half size only, this is unconfirmed",
-            "gap_down_plan": f"If gaps below {_fmt2(sma20)}: reclaim failed, no entry",
-            "partial_take_plan": f"Take 1/2 at R1 ({_fmt2(r1)}) — this is a lower-conviction setup",
-            "max_chase_pct": 0,
-            "time_horizon": "Wait 1-2 days for confirmation, then hold 3-5 days",
-            "position_size_guidance": "half size — unconfirmed reclaim",
-            "upgrade_conditions": [
-                f"2 consecutive closes above {_fmt2(sma20)}",
-                "5 SMA turns up",
-                "RVol increases on up day",
-            ],
-        }
-
-    # === ABOVE ZONE: good trend but chasing ===
-    if price and sma10 and price > sma10 and dist_from_10 > 2 and dist_from_20 > 1:
-        return {**base,
-            "type": "above_zone_wait",
-            "description": f"Trend is right but price is above the 10/20 zone ({dist_from_10:.1f}% vs 10, {dist_from_20:.1f}% vs 20). Don't chase.",
-            "trigger": f"BUY on pullback to {_fmt2(sma20)} - {_fmt2(sma10)} zone",
-            "watch_for": f"Light-volume pullback back into the 10/20 support band",
-            "invalidation": f"10 SMA rolls over and starts falling",
-            "gap_up_plan": "Do NOT buy — further from entry zone",
-            "gap_down_plan": f"If gaps to {_fmt2(sma10)}: potential entry, watch for intraday hold",
-            "max_chase_pct": 0,
-            "time_horizon": "Wait 2-5 days for pullback",
-            "upgrade_conditions": [
-                f"Price pulls back into {_fmt2(sma20)} - {_fmt2(sma10)} on declining volume",
-                f"Breakout above {_fmt2(rh_price)} on volume > 1.3x avg",
-            ],
-        }
-
-    # === DEFAULT: positive but no clean pattern ===
-    if action_bias in ("buy", "lean_buy"):
-        return {**base,
-            "type": "watch",
-            "description": "Trend positive but no clean entry pattern. Be patient.",
-            "trigger": f"BUY on pullback to {_fmt2(sma20)} or breakout above {_fmt2(rh_price)}",
-            "watch_for": "Wait for price to come to you",
-            "invalidation": f"20 SMA turns down or close below {_fmt2(sma50)}",
-            "gap_up_plan": "No action — let it develop",
-            "gap_down_plan": f"If gaps to {_fmt2(sma20)}: watch for hold and potential entry",
-            "max_chase_pct": 0,
-            "time_horizon": "Wait for setup to develop",
-            "upgrade_conditions": [
-                f"Pullback to {_fmt2(sma20)} on light volume",
-                f"Breakout above {_fmt2(rh_price)} on strong volume",
-            ],
-        }
-
-    return {**base,
-        "type": "no_setup",
-        "description": "No actionable pattern",
-        "trigger": None, "watch_for": None, "invalidation": None,
+        "type": label_map.get(setup_state, "forming"),
+        "setup_family": score.get("setup_family", "none"),
+        "stage": score.get("setup_stage", "forming"),
+        "state": setup_state,
+        "description": primary_pattern.get("detail", "No setup detail"),
+        "trigger": primary_trigger.get("detail") if primary_trigger else primary_pattern.get("detail"),
+        "raw_trigger": primary_trigger.get("trigger_type") if primary_trigger else None,
+        "pivot_level": primary_pattern.get("pivot_level"),
+        "trigger_level": primary_trigger.get("trigger_level"),
+        "invalidation": primary_trigger.get("invalidation_level") or primary_pattern.get("invalidation_level") or entry_zone.get("stop"),
     }
 
 
 def calc_tradeability(score_result: dict, entry_zone: dict, setup: dict, data_quality: dict | None = None) -> dict:
-    """
-    Execution-focused score: how tradable is this setup now?
-    Separates "good stock" from "good swing entry."
-    """
     data_quality = data_quality or {}
+<<<<<<< HEAD
     action_bias = score_result.get("action_bias", "")
     setup_type = setup.get("type", "no_setup")
     idea_score = _safe_float(score_result.get("idea_quality_score"), _safe_float(score_result.get("score"), 0.0))
@@ -1665,3 +1363,15 @@ def _pct_dist(a, b):
     if b == 0:
         return "?"
     return f"{abs(a/b - 1)*100:.1f}%"
+=======
+    structural = _safe_float(score_result.get("structural_score"), 0.0)
+    breakout = _safe_float(score_result.get("breakout_readiness_score"), 0.0)
+    trigger = _safe_float(score_result.get("trigger_readiness_score"), 0.0)
+    freshness = str(data_quality.get("intraday_freshness_label", "missing"))
+    freshness_penalty = 0.0 if freshness == "fresh" else 6.0 if freshness == "mildly_stale" else 14.0 if freshness == "stale" else 28.0
+    in_zone_bonus = 4.0 if entry_zone.get("in_zone") else 0.0
+    rr_bonus = 5.0 if _safe_float(entry_zone.get("rr_t1"), 0.0) >= 1.8 else 2.0 if _safe_float(entry_zone.get("rr_t1"), 0.0) >= 1.4 else -5.0
+    score = _clamp(0.38 * structural + 0.32 * breakout + 0.30 * trigger + in_zone_bonus + rr_bonus - freshness_penalty)
+    label = "A - actionable" if score >= 80 else "B - nearly actionable" if score >= 65 else "C - watchlist" if score >= 50 else "D - weak timing" if score >= 35 else "F - do not act"
+    return {"score": round(score, 1), "label": label, "detail": f"Tradeability blends structure/readiness/trigger with {freshness} intraday freshness"}
+>>>>>>> 955d76f (Harden runtime reliability and add offline validation)

@@ -1,10 +1,15 @@
 """
 Central configuration for Swing Engine.
-Edit this file to customize symbols, anchors, events, and parameters.
+
+The repo remains deterministic by default. Narrative generation is optional and
+never part of the frequent scan path unless explicitly requested.
 """
+from __future__ import annotations
+
 import os
-from pathlib import Path
 from datetime import date
+from pathlib import Path
+
 
 # =============================================================================
 # DIRECTORIES
@@ -13,18 +18,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 CACHE_DIR = DATA_DIR / "cache"
 REPORTS_DIR = BASE_DIR / "reports"
+TEMPLATES_DIR = BASE_DIR / "templates"
 DB_PATH = DATA_DIR / "swing_engine.sqlite3"
+DASHBOARD_OUTPUT_PATH = BASE_DIR / "dashboard.html"
+RUN_HEALTH_OUTPUT_DIR = REPORTS_DIR
+OFFLINE_SMOKE_OUTPUT_DIR = REPORTS_DIR
 
-for _d in [DATA_DIR, CACHE_DIR, REPORTS_DIR]:
-    _d.mkdir(parents=True, exist_ok=True)
+for _path in (DATA_DIR, CACHE_DIR, REPORTS_DIR, TEMPLATES_DIR):
+    _path.mkdir(parents=True, exist_ok=True)
+
 
 # =============================================================================
-# ACCOUNT
+# ACCOUNT / RISK
 # =============================================================================
 ACCOUNT_SIZE = 100_000
-MAX_RISK_PCT = 1.0          # % of account risked per trade
+MAX_RISK_PCT = 1.0
+MAX_GROUP_RISK_PCT = 2.0
 DEFAULT_ATR_STOP_MULT = 1.5
-MAX_GROUP_RISK_PCT = 2.0    # max total risk in any correlation group
+MAX_DAILY_VOLUME_PARTICIPATION_PCT = 0.01
+
 
 # =============================================================================
 # SYMBOLS
@@ -34,11 +46,9 @@ VIX_SYMBOL = "^VIX"
 BENCHMARK_SET = frozenset({"SPY", "QQQ", "SOXX", "DIA", "VIX", "^VIX", "IWM"})
 
 WATCHLIST = [
-    # User priority swing names
     "AAOI", "ALAB", "AVGO", "ABBV", "BE", "BW", "CIEN", "CLS", "COHR", "CRDO",
     "DOCN", "EOSE", "ETN", "EYPT", "EZPW", "GEV", "GNRC", "HROW", "KOD", "LITE",
     "NVDA", "NVT", "OCUL", "PWR", "REGN", "VRT", "WMB",
-    # Broader scan universe
     "AAPL", "ABT", "ACN", "ADP", "AMZN", "APD", "AXP", "BDX", "BLK", "BP",
     "BRK.B", "CBZ", "CMCSA", "CNXC", "CTSH", "EME", "ERIE", "EXAS", "FDS", "GOOG",
     "GOOGL", "HD", "IBM", "IBP", "ICLR", "IFNNY", "IQV", "IVZ", "JNJ", "KR",
@@ -48,32 +58,33 @@ WATCHLIST = [
     "VICI", "VRSN", "WAT", "WDAY", "WFC", "XNGSY", "ZTS",
 ]
 
-TOP_EXECUTION_COUNT = 5
-TOP_NARRATIVE_COUNT = 7
-TOP_CHART_COUNT = 15
-TOP_EXECUTION_INTRADAY_COUNT = 5
+STRUCTURAL_LEADER_COUNT = 12
+BREAKOUT_WATCH_COUNT = 18
+TRIGGERED_NOW_COUNT = 8
+TOP_NARRATIVE_COUNT = 8
+TOP_CHART_COUNT = 12
+TOP_EXECUTION_INTRADAY_COUNT = 6
+
 
 # =============================================================================
-# CORRELATION GROUPS (for position sizing)
+# CORRELATION GROUPS
 # =============================================================================
 CORRELATION_GROUPS = {
-    "mega_tech":    ["AAPL", "AMZN", "GOOG", "GOOGL", "MSFT", "NFLX"],
-    "semis":        ["NVDA", "AVGO", "MU", "TXN", "COHR", "LITE", "CLS", "CRDO", "SOXX", "SOXL"],
-    "network_ai":   ["AAOI", "ALAB", "CIEN", "DOCN", "VRT", "VIAV"],
-    "software":     ["ACN", "ADP", "CTSH", "PRGS", "SE", "WDAY", "TTD", "VRSN", "PHR"],
-    "healthcare":   ["ABBV", "ABT", "BDX", "EYPT", "EXAS", "HROW", "ICLR", "IQV", "JNJ", "KVUE", "MDT", "OCUL", "REGN", "WAT", "ZTS"],
-    "power_infra":  ["BE", "ETN", "GEV", "GNRC", "NVT", "PWR", "WMB"],
-    "industrial":   ["BW", "EME", "HD", "IBP", "MLM", "MMM", "ORLY", "PKG", "PPG", "ROL", "TSCO"],
-    "financials":   ["AXP", "BLK", "BRK.B", "ERIE", "EZPW", "FDS", "IVZ", "NDAQ", "PNC", "TROW", "WFC"],
+    "mega_tech": ["AAPL", "AMZN", "GOOG", "GOOGL", "MSFT", "NFLX"],
+    "semis": ["NVDA", "AVGO", "MU", "TXN", "COHR", "LITE", "CLS", "CRDO", "SOXX", "SOXL"],
+    "network_ai": ["AAOI", "ALAB", "CIEN", "DOCN", "VRT", "VIAV"],
+    "software": ["ACN", "ADP", "CTSH", "PRGS", "SE", "WDAY", "TTD", "VRSN", "PHR"],
+    "healthcare": ["ABBV", "ABT", "BDX", "EYPT", "EXAS", "HROW", "ICLR", "IQV", "JNJ", "KVUE", "MDT", "OCUL", "REGN", "WAT", "ZTS"],
+    "power_infra": ["BE", "ETN", "GEV", "GNRC", "NVT", "PWR", "WMB"],
+    "industrial": ["BW", "EME", "HD", "IBP", "MLM", "MMM", "ORLY", "PKG", "PPG", "ROL", "TSCO"],
+    "financials": ["AXP", "BLK", "BRK.B", "ERIE", "EZPW", "FDS", "IVZ", "NDAQ", "PNC", "TROW", "WFC"],
     "defensive_value": ["APD", "BP", "CMCSA", "KR", "MUA", "PEP", "PLD", "T", "VICI", "XNGSY"],
     "special_situations": ["CBZ", "CNXC", "IFNNY", "KOD", "LHX", "LZB", "PYPL", "SGI", "SMA"],
     "broad_market": ["SPY", "QQQ", "DIA", "IWM"],
 }
 
-# Some symbols need provider-specific formatting for market data downloads.
-DOWNLOAD_SYMBOL_OVERRIDES = {
-    "BRK.B": "BRK-B",
-}
+DOWNLOAD_SYMBOL_OVERRIDES = {"BRK.B": "BRK-B"}
+
 
 # =============================================================================
 # INDICATOR PARAMETERS
@@ -88,195 +99,251 @@ AVG_DOLLAR_VOL_PERIOD = 20
 MIN_AVG_DAILY_VOLUME = 750_000
 MIN_AVG_DOLLAR_VOLUME = 25_000_000
 PREFERRED_AVG_DOLLAR_VOLUME = 100_000_000
-MAX_DAILY_VOLUME_PARTICIPATION_PCT = 0.01
 
-DAILY_LOOKBACK_DAYS = 400   # ~1.5 years for 200 SMA stability
+DAILY_LOOKBACK_DAYS = 400
 INTRADAY_LOOKBACK_DAYS = 5
 
+
 # =============================================================================
-# MACRO ANCHORS (for anchored VWAP)
+# FRESHNESS / CACHE
+# =============================================================================
+DAILY_CACHE_MAX_AGE_HOURS = 18
+PREMARKET_INTRADAY_MAX_AGE_MINUTES = 75
+REGULAR_SESSION_INTRADAY_MAX_AGE_MINUTES = 12
+POSTMARKET_INTRADAY_MAX_AGE_MINUTES = 20
+OFFSESSION_INTRADAY_MAX_AGE_MINUTES = 240
+INTRADAY_MILD_STALE_MULTIPLIER = 2.0
+INTRADAY_HARD_STALE_MULTIPLIER = 4.0
+INTRADAY_TRIGGER_MIN_BARS = 24
+CACHE_RETENTION_DAYS = 6
+YFINANCE_TIMEOUT_SECONDS = 4
+YFINANCE_FAILURE_THRESHOLD = 6
+YFINANCE_FAILURE_COOLDOWN_MINUTES = 10
+RUN_DEGRADED_UNAVAILABLE_RATIO = 0.15
+RUN_FAILED_UNAVAILABLE_RATIO = 0.5
+RUN_DEGRADED_PACKET_FAILURE_COUNT = 1
+RUN_DEGRADED_TRIGGER_RATIO = 0.25
+
+
+# =============================================================================
+# BREAKOUT / TRIGGER MODEL
+# =============================================================================
+SETUP_FAMILY_TOGGLES = {
+    "near_high_breakout": True,
+    "volatility_contraction": True,
+    "flat_base": True,
+    "shelf_breakout": True,
+    "flag_pennant": True,
+    "breakout_retest": True,
+    "reclaim_and_go": True,
+}
+
+SETUP_STATES = (
+    "FORMING",
+    "BREAKOUT_WATCH",
+    "TRIGGER_WATCH",
+    "ACTIONABLE_BREAKOUT",
+    "ACTIONABLE_RETEST",
+    "ACTIONABLE_RECLAIM",
+    "EXTENDED_WAIT",
+    "FAILED",
+    "BLOCKED",
+    "DATA_UNAVAILABLE",
+)
+
+ACTIONABILITY_LABELS = (
+    "BUY NOW",
+    "BUY BREAKOUT",
+    "BUY RETEST",
+    "WATCH TRIGGER",
+    "WATCH CONTINUATION",
+    "WAIT PULLBACK",
+    "WAIT FOR TIGHTENING",
+    "BLOCK",
+    "DATA UNAVAILABLE",
+)
+
+STRUCTURAL_MIN_SCORE = 55.0
+BREAKOUT_WATCH_MIN_SCORE = 58.0
+TRIGGER_WATCH_MIN_SCORE = 62.0
+ACTIONABLE_TRIGGER_MIN_SCORE = 70.0
+ACTIONABLE_TOTAL_MIN_SCORE = 68.0
+PATTERN_MIN_CLARITY = 52.0
+MAX_BREAKOUT_EXTENSION_ATR = 1.35
+MAX_RETEST_EXTENSION_ATR = 0.9
+PIVOT_PROXIMITY_PCT = 3.0
+NEAR_HIGH_PCT_20D = 3.0
+NEAR_HIGH_PCT_60D = 4.0
+NEAR_HIGH_PCT_252D = 6.0
+MAX_OVERHEAD_SUPPLY_PCT = 6.0
+
+
+# =============================================================================
+# NARRATIVE / RUN MODE
+# =============================================================================
+DEFAULT_RUN_MODE = "run"
+ALLOW_NARRATIVES = True
+NARRATIVES_REQUIRE_EXPLICIT_MODE = True
+NARRATIVE_DEFAULT_INCLUDE = False
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+LOG_LEVEL = os.environ.get("SWING_ENGINE_LOG_LEVEL", "INFO").upper()
+
+
+# =============================================================================
+# ANCHORS
 # =============================================================================
 MACRO_ANCHORS = {
     "SPY": {
-        "covid_low":      "2020-03-23",
-        "2022_bear_low":  "2022-10-13",
-        "2024_aug_low":   "2024-08-05",
+        "covid_low": "2020-03-23",
+        "2022_bear_low": "2022-10-13",
+        "2024_aug_low": "2024-08-05",
         "liberation_day": "2025-04-07",
-        "ytd":            f"{date.today().year}-01-02",
+        "ytd": f"{date.today().year}-01-02",
     },
     "QQQ": {
-        "covid_low":      "2020-03-23",
-        "2022_bear_low":  "2022-10-13",
+        "covid_low": "2020-03-23",
+        "2022_bear_low": "2022-10-13",
         "liberation_day": "2025-04-07",
-        "ytd":            f"{date.today().year}-01-02",
+        "ytd": f"{date.today().year}-01-02",
     },
     "SOXX": {
-        "recent_high":         "2026-02-25",
-        "recent_low":          "2026-03-09",
-        "covid_low":           "2020-03-23",
-        "liberation_day_low":  "2025-04-07",
-        "iran_war_low":        "2026-03-10",
-        "ytd":                 f"{date.today().year}-01-02",
+        "recent_high": "2026-02-25",
+        "recent_low": "2026-03-09",
+        "covid_low": "2020-03-23",
+        "liberation_day_low": "2025-04-07",
+        "iran_war_low": "2026-03-10",
+        "ytd": f"{date.today().year}-01-02",
     },
     "DIA": {
-        "covid_low":      "2020-03-23",
+        "covid_low": "2020-03-23",
         "liberation_day": "2025-04-07",
-        "ytd":            f"{date.today().year}-01-02",
+        "ytd": f"{date.today().year}-01-02",
     },
 }
 
 DEFAULT_ANCHORS = {
-    "ytd":                 f"{date.today().year}-01-02",
-    "covid_low":           "2020-03-23",
-    "liberation_day":      "2025-04-07",
-    "iran_war_start":      "2026-03-10",
+    "ytd": f"{date.today().year}-01-02",
+    "covid_low": "2020-03-23",
+    "liberation_day": "2025-04-07",
+    "iran_war_start": "2026-03-10",
 }
 
-# =============================================================================
-# COMPANY-SPECIFIC ANCHORS
-# =============================================================================
 COMPANY_ANCHORS = {
     "NVDA": {"earnings_gap_may25": "2025-05-29"},
-    # Add per-symbol anchors as needed:
-    # "AAPL": {"earnings_oct25": "2025-10-30"},
 }
 
+
 # =============================================================================
-# MACRO EVENT CALENDAR (update Sunday evenings)
+# EVENTS / EARNINGS
 # =============================================================================
-# (date_str, event_name, severity: "high" | "medium" | "low")
 MACRO_EVENTS = [
     ("2026-03-18", "FOMC Decision + Press Conf", "high"),
-    ("2026-04-02", "Jobs Report",                "medium"),
-    ("2026-04-10", "CPI Release",                "high"),
-    ("2026-04-29", "FOMC Decision",              "high"),
-    ("2026-05-08", "Jobs Report",                "medium"),
-    ("2026-05-14", "CPI Release",                "high"),
-    ("2026-06-10", "FOMC Decision",              "high"),
-    ("2026-06-12", "CPI Release",                "high"),
+    ("2026-04-02", "Jobs Report", "medium"),
+    ("2026-04-10", "CPI Release", "high"),
+    ("2026-04-29", "FOMC Decision", "high"),
+    ("2026-05-08", "Jobs Report", "medium"),
+    ("2026-05-14", "CPI Release", "high"),
+    ("2026-06-10", "FOMC Decision", "high"),
+    ("2026-06-12", "CPI Release", "high"),
 ]
 
-# Known upcoming earnings (non-benchmark symbols only)
-EARNINGS_CALENDAR = {
-    # "NVDA": "2026-05-28",
-    # "AAPL": "2026-05-01",
-}
+EARNINGS_CALENDAR = {}
+AUTO_FETCH_EARNINGS = True
+
 
 # =============================================================================
-# SOXX TACTICAL ANCHORS
+# BENCHMARK TACTICAL
 # =============================================================================
 SOXX_TACTICAL_ANCHORS = {
-    "recent_high":         "2026-02-25",
-    "recent_low":          "2026-03-09",
-    "covid_low":           "2020-03-23",
-    "liberation_day_low":  "2025-04-07",
-    "iran_war_low":        "2026-03-10",
-    "ytd":                 f"{date.today().year}-01-02",
+    "recent_high": "2026-02-25",
+    "recent_low": "2026-03-09",
+    "covid_low": "2020-03-23",
+    "liberation_day_low": "2025-04-07",
+    "iran_war_low": "2026-03-10",
+    "ytd": f"{date.today().year}-01-02",
 }
 
-# =============================================================================
-# LEVERAGED BENCHMARK TACTICAL MAPPINGS
-# Chart symbol -> (3x long vehicle, 3x short vehicle, leverage)
-# =============================================================================
 LEVERAGED_PAIRS = {
-    "SPY":  {"long": "SPXL", "short": "SPXS", "leverage": 3.0, "name": "S&P 500"},
-    "QQQ":  {"long": "TQQQ", "short": "SQQQ", "leverage": 3.0, "name": "Nasdaq 100"},
+    "SPY": {"long": "SPXL", "short": "SPXS", "leverage": 3.0, "name": "S&P 500"},
+    "QQQ": {"long": "TQQQ", "short": "SQQQ", "leverage": 3.0, "name": "Nasdaq 100"},
     "SOXX": {"long": "SOXL", "short": "SOXS", "leverage": 3.0, "name": "Semiconductors"},
 }
 
-# =============================================================================
-# GATED SCORING PARAMETERS
-# =============================================================================
-# Gate thresholds — these are the values you calibrate over time
-GATE_WEEKLY_REQUIRES = "close_above_sma_20"   # minimum weekly condition
-GATE_DAILY_REQUIRES = "close_above_sma_50"    # minimum daily condition
 
-# Score caps when gates fail
+# =============================================================================
+# LEGACY GATES / BACKTESTING / CORRELATION
+# =============================================================================
+GATE_WEEKLY_REQUIRES = "constructive_weekly_structure"
+GATE_DAILY_REQUIRES = "constructive_daily_backbone"
 SCORE_CAP_WEEKLY_FAIL = 30
 SCORE_CAP_DAILY_FAIL = 50
-
-# Signal expiration
 SIGNAL_EXPIRY_DAYS = 3
 
+USE_DYNAMIC_CORRELATION = True
+DYNAMIC_CORR_LOOKBACK = 60
+DYNAMIC_CORR_THRESHOLD = 0.65
+
+BACKTEST_START_DATE = "2023-01-01"
+WALK_FORWARD_IN_SAMPLE_MONTHS = 12
+WALK_FORWARD_OUT_OF_SAMPLE_MONTHS = 3
+WALK_FORWARD_STEP_MONTHS = 3
+CALIBRATION_MIN_SAMPLES_WEIGHT = 6
+
+
 # =============================================================================
-# SCHWAB (optional — for account data, not market data)
+# MACRO SIGNAL TICKERS
 # =============================================================================
+MACRO_SIGNAL_TICKERS = {
+    "vix": "^VIX",
+    "vix3m": "^VIX3M",
+    "hyg": "HYG",
+    "lqd": "LQD",
+    "irx": "^IRX",
+    "tnx": "^TNX",
+    "skew": "^SKEW",
+}
+
+
+# =============================================================================
+# ALERTS / OPTIONAL ACCOUNT KEYS
+# =============================================================================
+ALERT_EMAIL_TO = os.environ.get("ALERT_EMAIL_TO", "")
+ALERT_EMAIL_FROM = os.environ.get("ALERT_EMAIL_FROM", "")
+ALERT_EMAIL_PASSWORD = os.environ.get("ALERT_EMAIL_PASSWORD", "")
+ALERT_EMAIL_SMTP = os.environ.get("ALERT_EMAIL_SMTP", "smtp.gmail.com")
+ALERT_WEBHOOK_URL = os.environ.get("ALERT_WEBHOOK_URL", "")
+ALERT_MIN_SCORE = 70
+ALERT_ACTION_BIASES = ("buy", "lean_buy")
+
 SCHWAB_APP_KEY = os.environ.get("SCHWAB_APP_KEY", "")
 SCHWAB_APP_SECRET = os.environ.get("SCHWAB_APP_SECRET", "")
 SCHWAB_REFRESH_TOKEN = os.environ.get("SCHWAB_REFRESH_TOKEN", "")
+
 
 # =============================================================================
 # EXECUTION COST MODEL
 # =============================================================================
 COST_MODEL = {
-    "commission_per_share":   0.00,   # Schwab: zero stock commissions
-    "commission_per_trade":   0.00,   # Default equity workflow: no per-trade commission
-    "slippage_bps_liquid":    3,      # >$100M ADV names: ~3bps round-trip entry
-    "slippage_bps_semiliquid": 8,     # $25M-$100M ADV names
-    "slippage_bps_illiquid":  20,     # <$25M ADV (should be blocked anyway)
-    "spread_bps_liquid":      2,      # Bid-ask half-spread for liquid names
-    "spread_bps_semiliquid":  5,
-    "spread_bps_illiquid":    15,
+    "commission_per_share": 0.00,
+    "commission_per_trade": 0.00,
+    "slippage_bps_liquid": 3,
+    "slippage_bps_semiliquid": 8,
+    "slippage_bps_illiquid": 20,
+    "spread_bps_liquid": 2,
+    "spread_bps_semiliquid": 5,
+    "spread_bps_illiquid": 15,
 }
 
-# =============================================================================
-# ALERTS
-# =============================================================================
-ALERT_EMAIL_TO       = os.environ.get("ALERT_EMAIL_TO", "")
-ALERT_EMAIL_FROM     = os.environ.get("ALERT_EMAIL_FROM", "")
-ALERT_EMAIL_PASSWORD = os.environ.get("ALERT_EMAIL_PASSWORD", "")
-ALERT_EMAIL_SMTP     = os.environ.get("ALERT_EMAIL_SMTP", "smtp.gmail.com")
-ALERT_WEBHOOK_URL    = os.environ.get("ALERT_WEBHOOK_URL", "")  # Slack/Discord/Teams
-ALERT_MIN_SCORE      = 70        # Only alert on setups scoring >= this
-ALERT_ACTION_BIASES  = ("buy", "lean_buy")
 
 # =============================================================================
-# EARNINGS AUTO-FETCH
-# =============================================================================
-AUTO_FETCH_EARNINGS = True   # Set False to rely on manual EARNINGS_CALENDAR only
-
-# =============================================================================
-# MACRO SIGNAL TICKERS (for regime overlay)
-# =============================================================================
-MACRO_SIGNAL_TICKERS = {
-    "vix":   "^VIX",
-    "vix3m": "^VIX3M",
-    "hyg":   "HYG",
-    "lqd":   "LQD",
-    "irx":   "^IRX",
-    "tnx":   "^TNX",
-    "skew":  "^SKEW",
-}
-
-# =============================================================================
-# DYNAMIC CORRELATION
-# =============================================================================
-USE_DYNAMIC_CORRELATION   = True
-DYNAMIC_CORR_LOOKBACK     = 60    # trading days
-DYNAMIC_CORR_THRESHOLD    = 0.65  # correlation above which names share a risk bucket
-
-# =============================================================================
-# EXIT POLICY (matched to ThresholdRegistry — change there to override)
+# EXIT POLICY
 # =============================================================================
 EXIT_POLICY = {
-    "trailing_stop_atr_mult":     1.5,
-    "partial_1_at_rr":            1.0,   # take 1/3 at 1R
-    "partial_2_at_rr":            2.0,   # take 1/3 at 2R
-    "trail_remaining_from_rr":    1.0,   # start trailing after 1R
-    "max_hold_days":              15,
-    "time_stop_below_entry_pct": -3.0,   # % loss threshold for time stop
-    "time_stop_trigger_days":     5,
+    "trailing_stop_atr_mult": 1.5,
+    "partial_1_at_rr": 1.0,
+    "partial_2_at_rr": 2.0,
+    "trail_remaining_from_rr": 1.0,
+    "max_hold_days": 15,
+    "time_stop_below_entry_pct": -3.0,
+    "time_stop_trigger_days": 5,
 }
-
-# =============================================================================
-# BACKTESTING
-# =============================================================================
-BACKTEST_START_DATE                = "2023-01-01"
-WALK_FORWARD_IN_SAMPLE_MONTHS      = 12
-WALK_FORWARD_OUT_OF_SAMPLE_MONTHS  = 3
-WALK_FORWARD_STEP_MONTHS           = 3
-
-# =============================================================================
-# CALIBRATION
-# =============================================================================
-CALIBRATION_MIN_SAMPLES_WEIGHT = 6   # Minimum signals before evidence gets weight
