@@ -59,10 +59,27 @@ def _prepare_watchlists(packets: dict, checklists: dict) -> dict:
     }
 
 
+def _normalize_chart_images(chart_images: dict | None, output_path: Path) -> dict:
+    output_dir = output_path.parent
+    normalized: dict[str, dict] = {}
+    for symbol, payload in (chart_images or {}).items():
+        entry = dict(payload or {})
+        for key, value in list(entry.items()):
+            if key.endswith("_path") and value:
+                path = Path(value)
+                try:
+                    entry[key.replace("_path", "_url")] = str(path.relative_to(output_dir)).replace("\\", "/")
+                except ValueError:
+                    entry[key.replace("_path", "_url")] = path.as_posix()
+        normalized[symbol] = entry
+    return normalized
+
+
 def generate_dashboard(regime: dict, packets: dict, checklists: dict, soxx_decision=None, narratives=None, leveraged=None, chart_images=None, output_path: Path | None = None, run_summary: dict | None = None):
     output_path = output_path or cfg.DASHBOARD_OUTPUT_PATH
     narratives = narratives or {}
     sections = _prepare_watchlists(packets, checklists)
+    chart_payload = _normalize_chart_images(chart_images, output_path)
     env = Environment(loader=FileSystemLoader(str(cfg.TEMPLATES_DIR)), autoescape=select_autoescape(["html", "xml"]))
     template = env.get_template("dashboard.html")
     html = template.render(
@@ -72,6 +89,7 @@ def generate_dashboard(regime: dict, packets: dict, checklists: dict, soxx_decis
         sections=sections,
         packets=packets,
         checklists=checklists,
+        chart_images=chart_payload,
         narratives=narratives,
         benchmarks=[packets[symbol] for symbol in cfg.BENCHMARKS if symbol in packets],
     )

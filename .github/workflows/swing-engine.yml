@@ -1,11 +1,6 @@
 name: Swing Engine
 
 on:
-  push:
-    branches:
-      - main
-      - codex-*
-  pull_request:
   workflow_dispatch:
     inputs:
       mode:
@@ -90,22 +85,22 @@ jobs:
           fi
 
       - name: Prepare Pages site
-        if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: success()
         shell: bash
         run: |
           rm -rf site
           mkdir -p site/reports
           cp dashboard.html site/index.html
-          if ls reports/*.json >/dev/null 2>&1; then
-            cp reports/*.json site/reports/
+          if [ -d reports ]; then
+            cp -R reports/. site/reports/
           fi
 
       - name: Upload Pages artifact
-        if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: success()
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
       - name: Deploy to GitHub Pages
-        if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: success()
         uses: actions/deploy-pages@v4

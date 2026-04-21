@@ -21,6 +21,11 @@
   .metric .label { color: #7f93a8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; }
   .metric .value { font-size: 1.4rem; font-weight: 700; margin-top: 6px; }
   .card { padding: 14px; }
+  .chart-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 12px; }
+  .chart-panel { background: rgba(255,255,255,0.025); border: 1px solid rgba(131, 158, 182, 0.14); border-radius: 12px; padding: 10px; }
+  .chart-panel img { display: block; width: 100%; border-radius: 8px; border: 1px solid rgba(131, 158, 182, 0.18); }
+  .chart-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #8da4bb; margin-bottom: 8px; }
+  .chart-empty { padding: 14px; border-radius: 10px; background: rgba(77, 19, 19, 0.25); color: #ffb1b1; }
   .row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; margin-right: 6px; }
   .state { background: #10253a; color: #8cc7ff; }
@@ -97,6 +102,7 @@
     <div class="grid card-grid">
       {% for row in rows %}
       {% set packet = row.packet %}
+      {% set charts = chart_images.get(row.symbol, {}) %}
       <div class="card">
         <div class="row">
           <div>
@@ -124,6 +130,41 @@
           <tr><th>Freshness</th><td>{{ packet.data_quality.intraday_freshness_minutes }} min old</td></tr>
           <tr><th>RS20</th><td>{{ packet.relative_strength.rs_20d }}</td></tr>
         </table>
+        <div class="chart-grid">
+          {% if charts.daily_url %}
+          <div class="chart-panel">
+            <div class="chart-title">Daily Chart</div>
+            <img src="{{ charts.daily_url }}" alt="{{ row.symbol }} daily chart">
+          </div>
+          {% endif %}
+          {% if charts.weekly_url %}
+          <div class="chart-panel">
+            <div class="chart-title">Weekly Chart</div>
+            <img src="{{ charts.weekly_url }}" alt="{{ row.symbol }} weekly chart">
+          </div>
+          {% endif %}
+          {% if charts.intra_15m_url %}
+          <div class="chart-panel">
+            <div class="chart-title">15m Execution</div>
+            <img src="{{ charts.intra_15m_url }}" alt="{{ row.symbol }} 15 minute chart">
+          </div>
+          {% endif %}
+          {% if charts.intra_30m_url %}
+          <div class="chart-panel">
+            <div class="chart-title">30m Execution</div>
+            <img src="{{ charts.intra_30m_url }}" alt="{{ row.symbol }} 30 minute chart">
+          </div>
+          {% endif %}
+          {% if charts.intra_60m_url %}
+          <div class="chart-panel">
+            <div class="chart-title">60m Execution</div>
+            <img src="{{ charts.intra_60m_url }}" alt="{{ row.symbol }} 60 minute chart">
+          </div>
+          {% endif %}
+          {% if not charts.daily_url and not charts.weekly_url and not charts.intra_15m_url and not charts.intra_30m_url and not charts.intra_60m_url %}
+          <div class="chart-empty">Charts unavailable</div>
+          {% endif %}
+        </div>
         {% if narratives.get(row.symbol) %}
         <div style="margin-top: 10px;" class="muted">{{ narratives[row.symbol] }}</div>
         {% endif %}
