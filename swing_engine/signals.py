@@ -34,6 +34,26 @@ JOURNAL_COLUMNS = [
     "reason", "exit_date", "exit_price", "exit_reason", "r_multiple", "pnl_dollars", "notes",
 ]
 
+SIGNAL_TEXT_COLUMNS = [
+    "date",
+    "symbol",
+    "quality",
+    "idea_quality",
+    "entry_timing",
+    "action_bias",
+    "setup_type",
+    "setup_family",
+    "setup_stage",
+    "setup_state",
+    "trigger_type",
+    "triggered_now_bucket",
+    "regime",
+    "freshness_label",
+    "actionability_label",
+    "trigger_date",
+    "outcome_status",
+]
+
 
 def _ensure_log(path: Path, columns: list[str]) -> pd.DataFrame:
     if path.exists():
@@ -47,9 +67,18 @@ def _ensure_log(path: Path, columns: list[str]) -> pd.DataFrame:
     return df
 
 
+def _prepare_signal_log(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    for column in SIGNAL_TEXT_COLUMNS:
+        if column not in df.columns:
+            df[column] = None
+        df[column] = df[column].astype("object")
+    return df
+
+
 def log_signal(packet: dict, regime_label: str = "") -> None:
     db.initialize()
-    df = _ensure_log(SIGNAL_LOG, SIGNAL_COLUMNS)
+    df = _prepare_signal_log(_ensure_log(SIGNAL_LOG, SIGNAL_COLUMNS))
     row = {
         "date": date.today().isoformat(),
         "symbol": packet["symbol"],
@@ -159,7 +188,7 @@ def backfill_outcomes(lookback_days: int = 14) -> int:
     db.initialize()
     if not SIGNAL_LOG.exists():
         return 0
-    df = _ensure_log(SIGNAL_LOG, SIGNAL_COLUMNS)
+    df = _prepare_signal_log(_ensure_log(SIGNAL_LOG, SIGNAL_COLUMNS))
     filled = 0
     for idx, row in df.iterrows():
         if pd.notna(row.get("fwd_1d_ret")):
