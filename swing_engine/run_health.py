@@ -8,7 +8,7 @@ import os
 import tempfile
 import time
 from collections import Counter
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from . import config as cfg
@@ -59,6 +59,7 @@ def collect_run_health(mode: str, context: dict, started_at: float) -> dict:
     regime = context.get("regime", {})
 
     live, cache_fallback, unavailable = _source_counts(data_status, watch_symbols)
+    successful_symbols = max(0, live + cache_fallback)
     trigger_degraded = sum(
         1
         for symbol in watch_symbols
@@ -73,7 +74,11 @@ def collect_run_health(mode: str, context: dict, started_at: float) -> dict:
     total_symbols = max(len(watch_symbols), 1)
     unavailable_ratio = unavailable / total_symbols
     trigger_ratio = trigger_degraded / total_symbols
-    if total_symbols == 0 or unavailable_ratio >= cfg.RUN_FAILED_UNAVAILABLE_RATIO:
+    if total_symbols == 0:
+        overall_status = "failed"
+    elif unavailable >= total_symbols or (
+        unavailable_ratio >= cfg.RUN_FAILED_UNAVAILABLE_RATIO and successful_symbols == 0
+    ):
         overall_status = "failed"
     elif (
         unavailable_ratio >= cfg.RUN_DEGRADED_UNAVAILABLE_RATIO
@@ -87,12 +92,13 @@ def collect_run_health(mode: str, context: dict, started_at: float) -> dict:
 
     return {
         "run_mode": mode,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "duration_seconds": round(time.perf_counter() - started_at, 3),
         "total_symbols_attempted": len(watch_symbols),
         "symbols_loaded_live": live,
         "symbols_loaded_from_cache_fallback": cache_fallback,
         "symbols_unavailable": unavailable,
+        "symbols_with_usable_data": successful_symbols,
         "packet_build_failures": len(packet_failures),
         "packet_failure_symbols": sorted(packet_failures),
         "benchmark_availability": benchmark_status,
@@ -108,6 +114,6 @@ def collect_run_health(mode: str, context: dict, started_at: float) -> dict:
 
 
 def persist_run_health(run_health: dict) -> Path:
-    timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     path = cfg.RUN_HEALTH_OUTPUT_DIR / f"run_health_{run_health['run_mode']}_{timestamp}.json"
     return atomic_write_json(path, run_health)

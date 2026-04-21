@@ -3,7 +3,7 @@ Deterministic offline smoke runner.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import numpy as np
 import pandas as pd
@@ -59,10 +59,10 @@ def _data_bundle(symbol: str, seed: int) -> dict:
         .reset_index()
     )
     intraday = _intraday_frame(seed, start_price=float(daily["close"].iloc[-1]) - 1.0)
-    daily.attrs["cache_meta"] = {"source": "fixture", "fetched_at": datetime.utcnow().isoformat()}
+    daily.attrs["cache_meta"] = {"source": "fixture", "fetched_at": datetime.now(UTC).isoformat().replace("+00:00", "Z")}
     intraday.attrs["cache_meta"] = {
         "source": "fixture",
-        "fetched_at": datetime.utcnow().isoformat(),
+        "fetched_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "freshness_label": "fresh",
         "freshness_age_minutes": 1.0,
     }
