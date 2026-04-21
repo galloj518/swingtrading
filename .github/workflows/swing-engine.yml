@@ -1,6 +1,11 @@
 name: Swing Engine
 
 on:
+  push:
+    branches:
+      - main
+      - codex-*
+  pull_request:
   workflow_dispatch:
     inputs:
       mode:
@@ -85,7 +90,7 @@ jobs:
           fi
 
       - name: Prepare Pages site
-        if: success()
+        if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         shell: bash
         run: |
           rm -rf site
@@ -96,11 +101,11 @@ jobs:
           fi
 
       - name: Upload Pages artifact
-        if: success()
+        if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
       - name: Deploy to GitHub Pages
-        if: success()
+        if: success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/deploy-pages@v4
