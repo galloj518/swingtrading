@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from . import checklist
+from . import charts
 from . import config as cfg
 from . import dashboard
 from . import packets
@@ -83,6 +84,7 @@ def run_offline_smoke(include_dashboard: bool = True) -> dict:
     started = run_health.start_timer()
     benchmark_packets = {}
     watch_packets = {}
+    watch_data = {}
 
     spy_daily = _data_bundle("SPY", 1)["daily"]
     benchmark_data = {symbol: _data_bundle(symbol, idx + 1) for idx, symbol in enumerate(cfg.BENCHMARKS)}
@@ -104,6 +106,7 @@ def run_offline_smoke(include_dashboard: bool = True) -> dict:
     data_status = {}
     for idx, symbol in enumerate(synthetic_symbols, start=10):
         bundle = _data_bundle(symbol, idx)
+        watch_data[symbol] = bundle
         watch_packets[symbol] = packets.build_packet(symbol, bundle, spy_daily, regime=regime)
         data_status[symbol] = {"daily_source": "fixture", "intraday_source": "fixture"}
 
@@ -112,6 +115,7 @@ def run_offline_smoke(include_dashboard: bool = True) -> dict:
     checklists = {symbol: checklist.generate_checklist(packet, regime) for symbol, packet in watch_packets.items()}
     context = {
         "packets": all_packets,
+        "data_store": {**benchmark_data, **watch_data},
         "checklists": checklists,
         "regime": regime,
         "watch_symbols": synthetic_symbols,
@@ -124,11 +128,19 @@ def run_offline_smoke(include_dashboard: bool = True) -> dict:
     context["run_health"] = run_summary
     report_path = run_health.atomic_write_json(cfg.OFFLINE_SMOKE_OUTPUT_DIR / "offline_smoke_health.json", run_summary)
     dashboard_path = None
+    chart_images = charts.generate_all_charts(
+        synthetic_symbols + list(cfg.BENCHMARKS),
+        context["data_store"],
+        all_packets,
+        output_dir=cfg.OFFLINE_SMOKE_OUTPUT_DIR / "charts",
+        intraday_emphasis_symbols=synthetic_symbols[: cfg.TOP_EXECUTION_INTRADAY_COUNT],
+    )
     if include_dashboard:
         dashboard_path = dashboard.generate_dashboard(
             regime,
             all_packets,
             checklists,
+            chart_images=chart_images,
             output_path=cfg.OFFLINE_SMOKE_OUTPUT_DIR / "offline_smoke_dashboard.html",
             run_summary=run_summary,
         )

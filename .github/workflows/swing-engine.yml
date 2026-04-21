@@ -91,8 +91,8 @@ jobs:
           rm -rf site
           mkdir -p site/reports
           cp dashboard.html site/index.html
-          if ls reports/*.json >/dev/null 2>&1; then
-            cp reports/*.json site/reports/
+          if [ -d reports ]; then
+            cp -R reports/. site/reports/
           fi
 
       - name: Upload Pages artifact

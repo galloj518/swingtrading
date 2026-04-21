@@ -174,6 +174,7 @@ def build_scan_context(force: bool = False) -> dict:
         "spy_daily": spy_daily,
         "regime": regime,
         "packets": packets_map,
+        "data_store": {**watchlist_data, **bench_data},
         "checklists": checklists,
         "calibration_profile": calibration_profile,
         "benchmark_status": benchmark_status,
@@ -213,12 +214,48 @@ def _save_report(context: dict, mode: str, narratives: dict | None = None) -> No
     run_health.atomic_write_json(report_path, report)
 
 
+def _chart_symbols(context: dict) -> list[str]:
+    packets_map = context["packets"]
+    checklists_map = context["checklists"]
+    watchlists = dashboard._prepare_watchlists(packets_map, checklists_map)
+    selected: list[str] = []
+    for section in ("triggered", "breakout", "structural"):
+        for row in watchlists[section]:
+            if row["symbol"] not in selected:
+                selected.append(row["symbol"])
+    selected = selected[: cfg.TOP_CHART_COUNT]
+    for symbol in cfg.BENCHMARKS:
+        if symbol in packets_map and symbol not in selected:
+            selected.append(symbol)
+    return selected
+
+
+def _generate_chart_payload(context: dict) -> dict:
+    symbols = _chart_symbols(context)
+    emphasized = symbols[: cfg.TOP_EXECUTION_INTRADAY_COUNT]
+    return charts.generate_all_charts(
+        symbols,
+        context.get("data_store", {}),
+        context["packets"],
+        output_dir=cfg.CHARTS_OUTPUT_DIR,
+        intraday_emphasis_symbols=emphasized,
+    )
+
+
 def _finalize_context(mode: str, context: dict, started_at: float, narratives: dict | None = None, include_dashboard: bool = True) -> dict:
     narratives = narratives or {}
     context["run_health"] = run_health.collect_run_health(mode, context, started_at)
     run_health.persist_run_health(context["run_health"])
+    context["chart_images"] = _generate_chart_payload(context)
     if include_dashboard:
-        dashboard.generate_dashboard(context["regime"], context["packets"], context["checklists"], narratives=narratives, run_summary=context["run_health"])
+        dashboard.generate_dashboard(
+            context["regime"],
+            context["packets"],
+            context["checklists"],
+            narratives=narratives,
+            chart_images=context["chart_images"],
+            run_summary=context["run_health"],
+        )
     _save_report(context, mode, narratives=narratives)
     log_event(
         LOGGER,
