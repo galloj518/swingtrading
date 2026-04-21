@@ -10,9 +10,6 @@ import numpy as np
 import pandas as pd
 
 from . import config as cfg
-<<<<<<< HEAD
-from .utils import _band_ratio, _linear_ratio, _clamp  # noqa: F401 — re-exported for callers
-=======
 
 
 def _clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
@@ -33,7 +30,6 @@ def _band_ratio(value: float, outer_low: float, ideal_low: float, ideal_high: fl
     if value < ideal_low:
         return _linear_ratio(value, outer_low, ideal_low)
     return _linear_ratio(outer_high - value, 0.0, outer_high - ideal_high)
->>>>>>> 955d76f (Harden runtime reliability and add offline validation)
 
 
 def add_smas(df: pd.DataFrame, periods: list[int]) -> pd.DataFrame:
@@ -277,60 +273,15 @@ def assess_overhead_supply(price: float, daily_df: pd.DataFrame, pivots: dict, a
     if reference_levels.get("prior_day_high"):
         levels.append(("prior_day_high", float(reference_levels["prior_day_high"])))
     for label, data in avwap_map.items():
-<<<<<<< HEAD
-        avwap = data.get("avwap")
-        if avwap:
-            levels.append((f"avwap_{label}", float(avwap)))
-
-    for label in ("prior_day_high",):
-        val = reference_levels.get(label)
-        if val:
-            levels.append((label, float(val)))
-
-    # ATR-normalize: for high-ATR stocks, levels within < 1 ATR are noise
-    atr_col = daily_df["atr"] if "atr" in daily_df.columns else None
-    atr_val = float(atr_col.iloc[-1]) if atr_col is not None and not atr_col.empty and pd.notna(atr_col.iloc[-1]) else price * 0.02
-    atr_pct = (atr_val / price) * 100.0 if price > 0 else 2.0
-    min_meaningful = max(0.35, 0.5 * atr_pct)
-
-    above = []
-    for name, level in levels:
-        if level > price:
-            pct = ((level / price) - 1.0) * 100.0
-            if pct < min_meaningful:
-                continue
-            above.append((name, level, pct))
-
-=======
         if data.get("avwap"):
             levels.append((f"avwap_{label}", float(data["avwap"])))
     above = [((name, level, ((level / price) - 1.0) * 100.0)) for name, level in levels if level > price]
->>>>>>> 955d76f (Harden runtime reliability and add offline validation)
     if not above:
         return {"score": 96.0, "nearest_pct": None, "detail": "No meaningful overhead supply nearby"}
     nearest = min(above, key=lambda item: item[2])
-<<<<<<< HEAD
-    unique_above = {}
-    for name, level, pct in above:
-        bucket = round(pct, 1)
-        unique_above.setdefault(bucket, (name, level, pct))
-    unique_values = list(unique_above.values())
-    within_3 = [item for item in unique_values if item[2] <= 3.0]
-    within_8 = [item for item in unique_values if item[2] <= 8.0]
-
-    # ATR-normalize nearest distance: measure in ATRs, not raw %
-    nearest_atrs = nearest[2] / atr_pct if atr_pct > 0 else nearest[2] / 2.0
-    nearest_ratio = min(max((nearest_atrs - 0.5) / 3.0, 0.0), 1.0)
-    # Density windows stay in raw % (the min_meaningful filter already removes noise)
-    density_ratio = 1.0 - min(len(within_8) / 6.0, 1.0)
-    crowd_penalty = 0.10 if len(within_3) >= 3 else 0.05 if len(within_3) >= 2 else 0.0
-    score = float(round(100.0 * max(0.0, min(1.0, 0.60 * nearest_ratio + 0.40 * density_ratio - crowd_penalty)), 1))
-
-=======
     within_3 = sum(1 for item in above if item[2] <= 3.0)
     within_8 = sum(1 for item in above if item[2] <= 8.0)
     score = round(_clamp(100.0 - nearest[2] * 8.0 - within_3 * 8.0 - max(0, within_8 - within_3) * 3.0), 1)
->>>>>>> 955d76f (Harden runtime reliability and add offline validation)
     return {
         "score": score,
         "nearest_level": nearest[0],
@@ -351,186 +302,9 @@ def assess_clean_air(price: float, daily_state: dict, pivots: dict, avwap_map: d
     score = round(_clamp(atrs / 3.0 * 100.0), 1)
     return {
         "score": score,
-<<<<<<< HEAD
-        "recent_breakout": True,
-        "failed_breakout": bool(failed),
-        "hard_failed_breakout": bool(hard_fail),
-        "breakout_level": round(breakout_level, 2),
-        "breakout_close": round(breakout_close, 2),
-        "detail": detail,
-    }
-
-
-def assess_base_quality(daily_df: pd.DataFrame) -> dict:
-    """
-    Evaluate whether the recent base/pullback is orderly enough for a swing entry.
-    """
-    if daily_df.empty or len(daily_df) < 35:
-        return {
-            "score": 55.0,
-            "compression_pct": None,
-            "volume_dryup_ratio": None,
-            "down_weeks": None,
-            "detail": "Base quality unavailable",
-        }
-
-    recent = daily_df.iloc[-25:].copy()
-    prior = daily_df.iloc[-50:-25].copy() if len(daily_df) >= 50 else recent
-    close = float(recent["close"].iloc[-1])
-    base_range_pct = ((float(recent["high"].max()) - float(recent["low"].min())) / close) * 100 if close else 0.0
-    # ATR-normalize: measure base range in ATR-widths, not raw %.
-    # A 5% ATR stock with 25% range = 5 ATR-widths (orderly).
-    # A 0.3% ATR stock with 2% range = 6.7 ATR-widths (also orderly).
-    atr_col = recent["atr"] if "atr" in recent.columns else None
-    atr_val = float(atr_col.iloc[-1]) if atr_col is not None and not atr_col.empty and pd.notna(atr_col.iloc[-1]) else close * 0.02
-    atr_pct = (atr_val / close) * 100.0 if close > 0 else 2.0
-    base_range_atrs = base_range_pct / max(atr_pct, 0.3)
-    compression_score = 100.0 * max(0.0, 1.0 - min(base_range_atrs / 10.0, 1.0))
-
-    recent_vol = float(recent["volume"].mean()) if not recent.empty else 0.0
-    prior_vol = float(prior["volume"].mean()) if not prior.empty else recent_vol
-    dryup_ratio = (recent_vol / prior_vol) if prior_vol else 1.0
-    dryup_score = 100.0 * max(0.0, min((1.35 - dryup_ratio) / 0.65, 1.0))
-
-    down_closes = float((recent["close"].diff() < 0).mean())
-    churn_score = 100.0 * max(0.0, 1.0 - min(down_closes / 0.6, 1.0))
-
-    score = float(round(
-        max(0.0, min(100.0, 0.45 * compression_score + 0.25 * dryup_score + 0.30 * churn_score)),
-        1,
-    ))
-    return {
-        "score": score,
-        "compression_pct": round(base_range_pct, 2),
-        "volume_dryup_ratio": round(dryup_ratio, 2),
-        "down_close_ratio": round(down_closes, 2),
-        "detail": (
-            f"Base range {base_range_pct:.1f}%, volume dry-up {dryup_ratio:.2f}x, "
-            f"down-close ratio {down_closes:.2f}"
-        ),
-    }
-
-
-def assess_continuation_pattern(daily_df: pd.DataFrame, weekly_df: pd.DataFrame) -> dict:
-    """
-    Detect continuation and secondary-buy behavior that often precedes positive follow-through:
-    tight price action, volatility contraction, dry-up volume, and gap-hold behavior.
-    """
-    if daily_df.empty or len(daily_df) < 25:
-        return {
-            "score": 50.0,
-            "three_weeks_tight": False,
-            "tight_closes_5d": False,
-            "nr7": False,
-            "secondary_buy_candidate": False,
-            "buy_trigger": None,
-            "buy_range_high": None,
-            "detail": "Continuation pattern unavailable",
-        }
-
-    recent5 = daily_df.iloc[-5:].copy()
-    prior15 = daily_df.iloc[-20:-5].copy() if len(daily_df) >= 20 else daily_df.iloc[:-5].copy()
-    last_close = float(recent5["close"].iloc[-1])
-
-    close_tight_pct = ((float(recent5["close"].max()) - float(recent5["close"].min())) / last_close * 100.0) if last_close else 0.0
-    tight_close_score = 100.0 * max(0.0, 1.0 - min(close_tight_pct / 4.5, 1.0))
-    tight_closes_5d = close_tight_pct <= 2.0
-
-    recent_ranges = (recent5["high"] - recent5["low"]).astype(float)
-    prior_ranges = (prior15["high"] - prior15["low"]).astype(float) if not prior15.empty else recent_ranges
-    avg_recent_range = float(recent_ranges.mean()) if not recent_ranges.empty else 0.0
-    avg_prior_range = float(prior_ranges.mean()) if not prior_ranges.empty else avg_recent_range
-    contraction_ratio = (avg_recent_range / avg_prior_range) if avg_prior_range else 1.0
-    contraction_score = 100.0 * max(0.0, min((1.35 - contraction_ratio) / 0.75, 1.0))
-
-    recent_vol = float(recent5["volume"].mean()) if "volume" in recent5.columns and not recent5.empty else 0.0
-    prior_vol = float(prior15["volume"].mean()) if "volume" in prior15.columns and not prior15.empty else recent_vol
-    dryup_ratio = (recent_vol / prior_vol) if prior_vol else 1.0
-    dryup_score = 100.0 * max(0.0, min((1.25 - dryup_ratio) / 0.55, 1.0))
-
-    nr7 = False
-    nr7_score = 55.0
-    if len(daily_df) >= 7:
-        ranges7 = (daily_df["high"].iloc[-7:] - daily_df["low"].iloc[-7:]).astype(float)
-        nr7 = bool(ranges7.iloc[-1] <= ranges7.min() + 1e-9)
-        nr7_score = 90.0 if nr7 else 55.0
-
-    three_weeks_tight = False
-    weekly_tight_pct = None
-    weekly_tight_score = 55.0
-    if not weekly_df.empty and len(weekly_df) >= 3:
-        wk = weekly_df.iloc[-3:].copy()
-        latest_week_close = float(wk["close"].iloc[-1])
-        if latest_week_close:
-            weekly_tight_pct = ((float(wk["close"].max()) - float(wk["close"].min())) / latest_week_close) * 100.0
-            three_weeks_tight = weekly_tight_pct <= 1.5
-            weekly_tight_score = 100.0 * max(0.0, 1.0 - min((weekly_tight_pct or 0.0) / 4.0, 1.0))
-
-    prior_20_high = float(daily_df["high"].iloc[-21:-1].max()) if len(daily_df) >= 21 else float(daily_df["high"].iloc[:-1].max())
-    breakout_distance_pct = ((prior_20_high / last_close) - 1.0) * 100.0 if last_close and prior_20_high else 0.0
-    breakout_ready = -1.0 <= breakout_distance_pct <= 4.0
-    proximity_score = 100.0 * _band_ratio(breakout_distance_pct, -6.0, -0.5, 2.5, 6.0)
-
-    gap_hold_score = 55.0
-    gap_hold = False
-    if len(daily_df) >= 12:
-        recent = daily_df.iloc[-12:].copy()
-        prev_close = recent["close"].shift(1)
-        gap_pct = ((recent["open"] / prev_close) - 1.0) * 100.0
-        avg_vol = recent["volume"].rolling(20, min_periods=1).mean()
-        volume_ratio = (recent["volume"] / avg_vol.replace(0, np.nan)).replace([np.inf, -np.inf], np.nan).fillna(1.0)
-        candidates = recent[(gap_pct >= 3.0) & (volume_ratio >= 1.3) & prev_close.notna()]
-        if not candidates.empty:
-            row = candidates.iloc[-1]
-            gap_hold = bool(last_close >= float(row["open"]))
-            gap_hold_score = 82.0 if gap_hold else 40.0
-
-    score = float(round(
-        max(0.0, min(
-            100.0,
-            0.22 * tight_close_score +
-            0.18 * contraction_score +
-            0.12 * dryup_score +
-            0.12 * nr7_score +
-            0.18 * weekly_tight_score +
-            0.10 * proximity_score +
-            0.08 * gap_hold_score
-        )),
-        1,
-    ))
-
-    buy_trigger = round(max(float(recent5["high"].max()), prior_20_high), 2) if breakout_ready else round(float(recent5["high"].max()), 2)
-    buy_range_high = round(buy_trigger * 1.03, 2) if buy_trigger else None
-    secondary_buy_candidate = bool(
-        score >= 68 and (
-            three_weeks_tight or tight_closes_5d or nr7
-        ) and breakout_ready
-    )
-
-    weekly_tight_txt = f"{weekly_tight_pct:.1f}%" if weekly_tight_pct is not None else "--"
-    return {
-        "score": score,
-        "three_weeks_tight": three_weeks_tight,
-        "tight_closes_5d": tight_closes_5d,
-        "nr7": nr7,
-        "gap_hold": gap_hold,
-        "breakout_ready": breakout_ready,
-        "secondary_buy_candidate": secondary_buy_candidate,
-        "buy_trigger": buy_trigger,
-        "buy_range_high": buy_range_high,
-        "close_tight_pct": round(close_tight_pct, 2),
-        "weekly_tight_pct": round(weekly_tight_pct, 2) if weekly_tight_pct is not None else None,
-        "contraction_ratio": round(contraction_ratio, 2),
-        "volume_dryup_ratio": round(dryup_ratio, 2),
-        "detail": (
-            f"5d tightness {close_tight_pct:.1f}%, 3WT {weekly_tight_txt}, "
-            f"range ratio {contraction_ratio:.2f}, dry-up {dryup_ratio:.2f}x"
-        ),
-=======
         "nearest_resistance_pct": round(nearest_pct, 2),
         "atr_to_resistance": round(atrs, 2),
         "detail": f"Nearest resistance {nearest_pct:.1f}% away ({atrs:.1f} ATR)",
->>>>>>> 955d76f (Harden runtime reliability and add offline validation)
     }
 
 
