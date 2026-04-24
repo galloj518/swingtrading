@@ -4,6 +4,7 @@ SQLite persistence for signal calls and executed trades.
 CSV files remain available for portability, but the database acts as the
 durable store the app can update over time.
 """
+from typing import Optional, List
 import json
 import sqlite3
 from datetime import datetime
@@ -44,6 +45,14 @@ def initialize() -> None:
                 entry_timing TEXT,
                 action_bias TEXT,
                 setup_type TEXT,
+                setup_family TEXT,
+                setup_stage TEXT,
+                setup_state TEXT,
+                trigger_type TEXT,
+                triggered_now_bucket TEXT,
+                structural_score REAL,
+                breakout_readiness_score REAL,
+                trigger_readiness_score REAL,
                 weekly_gate INTEGER,
                 daily_gate INTEGER,
                 entry_low REAL,
@@ -54,9 +63,29 @@ def initialize() -> None:
                 price_at_signal REAL,
                 atr REAL,
                 rs_20d REAL,
+                pivot_level REAL,
+                trigger_level REAL,
+                pivot_distance_pct REAL,
+                extension_atr REAL,
+                reward_risk_now REAL,
+                short_ma_rising INTEGER,
+                tightening_to_short_ma INTEGER,
+                larger_ma_supportive INTEGER,
+                avwap_supportive INTEGER,
+                avwap_resistance INTEGER,
+                avwap_context TEXT,
+                overhead_supply_score REAL,
+                overhead_supply_detail TEXT,
                 regime TEXT,
                 event_risk INTEGER,
                 rvol REAL,
+                freshness_label TEXT,
+                freshness_minutes REAL,
+                actionability_label TEXT,
+                data_quality_score REAL,
+                run_mode TEXT,
+                calibration_provenance TEXT,
+                calibration_confidence TEXT,
                 slippage_est_bps REAL,
                 cost_dollars_est REAL,
                 net_rr_t1_est REAL,
@@ -66,6 +95,17 @@ def initialize() -> None:
                 fwd_1d_ret REAL,
                 fwd_3d_ret REAL,
                 fwd_5d_ret REAL,
+                fwd_10d_ret REAL,
+                fwd_20d_ret REAL,
+                entry_model_date TEXT,
+                entry_model_price REAL,
+                stop_model_price REAL,
+                target_model_price REAL,
+                triggered_model INTEGER,
+                days_to_entry INTEGER,
+                days_to_stop INTEGER,
+                days_to_target INTEGER,
+                realized_r REAL,
                 outcome_r REAL,
                 outcome_status TEXT,
                 hit_target_1 INTEGER,
@@ -139,10 +179,72 @@ def initialize() -> None:
 
             CREATE INDEX IF NOT EXISTS idx_trades_symbol_status
             ON trades(symbol, status, open_date);
+
+            CREATE TABLE IF NOT EXISTS backtest_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                replay_mode TEXT NOT NULL,
+                evaluation_date TEXT NOT NULL,
+                symbol TEXT NOT NULL,
+                setup_state TEXT,
+                setup_family TEXT,
+                setup_stage TEXT,
+                actionability_label TEXT,
+                trigger_type TEXT,
+                structural_score REAL,
+                breakout_readiness_score REAL,
+                trigger_readiness_score REAL,
+                pivot_level REAL,
+                trigger_level REAL,
+                production_score REAL,
+                sizing_tier TEXT,
+                pivot_zone TEXT,
+                trigger_band TEXT,
+                breakout_band TEXT,
+                structural_band TEXT,
+                dominant_negative_flags TEXT,
+                interaction_cluster_flags TEXT,
+                readiness_rebalance_flags TEXT,
+                pivot_position TEXT,
+                pivot_distance_pct REAL,
+                extension_atr REAL,
+                reward_risk_now REAL,
+                short_ma_rising INTEGER,
+                tightening_to_short_ma INTEGER,
+                larger_ma_supportive INTEGER,
+                avwap_supportive INTEGER,
+                avwap_resistance INTEGER,
+                avwap_context TEXT,
+                overhead_supply_score REAL,
+                contraction_score REAL,
+                freshness_label TEXT,
+                calibration_provenance TEXT,
+                calibration_confidence TEXT,
+                fwd_1d_ret REAL,
+                fwd_3d_ret REAL,
+                fwd_5d_ret REAL,
+                fwd_10d_ret REAL,
+                return_5d REAL,
+                return_10d REAL,
+                fwd_20d_ret REAL,
+                max_favorable_excursion_pct REAL,
+                max_adverse_excursion_pct REAL,
+                realized_r REAL,
+                outcome_status TEXT,
+                target_1_before_stop INTEGER,
+                stop_before_target_1 INTEGER,
+                payload_json TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(replay_mode, evaluation_date, symbol)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_backtest_events_mode_date
+            ON backtest_events(replay_mode, evaluation_date);
             """
         )
         _ensure_signal_columns(conn)
         _ensure_trade_columns(conn)
+        _ensure_backtest_event_columns(conn)
 
     _INITIALIZED = True
     sync_csv_to_db()
@@ -167,6 +269,14 @@ def _ensure_signal_columns(conn: sqlite3.Connection) -> None:
         "entry_timing": "TEXT",
         "action_bias": "TEXT",
         "setup_type": "TEXT",
+        "setup_family": "TEXT",
+        "setup_stage": "TEXT",
+        "setup_state": "TEXT",
+        "trigger_type": "TEXT",
+        "triggered_now_bucket": "TEXT",
+        "structural_score": "REAL",
+        "breakout_readiness_score": "REAL",
+        "trigger_readiness_score": "REAL",
         "weekly_gate": "INTEGER",
         "daily_gate": "INTEGER",
         "entry_low": "REAL",
@@ -177,9 +287,29 @@ def _ensure_signal_columns(conn: sqlite3.Connection) -> None:
         "price_at_signal": "REAL",
         "atr": "REAL",
         "rs_20d": "REAL",
+        "pivot_level": "REAL",
+        "trigger_level": "REAL",
+        "pivot_distance_pct": "REAL",
+        "extension_atr": "REAL",
+        "reward_risk_now": "REAL",
+        "short_ma_rising": "INTEGER",
+        "tightening_to_short_ma": "INTEGER",
+        "larger_ma_supportive": "INTEGER",
+        "avwap_supportive": "INTEGER",
+        "avwap_resistance": "INTEGER",
+        "avwap_context": "TEXT",
+        "overhead_supply_score": "REAL",
+        "overhead_supply_detail": "TEXT",
         "regime": "TEXT",
         "event_risk": "INTEGER",
         "rvol": "REAL",
+        "freshness_label": "TEXT",
+        "freshness_minutes": "REAL",
+        "actionability_label": "TEXT",
+        "data_quality_score": "REAL",
+        "run_mode": "TEXT",
+        "calibration_provenance": "TEXT",
+        "calibration_confidence": "TEXT",
         "slippage_est_bps": "REAL",
         "cost_dollars_est": "REAL",
         "net_rr_t1_est": "REAL",
@@ -189,6 +319,17 @@ def _ensure_signal_columns(conn: sqlite3.Connection) -> None:
         "fwd_1d_ret": "REAL",
         "fwd_3d_ret": "REAL",
         "fwd_5d_ret": "REAL",
+        "fwd_10d_ret": "REAL",
+        "fwd_20d_ret": "REAL",
+        "entry_model_date": "TEXT",
+        "entry_model_price": "REAL",
+        "stop_model_price": "REAL",
+        "target_model_price": "REAL",
+        "triggered_model": "INTEGER",
+        "days_to_entry": "INTEGER",
+        "days_to_stop": "INTEGER",
+        "days_to_target": "INTEGER",
+        "realized_r": "REAL",
         "outcome_r": "REAL",
         "outcome_status": "TEXT",
         "hit_target_1": "INTEGER",
@@ -242,15 +383,40 @@ def _ensure_trade_columns(conn: sqlite3.Connection) -> None:
     )
 
 
+def _ensure_backtest_event_columns(conn: sqlite3.Connection) -> None:
+    existing = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(backtest_events)").fetchall()
+    }
+    desired = {
+        "production_score": "REAL",
+        "sizing_tier": "TEXT",
+        "pivot_zone": "TEXT",
+        "trigger_band": "TEXT",
+        "breakout_band": "TEXT",
+        "structural_band": "TEXT",
+        "dominant_negative_flags": "TEXT",
+        "interaction_cluster_flags": "TEXT",
+        "readiness_rebalance_flags": "TEXT",
+        "return_5d": "REAL",
+        "return_10d": "REAL",
+    }
+    for column, col_type in desired.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE backtest_events ADD COLUMN {column} {col_type}")
+
+
 def _coerce_bool(value):
     if value in (None, "", "nan"):
         return None
     if isinstance(value, bool):
         return int(value)
+    if isinstance(value, (int, float)):
+        return int(bool(value))
     text = str(value).strip().lower()
     if text in {"1", "true", "yes"}:
         return 1
-    if text in {"0", "false", "no"}:
+    if text in {"0", "0.0", "false", "no"}:
         return 0
     return None
 
@@ -288,6 +454,14 @@ def upsert_signal(row: dict, packet: dict = None) -> None:
         "entry_timing": row.get("entry_timing"),
         "action_bias": row.get("action_bias"),
         "setup_type": row.get("setup_type"),
+        "setup_family": row.get("setup_family"),
+        "setup_stage": row.get("setup_stage"),
+        "setup_state": row.get("setup_state"),
+        "trigger_type": row.get("trigger_type"),
+        "triggered_now_bucket": row.get("triggered_now_bucket"),
+        "structural_score": _coerce_float(row.get("structural_score")),
+        "breakout_readiness_score": _coerce_float(row.get("breakout_readiness_score")),
+        "trigger_readiness_score": _coerce_float(row.get("trigger_readiness_score")),
         "weekly_gate": _coerce_bool(row.get("weekly_gate")),
         "daily_gate": _coerce_bool(row.get("daily_gate")),
         "entry_low": _coerce_float(row.get("entry_low")),
@@ -298,9 +472,29 @@ def upsert_signal(row: dict, packet: dict = None) -> None:
         "price_at_signal": _coerce_float(row.get("price_at_signal")),
         "atr": _coerce_float(row.get("atr")),
         "rs_20d": _coerce_float(row.get("rs_20d")),
+        "pivot_level": _coerce_float(row.get("pivot_level")),
+        "trigger_level": _coerce_float(row.get("trigger_level")),
+        "pivot_distance_pct": _coerce_float(row.get("pivot_distance_pct")),
+        "extension_atr": _coerce_float(row.get("extension_atr")),
+        "reward_risk_now": _coerce_float(row.get("reward_risk_now")),
+        "short_ma_rising": _coerce_bool(row.get("short_ma_rising")),
+        "tightening_to_short_ma": _coerce_bool(row.get("tightening_to_short_ma")),
+        "larger_ma_supportive": _coerce_bool(row.get("larger_ma_supportive")),
+        "avwap_supportive": _coerce_bool(row.get("avwap_supportive")),
+        "avwap_resistance": _coerce_bool(row.get("avwap_resistance")),
+        "avwap_context": row.get("avwap_context"),
+        "overhead_supply_score": _coerce_float(row.get("overhead_supply_score")),
+        "overhead_supply_detail": row.get("overhead_supply_detail"),
         "regime": row.get("regime"),
         "event_risk": _coerce_bool(row.get("event_risk")),
         "rvol": _coerce_float(row.get("rvol")),
+        "freshness_label": row.get("freshness_label"),
+        "freshness_minutes": _coerce_float(row.get("freshness_minutes")),
+        "actionability_label": row.get("actionability_label"),
+        "data_quality_score": _coerce_float(row.get("data_quality_score")),
+        "run_mode": row.get("run_mode"),
+        "calibration_provenance": row.get("calibration_provenance"),
+        "calibration_confidence": row.get("calibration_confidence"),
         "slippage_est_bps": _coerce_float(row.get("slippage_est_bps")),
         "cost_dollars_est": _coerce_float(row.get("cost_dollars_est")),
         "net_rr_t1_est": _coerce_float(row.get("net_rr_t1_est")),
@@ -310,6 +504,17 @@ def upsert_signal(row: dict, packet: dict = None) -> None:
         "fwd_1d_ret": _coerce_float(row.get("fwd_1d_ret")),
         "fwd_3d_ret": _coerce_float(row.get("fwd_3d_ret")),
         "fwd_5d_ret": _coerce_float(row.get("fwd_5d_ret")),
+        "fwd_10d_ret": _coerce_float(row.get("fwd_10d_ret")),
+        "fwd_20d_ret": _coerce_float(row.get("fwd_20d_ret")),
+        "entry_model_date": row.get("entry_model_date"),
+        "entry_model_price": _coerce_float(row.get("entry_model_price")),
+        "stop_model_price": _coerce_float(row.get("stop_model_price")),
+        "target_model_price": _coerce_float(row.get("target_model_price")),
+        "triggered_model": _coerce_bool(row.get("triggered_model")),
+        "days_to_entry": _coerce_int(row.get("days_to_entry")),
+        "days_to_stop": _coerce_int(row.get("days_to_stop")),
+        "days_to_target": _coerce_int(row.get("days_to_target")),
+        "realized_r": _coerce_float(row.get("realized_r")),
         "outcome_r": _coerce_float(row.get("outcome_r")),
         "outcome_status": row.get("outcome_status"),
         "hit_target_1": _coerce_bool(row.get("hit_target_1")),
@@ -478,7 +683,7 @@ def sync_csv_to_db() -> None:
             insert_trade(row)
 
 
-def get_open_trades() -> list[dict]:
+def get_open_trades() -> List[dict]:
     """Return all open trades as a list of dicts."""
     initialize()
     with _connect() as conn:
@@ -570,3 +775,86 @@ def load_signal_packet(signal_date: str, symbol: str):
         return json.loads(row["packet_json"])
     except json.JSONDecodeError:
         return None
+
+
+def upsert_backtest_event(row: dict) -> None:
+    initialize()
+    now = _now_iso()
+    payload = {
+        "replay_mode": row.get("replay_mode"),
+        "evaluation_date": row.get("evaluation_date"),
+        "symbol": row.get("symbol"),
+        "setup_state": row.get("setup_state"),
+        "setup_family": row.get("setup_family"),
+        "setup_stage": row.get("setup_stage"),
+        "actionability_label": row.get("actionability_label"),
+        "trigger_type": row.get("trigger_type"),
+        "structural_score": _coerce_float(row.get("structural_score")),
+        "breakout_readiness_score": _coerce_float(row.get("breakout_readiness_score")),
+        "trigger_readiness_score": _coerce_float(row.get("trigger_readiness_score")),
+        "pivot_level": _coerce_float(row.get("pivot_level")),
+        "trigger_level": _coerce_float(row.get("trigger_level")),
+        "production_score": _coerce_float(row.get("production_score")),
+        "sizing_tier": row.get("sizing_tier"),
+        "pivot_zone": row.get("pivot_zone"),
+        "trigger_band": row.get("trigger_band"),
+        "breakout_band": row.get("breakout_band"),
+        "structural_band": row.get("structural_band"),
+        "dominant_negative_flags": json.dumps(row.get("dominant_negative_flags", []), default=str),
+        "interaction_cluster_flags": json.dumps(row.get("interaction_cluster_flags", []), default=str),
+        "readiness_rebalance_flags": json.dumps(row.get("readiness_rebalance_flags", []), default=str),
+        "pivot_position": row.get("pivot_position"),
+        "pivot_distance_pct": _coerce_float(row.get("pivot_distance_pct")),
+        "extension_atr": _coerce_float(row.get("extension_atr")),
+        "reward_risk_now": _coerce_float(row.get("reward_risk_now")),
+        "short_ma_rising": _coerce_bool(row.get("short_ma_rising")),
+        "tightening_to_short_ma": _coerce_bool(row.get("tightening_to_short_ma")),
+        "larger_ma_supportive": _coerce_bool(row.get("larger_ma_supportive")),
+        "avwap_supportive": _coerce_bool(row.get("avwap_supportive")),
+        "avwap_resistance": _coerce_bool(row.get("avwap_resistance")),
+        "avwap_context": row.get("avwap_context"),
+        "overhead_supply_score": _coerce_float(row.get("overhead_supply_score")),
+        "contraction_score": _coerce_float(row.get("contraction_score")),
+        "freshness_label": row.get("freshness_label"),
+        "calibration_provenance": row.get("calibration_provenance"),
+        "calibration_confidence": row.get("calibration_confidence"),
+        "fwd_1d_ret": _coerce_float(row.get("fwd_1d_ret")),
+        "fwd_3d_ret": _coerce_float(row.get("fwd_3d_ret")),
+        "fwd_5d_ret": _coerce_float(row.get("fwd_5d_ret")),
+        "fwd_10d_ret": _coerce_float(row.get("fwd_10d_ret")),
+        "return_5d": _coerce_float(row.get("return_5d")),
+        "return_10d": _coerce_float(row.get("return_10d")),
+        "fwd_20d_ret": _coerce_float(row.get("fwd_20d_ret")),
+        "max_favorable_excursion_pct": _coerce_float(row.get("max_favorable_excursion_pct")),
+        "max_adverse_excursion_pct": _coerce_float(row.get("max_adverse_excursion_pct")),
+        "realized_r": _coerce_float(row.get("realized_r")),
+        "outcome_status": row.get("outcome_status"),
+        "target_1_before_stop": _coerce_bool(row.get("target_1_before_stop")),
+        "stop_before_target_1": _coerce_bool(row.get("stop_before_target_1")),
+        "payload_json": json.dumps(row, default=str),
+        "created_at": now,
+        "updated_at": now,
+    }
+    columns = list(payload.keys())
+    update_columns = [c for c in columns if c not in {"replay_mode", "evaluation_date", "symbol", "created_at"}]
+    with _connect() as conn:
+        conn.execute(
+            f"""
+            INSERT INTO backtest_events ({", ".join(columns)})
+            VALUES ({", ".join(":" + c for c in columns)})
+            ON CONFLICT(replay_mode, evaluation_date, symbol) DO UPDATE SET
+                {", ".join(f"{c}=excluded.{c}" for c in update_columns)}
+            """,
+            payload,
+        )
+
+
+def load_backtest_events(replay_mode:Optional[str] = None) -> pd.DataFrame:
+    initialize()
+    query = "SELECT * FROM backtest_events"
+    params: tuple = ()
+    if replay_mode:
+        query += " WHERE replay_mode = ?"
+        params = (replay_mode,)
+    with _connect() as conn:
+        return pd.read_sql_query(query, conn, params=params)

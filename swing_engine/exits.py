@@ -13,7 +13,7 @@ CLI: python -m swing_engine exits
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, List
 
 import pandas as pd
 
@@ -270,7 +270,7 @@ def evaluate_open_trade(
 def run_exit_scan(
     data_store: Optional[dict] = None,
     symbol_filter: Optional[str] = None,
-) -> list[dict]:
+) -> List[dict]:
     """
     Evaluate all open positions and print/return exit recommendations.
 
@@ -381,7 +381,7 @@ def run_exit_scan(
     return recommendations
 
 
-def print_exit_report(recommendations: list[dict]) -> None:
+def print_exit_report(recommendations: List[dict]) -> None:
     """Print a detailed exit report. Useful for end-of-day review."""
     if not recommendations:
         print("  No open positions.")

@@ -4,7 +4,7 @@ trigger context.
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, List
 
 import numpy as np
 import pandas as pd
@@ -32,14 +32,14 @@ def _band_ratio(value: float, outer_low: float, ideal_low: float, ideal_high: fl
     return _linear_ratio(outer_high - value, 0.0, outer_high - ideal_high)
 
 
-def add_smas(df: pd.DataFrame, periods: list[int]) -> pd.DataFrame:
+def add_smas(df: pd.DataFrame, periods: List[int]) -> pd.DataFrame:
     df = df.copy()
     for period in periods:
         df[f"sma_{period}"] = df["close"].rolling(period).mean()
     return df
 
 
-def add_atr(df: pd.DataFrame, period: int | None = None) -> pd.DataFrame:
+def add_atr(df: pd.DataFrame, period:Optional[int] = None) -> pd.DataFrame:
     period = period or cfg.ATR_PERIOD
     df = df.copy()
     prev_close = df["close"].shift(1)
@@ -55,7 +55,7 @@ def add_atr(df: pd.DataFrame, period: int | None = None) -> pd.DataFrame:
     return df
 
 
-def add_relative_volume(df: pd.DataFrame, period: int | None = None) -> pd.DataFrame:
+def add_relative_volume(df: pd.DataFrame, period:Optional[int] = None) -> pd.DataFrame:
     period = period or cfg.RVOL_PERIOD
     df = df.copy()
     avg_volume = df["volume"].rolling(period).mean()
@@ -124,7 +124,7 @@ def find_recent_low(daily_df: pd.DataFrame, lookback: int = 60) -> dict:
     return {"price": round(float(row["low"]), 2), "date": row["date"].strftime("%Y-%m-%d")}
 
 
-def calc_relative_strength(sym_daily: pd.DataFrame, spy_daily: pd.DataFrame, periods: list[int] | None = None) -> dict:
+def calc_relative_strength(sym_daily: pd.DataFrame, spy_daily: pd.DataFrame, periods:Optional[List[int]] = None) -> dict:
     periods = periods or [20, 60, 120]
     rs = {"benchmark_status": "available"}
     for period in periods:
@@ -259,7 +259,7 @@ def assess_chart_quality(daily_df: pd.DataFrame) -> dict:
     }
 
 
-def assess_overhead_supply(price: float, daily_df: pd.DataFrame, pivots: dict, avwap_map: dict, reference_levels: dict | None = None) -> dict:
+def assess_overhead_supply(price: float, daily_df: pd.DataFrame, pivots: dict, avwap_map: dict, reference_levels:Optional[dict] = None) -> dict:
     if not price or daily_df.empty:
         return {"score": 40.0, "detail": "Overhead supply unavailable"}
     reference_levels = reference_levels or {}
@@ -417,7 +417,7 @@ def _recent_contraction_ratio(daily_df: pd.DataFrame) -> float:
     return recent_range / prior_range if prior_range > 0 else 1.0
 
 
-def _tight_close_pct(daily_df: pd.DataFrame, lookback: int = 5) -> float | None:
+def _tight_close_pct(daily_df: pd.DataFrame, lookback: int = 5) -> Optional[float]:
     sub = daily_df.tail(lookback)
     if sub.empty:
         return None
@@ -617,7 +617,7 @@ def sma5_tomorrow_target(daily_df: pd.DataFrame) -> Optional[float]:
     return round(float(5 * current_sma5 - last_4), 2)
 
 
-def extract_ma_state(df: pd.DataFrame, sma_periods: list[int], label: str) -> dict:
+def extract_ma_state(df: pd.DataFrame, sma_periods: List[int], label: str) -> dict:
     if df.empty:
         return {"error": f"Insufficient {label} data"}
     state = {"last_close": round(float(df["close"].iloc[-1]), 2)}
@@ -666,7 +666,7 @@ def extract_ma_state(df: pd.DataFrame, sma_periods: list[int], label: str) -> di
     return state
 
 
-def calc_confluence(price: float, daily_state: dict, pivots: dict, avwap_map: dict, reference_levels: dict | None = None) -> dict:
+def calc_confluence(price: float, daily_state: dict, pivots: dict, avwap_map: dict, reference_levels:Optional[dict] = None) -> dict:
     if not price:
         return {"support": 0, "resistance": 0, "score": 0}
     tol = price * 0.015
@@ -694,7 +694,7 @@ def calc_confluence(price: float, daily_state: dict, pivots: dict, avwap_map: di
     }
 
 
-def compute_breakout_context(daily_df: pd.DataFrame, weekly_df: pd.DataFrame, intraday_df: pd.DataFrame, spy_daily: pd.DataFrame | None = None, avwap_map: dict | None = None) -> dict:
+def compute_breakout_context(daily_df: pd.DataFrame, weekly_df: pd.DataFrame, intraday_df: pd.DataFrame, spy_daily:Optional[pd.DataFrame] = None, avwap_map:Optional[dict] = None) -> dict:
     if daily_df.empty:
         return {}
     avwap_map = avwap_map or {}

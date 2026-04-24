@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Optional
+from typing import Optional, List
 
 from . import config as cfg
 
@@ -53,7 +53,7 @@ def generate_narrative(packet: dict, regime: dict) -> Optional[str]:
         return None
 
 
-def generate_narratives(packets: dict, regime: dict, min_score: int | None = None, selected_symbols: list[str] | None = None, max_count: int | None = None) -> dict:
+def generate_narratives(packets: dict, regime: dict, min_score:Optional[int] = None, selected_symbols:Optional[List[str]] = None, max_count:Optional[int] = None) -> dict:
     api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key:
         return {}

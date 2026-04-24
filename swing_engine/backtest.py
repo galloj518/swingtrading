@@ -1,524 +1,377 @@
 """
-Walk-forward backtesting framework.
+Historical event-study and walk-forward replay backtesting.
 
-Two-layer design:
-  1. SingleSymbolBacktester — replays the scoring engine bar-by-bar on
-     a historical price series, producing a signal log with simulated outcomes.
-  2. WalkForwardEngine — slices time into in-sample/out-of-sample windows,
-     builds a calibration profile on in-sample signals, then evaluates
-     predictive power on out-of-sample signals.
-
-CLI:
-    python -m swing_engine backtest [--start 2023-01-01] [--symbols NVDA AVGO]
-
-No new dependencies — uses existing scoring, features, regime, calibration
-modules alongside pandas/numpy.
+This module reuses the live packet/scoring pipeline on date-sliced historical
+data so signal snapshots are generated without future leakage.
 """
 from __future__ import annotations
+from typing import Optional, List, Tuple
 
 import json
-import warnings
-from datetime import date, timedelta
+from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
-from typing import Optional
 
-import numpy as np
 import pandas as pd
 
+from . import calibration
+from . import calibration_setups
+from . import checklist
 from . import config as cfg
-from . import features as feat
-from . import scoring
+from . import data as mdata
+from . import db
+from . import packets
 from . import regime as regime_mod
-from . import events
-from . import calibration as cal
+from . import signals
+from . import smoke
+from . import run_health
 
 
-warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
+BACKTEST_REPORT_DIR = cfg.REPORTS_DIR / "backtests"
+BACKTEST_REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ---------------------------------------------------------------------------
-# Single-symbol bar-by-bar backtest
-# ---------------------------------------------------------------------------
-
-class SingleSymbolBacktester:
-    """
-    Replay the scoring engine on a historical daily series.
-
-    On each bar, reconstructs a state dict from the data available at that
-    bar (no look-ahead) and records the score, action bias, and setup type.
-    Then simulates forward N bars to determine the outcome.
-
-    This is intentionally a simplified version — it captures the daily/weekly
-    gate pass/fail, idea quality, and timing scores, but skips intraday data
-    and some cross-symbol features (group strength) that require a full daily run.
-    """
-
-    def __init__(
-        self,
-        symbol: str,
-        daily_df: pd.DataFrame,
-        spy_df: pd.DataFrame,
-        forward_bars: int = 5,
-        min_score_to_record: float = 50.0,
-        slippage_bps: float = 6.0,
-    ):
-        self.symbol = symbol
-        self.daily_df = daily_df.copy().reset_index(drop=True)
-        self.spy_df = spy_df.copy()
-        self.forward_bars = forward_bars
-        self.min_score_to_record = min_score_to_record
-        self.slippage_bps = slippage_bps
-
-        # Pre-compute SPY returns for relative strength
-        if not spy_df.empty and "close" in spy_df.columns:
-            self._spy_series = spy_df.set_index("date")["close"].sort_index()
-        else:
-            self._spy_series = pd.Series(dtype=float)
-
-    def run(self) -> pd.DataFrame:
-        """
-        Run the bar-by-bar simulation.
-
-        Returns:
-            DataFrame of signal records with simulated outcomes.
-        """
-        daily = self.daily_df
-        n = len(daily)
-        min_bars = max(cfg.DAILY_SMA_PERIODS) + 20
-
-        records = []
-
-        for i in range(min_bars, n - self.forward_bars):
-            slice_df = daily.iloc[: i + 1].copy()
-            bar_date = slice_df["date"].iloc[-1]
-
-            try:
-                record = self._score_bar(slice_df, bar_date, i)
-            except Exception:
-                continue
-
-            if record is None:
-                continue
-            if record.get("score", 0) < self.min_score_to_record:
-                continue
-
-            # Simulate forward outcome
-            future = daily.iloc[i + 1: i + 1 + self.forward_bars]
-            outcome = self._simulate_outcome(record, future)
-            record.update(outcome)
-            records.append(record)
-
-        return pd.DataFrame(records)
-
-    def _score_bar(self, slice_df: pd.DataFrame, bar_date, bar_idx: int) -> Optional[dict]:
-        """Score a single bar using the full feature/scoring pipeline."""
-        # Add indicators
-        df = feat.add_smas(slice_df, cfg.DAILY_SMA_PERIODS)
-        df = feat.add_atr(df)
-        df = feat.add_relative_volume(df)
-
-        # Build weekly from available slice
-        from . import data as mdata
-        weekly_df = mdata.build_weekly(df)
-        if weekly_df.empty:
-            return None
-        weekly_df = feat.add_smas(weekly_df, cfg.WEEKLY_SMA_PERIODS)
-
-        # Extract MA states
-        daily_state = feat.extract_ma_state(df, cfg.DAILY_SMA_PERIODS, "daily")
-        weekly_state = feat.extract_ma_state(weekly_df, cfg.WEEKLY_SMA_PERIODS, "weekly")
-
-        # Relative strength
-        bar_date_ts = pd.Timestamp(bar_date)
-        rs_20d = rs_60d = 0.0
-        if not self._spy_series.empty:
-            rs_20d, rs_60d = _calc_rs(df, self._spy_series, bar_date_ts)
-
-        # Gate checks
-        weekly_gate = scoring._check_weekly_gate(weekly_state)
-        daily_gate = scoring._check_daily_gate(daily_state)
-
-        if not weekly_gate["passed"] and not daily_gate["passed"]:
-            return None  # Skip broken-structure bars for efficiency
-
-        # Get last close and ATR
-        last_close = float(df["close"].iloc[-1])
-        atr_series = df.get("atr") if "atr" in df.columns else pd.Series(dtype=float)
-        atr = float(atr_series.iloc[-1]) if not atr_series.empty else last_close * 0.015
-
-        # Simplified packet for scoring
-        packet = {
-            "symbol": self.symbol,
-            "daily": {**daily_state, "last_close": last_close, "atr": atr},
-            "weekly": weekly_state,
-            "relative_strength": {"rs_20d": rs_20d, "rs_60d": rs_60d},
-        }
-
-        # Score using the gate-based engine
-        score_result = scoring.score_symbol(
-            daily_state=daily_state,
-            weekly_state=weekly_state,
-            relative_strength={"rs_20d": rs_20d, "rs_60d": rs_60d},
-            additional_features={},
-            calibration_context={},
-        )
-
-        pivots = feat.get_daily_pivots(df)
-        recent_high = feat.find_recent_high(df, lookback=60)
-        entry_zone = scoring.calc_entry_zone(daily_state, pivots=pivots)
-        event_ctx = events.get_event_context(bar_date_ts.strftime("%Y-%m-%d"))
-        setup = scoring.classify_setup(
-            daily_state,
-            score_result.get("score", 0),
-            score_result.get("action_bias", "wait"),
-            recent_high,
-            last_close,
-            entry_zone=entry_zone,
-            pivots=pivots,
-            event_risk=event_ctx,
-            weekly_state=weekly_state,
-        )
-        tradeability = scoring.calc_tradeability(
-            score_result,
-            entry_zone,
-            setup,
-            data_quality={"score": 100.0, "label": "Backtest"},
-        )
-
-        # Regime (simplified — SPY only)
-        spy_state = _build_spy_state_approx(self._spy_series, bar_date_ts)
-        regime_result = regime_mod.calc_regime(
-            spy=spy_state, qqq=spy_state, soxx=spy_state, dia=spy_state,
-        )
-
-        return {
-            "date": bar_date_ts.strftime("%Y-%m-%d"),
-            "symbol": self.symbol,
-            "score": score_result.get("score", 0),
-            "idea_quality_score": score_result.get("idea_quality_score", 0),
-            "entry_timing_score": score_result.get("entry_timing_score", 0),
-            "tradeability_score": tradeability.get("score", score_result.get("score", 0)),
-            "action_bias": score_result.get("action_bias", "wait"),
-            "setup_type": setup.get("type"),
-            "regime": regime_result.get("regime", "unknown"),
-            "weekly_gate": weekly_gate["passed"],
-            "daily_gate": daily_gate["passed"],
-            "entry_price": last_close,
-            "atr": atr,
-        }
-
-    def _simulate_outcome(self, record: dict, future: pd.DataFrame) -> dict:
-        """
-        Simulate forward outcome for a given signal bar.
-
-        Applies slippage to the entry price, then checks how the trade
-        performed over `forward_bars` bars.
-        """
-        if future.empty:
-            return {"fwd_5d_ret": None, "outcome_r": None, "simulated_stop": None}
-
-        entry = record["entry_price"]
-        atr = record["atr"]
-        slip = entry * self.slippage_bps / 10_000
-        effective_entry = entry + slip  # long entry: slippage adds to cost
-
-        stop = effective_entry - 1.5 * atr
-        target_1 = effective_entry + 2.0 * atr
-        risk = effective_entry - stop
-
-        fwd_close = float(future["close"].iloc[-1])
-        fwd_ret = round((fwd_close - effective_entry) / effective_entry * 100, 2)
-
-        outcome_r = round((fwd_close - effective_entry) / risk, 2) if risk > 0 else None
-
-        # Check if stop was hit before target
-        stop_hit = bool((future["low"] <= stop).any())
-        t1_hit = bool((future["high"] >= target_1).any())
-
-        # Determine which came first
-        t1_before_stop = None
-        if stop_hit or t1_hit:
-            stop_bar = future[future["low"] <= stop].index.min() if stop_hit else float("inf")
-            t1_bar = future[future["high"] >= target_1].index.min() if t1_hit else float("inf")
-            t1_before_stop = t1_bar <= stop_bar
-
-        return {
-            "fwd_5d_ret": fwd_ret,
-            "outcome_r": outcome_r,
-            "simulated_stop": round(stop, 2),
-            "simulated_target_1": round(target_1, 2),
-            "stop_hit": stop_hit,
-            "t1_hit": t1_hit,
-            "t1_before_stop": t1_before_stop,
-        }
+@dataclass
+class ReplayBundle:
+    symbol: str
+    full_bundle: dict
 
 
-# ---------------------------------------------------------------------------
-# Portfolio-level run
-# ---------------------------------------------------------------------------
-
-def run_backtest(
-    symbols: list[str],
-    daily_data_store: dict,
-    spy_df: pd.DataFrame,
-    start_date: str = None,
-    end_date: str = None,
-    min_score: float = 55.0,
-    slippage_bps: float = 6.0,
-) -> pd.DataFrame:
-    """
-    Run SingleSymbolBacktester for each symbol and combine results.
-
-    Args:
-        symbols: Symbols to backtest.
-        daily_data_store: {symbol: {"daily": df, ...}} from data.load_all().
-        spy_df: SPY daily DataFrame for relative strength and regime.
-        start_date: ISO date string (inclusive). Defaults to BACKTEST_START_DATE.
-        end_date: ISO date string (inclusive). Defaults to today.
-        min_score: Minimum score to include a signal in the output.
-        slippage_bps: Simulated entry slippage in basis points.
-
-    Returns:
-        Combined DataFrame of all signals with outcomes.
-    """
-    start = pd.Timestamp(start_date or cfg.BACKTEST_START_DATE)
-    end = pd.Timestamp(end_date or date.today().isoformat())
-
-    all_records = []
-    for sym in symbols:
-        daily = daily_data_store.get(sym, {}).get("daily")
-        if daily is None or daily.empty:
-            continue
-
-        # Filter to date range
-        daily = daily.copy()
-        daily["date"] = pd.to_datetime(daily["date"])
-        daily = daily[(daily["date"] >= start) & (daily["date"] <= end)].reset_index(drop=True)
-
-        if len(daily) < 60:
-            continue
-
-        bt = SingleSymbolBacktester(
-            symbol=sym,
-            daily_df=daily,
-            spy_df=spy_df,
-            min_score_to_record=min_score,
-            slippage_bps=slippage_bps,
-        )
-        try:
-            records = bt.run()
-            if not records.empty:
-                all_records.append(records)
-        except Exception as e:
-            print(f"  BACKTEST: {sym} failed: {e}")
-
-    if not all_records:
+def _slice_df(df: pd.DataFrame, evaluation_date: str) -> pd.DataFrame:
+    if df is None or df.empty or "date" not in df.columns:
         return pd.DataFrame()
-
-    return pd.concat(all_records, ignore_index=True)
-
-
-# ---------------------------------------------------------------------------
-# Walk-forward engine
-# ---------------------------------------------------------------------------
-
-class WalkForwardEngine:
-    """
-    Rolling in-sample / out-of-sample validation.
-
-    For each window:
-      1. Run backtest on in-sample period to generate signals.
-      2. Build calibration profile from in-sample signals.
-      3. Evaluate calibration predictive power on out-of-sample signals.
-      4. Record per-window statistics.
-
-    This validates that the scoring system generalises across time periods
-    rather than fitting to one specific market regime.
-    """
-
-    def __init__(
-        self,
-        symbols: list[str],
-        daily_data_store: dict,
-        spy_df: pd.DataFrame,
-        in_sample_months: int = None,
-        out_of_sample_months: int = None,
-        step_months: int = None,
-        start_date: str = None,
-    ):
-        self.symbols = symbols
-        self.data_store = daily_data_store
-        self.spy_df = spy_df
-        self.in_sample_months = in_sample_months or cfg.WALK_FORWARD_IN_SAMPLE_MONTHS
-        self.oos_months = out_of_sample_months or cfg.WALK_FORWARD_OUT_OF_SAMPLE_MONTHS
-        self.step_months = step_months or cfg.WALK_FORWARD_STEP_MONTHS
-        self.start = pd.Timestamp(start_date or cfg.BACKTEST_START_DATE)
-
-    def run(self) -> list[dict]:
-        """
-        Execute all walk-forward windows.
-
-        Returns:
-            List of window dicts with in-sample metrics, OOS metrics,
-            and calibration alignment.
-        """
-        windows = self._build_windows()
-        results = []
-
-        for i, (is_start, is_end, oos_start, oos_end) in enumerate(windows):
-            print(f"  WF window {i+1}/{len(windows)}: "
-                  f"IS {is_start.date()} -> {is_end.date()} | "
-                  f"OOS {oos_start.date()} -> {oos_end.date()}")
-
-            # In-sample backtest
-            is_signals = run_backtest(
-                self.symbols, self.data_store, self.spy_df,
-                start_date=is_start.isoformat()[:10],
-                end_date=is_end.isoformat()[:10],
-            )
-
-            # Out-of-sample backtest
-            oos_signals = run_backtest(
-                self.symbols, self.data_store, self.spy_df,
-                start_date=oos_start.isoformat()[:10],
-                end_date=oos_end.isoformat()[:10],
-            )
-
-            is_metrics = _window_metrics(is_signals, "in_sample")
-            oos_metrics = _window_metrics(oos_signals, "out_of_sample")
-
-            results.append({
-                "window": i + 1,
-                "is_start": is_start.isoformat()[:10],
-                "is_end": is_end.isoformat()[:10],
-                "oos_start": oos_start.isoformat()[:10],
-                "oos_end": oos_end.isoformat()[:10],
-                **is_metrics,
-                **oos_metrics,
-            })
-
-        return results
-
-    def _build_windows(self) -> list[tuple]:
-        windows = []
-        cur = self.start
-        overall_end = pd.Timestamp(date.today().isoformat())
-
-        while True:
-            is_start = cur
-            is_end = cur + pd.DateOffset(months=self.in_sample_months) - timedelta(days=1)
-            oos_start = is_end + timedelta(days=1)
-            oos_end = oos_start + pd.DateOffset(months=self.oos_months) - timedelta(days=1)
-
-            if oos_end > overall_end:
-                break
-
-            windows.append((is_start, is_end, oos_start, oos_end))
-            cur += pd.DateOffset(months=self.step_months)
-
-        return windows
-
-    def summary(self, window_results: list[dict]) -> pd.DataFrame:
-        """Return a summary DataFrame of per-window metrics."""
-        if not window_results:
-            return pd.DataFrame()
-        df = pd.DataFrame(window_results)
-        return df
-
-    def save_report(self, window_results: list[dict]) -> Path:
-        """Save walk-forward report to reports directory."""
-        report_path = cfg.REPORTS_DIR / f"walkforward_{date.today().isoformat()}.json"
-        with open(report_path, "w") as f:
-            json.dump(window_results, f, indent=2, default=str)
-        print(f"  Walk-forward report saved: {report_path}")
-        return report_path
+    out = df.copy()
+    out["date"] = pd.to_datetime(out["date"], errors="coerce")
+    cutoff = pd.Timestamp(evaluation_date)
+    out = out[out["date"] <= cutoff].copy()
+    return out.reset_index(drop=True)
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+def _slice_intraday(df: pd.DataFrame, evaluation_date: str) -> pd.DataFrame:
+    if df is None or df.empty or "date" not in df.columns:
+        return pd.DataFrame()
+    out = df.copy()
+    out["date"] = pd.to_datetime(out["date"], errors="coerce")
+    cutoff_day = pd.Timestamp(evaluation_date).normalize()
+    out = out[out["date"].dt.normalize() <= cutoff_day].copy()
+    if out.empty:
+        return out
+    out = out[out["date"].dt.normalize() == out["date"].dt.normalize().max()].copy()
+    return out.reset_index(drop=True)
 
-def _window_metrics(signals: pd.DataFrame, prefix: str) -> dict:
-    """Compute standard backtest metrics for a signal window."""
-    if signals.empty:
-        return {
-            f"{prefix}_n_signals": 0,
-            f"{prefix}_win_rate": None,
-            f"{prefix}_avg_r": None,
-            f"{prefix}_profit_factor": None,
-            f"{prefix}_sharpe": None,
-        }
 
-    outcomes = signals["outcome_r"].dropna()
-    n = len(signals)
-
-    if outcomes.empty:
-        return {
-            f"{prefix}_n_signals": n,
-            f"{prefix}_win_rate": None,
-            f"{prefix}_avg_r": None,
-            f"{prefix}_profit_factor": None,
-            f"{prefix}_sharpe": None,
-        }
-
-    wins = float((outcomes > 0).sum())
-    win_rate = round(wins / len(outcomes), 3)
-    avg_r = round(float(outcomes.mean()), 3)
-
-    gross_profit = float(outcomes[outcomes > 0].sum())
-    gross_loss = abs(float(outcomes[outcomes < 0].sum()))
-    profit_factor = round(gross_profit / gross_loss, 2) if gross_loss > 0 else None
-
-    sharpe = round(
-        float(outcomes.mean() / outcomes.std()), 2
-    ) if len(outcomes) >= 5 and outcomes.std() > 0 else None
-
+def build_historical_snapshot_bundle(full_bundle: dict, evaluation_date: str) -> dict:
+    daily = _slice_df(full_bundle.get("daily", pd.DataFrame()), evaluation_date)
+    weekly = mdata.build_weekly(daily)
+    intraday = _slice_intraday(full_bundle.get("intraday", pd.DataFrame()), evaluation_date)
     return {
-        f"{prefix}_n_signals": n,
-        f"{prefix}_win_rate": win_rate,
-        f"{prefix}_avg_r": avg_r,
-        f"{prefix}_profit_factor": profit_factor,
-        f"{prefix}_sharpe": sharpe,
+        "daily": daily,
+        "weekly": weekly,
+        "intraday": intraday,
+        "meta": {
+            "daily": {"source": "historical_replay", "evaluation_date": evaluation_date},
+            "weekly": {"source": "historical_replay", "evaluation_date": evaluation_date},
+            "intraday": {"source": "historical_replay", "evaluation_date": evaluation_date, "freshness_label": "historical"},
+        },
     }
 
 
-def _calc_rs(df: pd.DataFrame, spy_series: pd.Series, as_of: pd.Timestamp) -> tuple[float, float]:
-    """Compute 20d and 60d relative strength vs SPY."""
-    try:
-        close = df.set_index("date")["close"]
-        sym_ret_20 = float(close.iloc[-1] / close.iloc[-21] - 1) if len(close) >= 21 else 0.0
-        sym_ret_60 = float(close.iloc[-1] / close.iloc[-61] - 1) if len(close) >= 61 else 0.0
+def _benchmark_states(benchmark_store: dict, evaluation_date: str) -> Tuple[pd.DataFrame, dict]:
+    from . import features as feat
 
-        spy_aligned = spy_series.reindex(close.index, method="ffill")
-        spy_ret_20 = float(spy_aligned.iloc[-1] / spy_aligned.iloc[-21] - 1) if len(spy_aligned) >= 21 else 0.0
-        spy_ret_60 = float(spy_aligned.iloc[-1] / spy_aligned.iloc[-61] - 1) if len(spy_aligned) >= 61 else 0.0
+    bench_states = {}
+    spy_daily = pd.DataFrame()
+    for symbol, bundle in benchmark_store.items():
+        sliced = build_historical_snapshot_bundle(bundle, evaluation_date)["daily"]
+        if sliced.empty:
+            bench_states[symbol] = {}
+            continue
+        if symbol == "SPY":
+            spy_daily = sliced.copy()
+        sliced = feat.add_smas(sliced, cfg.DAILY_SMA_PERIODS)
+        sliced = feat.add_atr(sliced)
+        bench_states[symbol] = feat.extract_ma_state(sliced, cfg.DAILY_SMA_PERIODS, "daily")
+    return spy_daily, bench_states
 
-        rs_20d = round((sym_ret_20 - spy_ret_20) * 100, 2)
-        rs_60d = round((sym_ret_60 - spy_ret_60) * 100, 2)
-        return rs_20d, rs_60d
-    except Exception:
-        return 0.0, 0.0
+
+def _regime_for_date(benchmark_store: dict, evaluation_date: str) -> Tuple[pd.DataFrame, dict]:
+    spy_daily, bench_states = _benchmark_states(benchmark_store, evaluation_date)
+    regime = regime_mod.calc_regime(
+        spy=bench_states.get("SPY", {}),
+        qqq=bench_states.get("QQQ", {}),
+        soxx=bench_states.get("SOXX", {}),
+        dia=bench_states.get("DIA", {}),
+        vix_close=None,
+        macro_signals={},
+    )
+    regime["benchmark_status"] = {symbol: bool(state) for symbol, state in bench_states.items()}
+    regime["quality"] = "healthy" if all(regime["benchmark_status"].values()) else "degraded"
+    return spy_daily, regime
 
 
-def _build_spy_state_approx(spy_series: pd.Series, as_of: pd.Timestamp) -> dict:
-    """Build a minimal SPY MA state for regime estimation."""
-    if spy_series.empty:
-        return {}
-    try:
-        idx = spy_series.index[spy_series.index <= as_of]
-        if len(idx) < 50:
-            return {}
-        sub = spy_series.loc[idx].tail(250)
-        close = sub.iloc[-1]
-        sma50 = sub.tail(50).mean()
-        sma200 = sub.tail(200).mean() if len(sub) >= 200 else sma50
-        return {
-            "close_above_sma_50": bool(close > sma50),
-            "close_above_sma_200": bool(close > sma200),
-            "sma20_above_sma50": bool(sub.tail(20).mean() > sma50),
-            "ma_stack": "bullish" if close > sma50 > sma200 else "bearish",
-            "dist_from_sma_50_pct": round((close / sma50 - 1) * 100, 2),
-            "dist_from_sma_200_pct": round((close / sma200 - 1) * 100, 2),
-        }
-    except Exception:
-        return {}
+def _valid_evaluation_dates(bundle: dict, start_date: str, end_date: str) -> List[str]:
+    daily = bundle.get("daily", pd.DataFrame())
+    if daily.empty:
+        return []
+    dates = pd.to_datetime(daily["date"], errors="coerce").dropna()
+    start = pd.Timestamp(start_date)
+    end = pd.Timestamp(end_date)
+    min_ready = max(cfg.DAILY_SMA_PERIODS) + 20
+    if len(dates) <= min_ready:
+        return []
+    eligible = dates.iloc[min_ready:]
+    usable = eligible[(eligible >= start) & (eligible <= end)]
+    return [d.strftime("%Y-%m-%d") for d in usable]
+
+
+def _snapshot_row_from_packet(packet: dict, regime: dict, evaluation_date: str, replay_mode: str) -> dict:
+    snapshot = signals.build_signal_snapshot(packet, regime_label=regime.get("regime", ""), run_mode=replay_mode, signal_date=evaluation_date)
+    breakout_features = packet.get("breakout_features", {})
+    early_setup = breakout_features.get("early_setup", {})
+    avwap = breakout_features.get("avwap", {})
+    production = packet.get("score", {}).get("production_promotion", {}) or {}
+    band_profile = production.get("band_profile", {}) or {}
+    position_sizing = packet.get("position_sizing", {}) or {}
+    snapshot.update({
+        "evaluation_date": evaluation_date,
+        "replay_mode": replay_mode,
+        "pivot_position": (packet.get("score", {}).get("pivot_position", {}) or {}).get("classification"),
+        "contraction_score": breakout_features.get("contraction", {}).get("contraction_score"),
+        "short_ma_rising": early_setup.get("short_ma_rising"),
+        "larger_ma_supportive": early_setup.get("larger_ma_supportive"),
+        "avwap_supportive": avwap.get("supportive"),
+        "avwap_resistance": avwap.get("overhead_resistance"),
+        "production_score": production.get("production_score"),
+        "sizing_tier": position_sizing.get("sizing_tier"),
+        "pivot_zone": production.get("pivot_zone"),
+        "trigger_band": (band_profile.get("trigger_readiness_score") or {}).get("label"),
+        "breakout_band": (band_profile.get("breakout_readiness_score") or {}).get("label"),
+        "structural_band": (band_profile.get("structural_score") or {}).get("label"),
+        "dominant_negative_flags": list(production.get("dominant_negative_flags", [])),
+        "interaction_cluster_flags": list(production.get("interaction_cluster_flags", [])),
+        "readiness_rebalance_flags": list(production.get("readiness_rebalance_flags", [])),
+    })
+    return snapshot
+
+
+def _mature_history_as_of(history: pd.DataFrame, evaluation_date: str) -> pd.DataFrame:
+    if history is None or history.empty or "evaluation_date" not in history.columns:
+        return pd.DataFrame()
+    out = history.copy()
+    out["evaluation_date"] = pd.to_datetime(out["evaluation_date"], errors="coerce")
+    cutoff = pd.Timestamp(evaluation_date) - pd.Timedelta(days=cfg.OUTCOME_ANALYSIS_HORIZON_DAYS)
+    out = out[out["evaluation_date"] <= cutoff].copy()
+    return out.reset_index(drop=True)
+
+
+def persist_backtest_event(row: dict) -> None:
+    db.upsert_backtest_event(row)
+
+
+def generate_historical_snapshot(
+    symbol: str,
+    evaluation_date: str,
+    full_bundle: dict,
+    benchmark_store: dict,
+    threshold_profile:Optional[dict] = None,
+) -> Optional[dict]:
+    spy_daily, regime = _regime_for_date(benchmark_store, evaluation_date)
+    sliced_bundle = build_historical_snapshot_bundle(full_bundle, evaluation_date)
+    if sliced_bundle["daily"].empty or spy_daily.empty:
+        return None
+    packet = packets.build_packet(
+        symbol,
+        sliced_bundle,
+        spy_daily,
+        regime=regime,
+        threshold_profile=threshold_profile,
+    )
+    packet["actionability"] = checklist.evaluate_actionability(packet)
+    packet["_historical_regime"] = regime
+    return packet
+
+
+class HistoricalEventStudy:
+    def __init__(
+        self,
+        symbols: List[str],
+        data_store: dict,
+        benchmark_store: dict,
+        *,
+        start_date: str,
+        end_date: str,
+        replay_mode: str,
+        calibration_enabled: bool = False,
+        prior_history:Optional[pd.DataFrame] = None,
+    ):
+        self.symbols = symbols
+        self.data_store = data_store
+        self.benchmark_store = benchmark_store
+        self.start_date = start_date
+        self.end_date = end_date
+        self.replay_mode = replay_mode
+        self.calibration_enabled = calibration_enabled
+        self.prior_history = prior_history if prior_history is not None else pd.DataFrame()
+
+    def run(self) -> pd.DataFrame:
+        rows: List[dict] = []
+        for symbol in self.symbols:
+            bundle = self.data_store.get(symbol, {})
+            for evaluation_date in _valid_evaluation_dates(bundle, self.start_date, self.end_date):
+                prior = pd.DataFrame(rows)
+                signal_history = pd.concat([self.prior_history, prior], ignore_index=True) if not self.prior_history.empty else prior
+                matured_history = _mature_history_as_of(signal_history, evaluation_date)
+                threshold_profile = None
+                if self.calibration_enabled:
+                    threshold_profile = calibration_setups.derive_state_threshold_profile({}, signal_history=matured_history)
+                packet = generate_historical_snapshot(
+                    symbol,
+                    evaluation_date,
+                    bundle,
+                    self.benchmark_store,
+                    threshold_profile=threshold_profile,
+                )
+                if not packet:
+                    continue
+                snapshot = _snapshot_row_from_packet(packet, packet.get("_historical_regime", {}), evaluation_date, self.replay_mode)
+                full_history = bundle.get("daily", pd.DataFrame())
+                outcome = signals.analyze_signal_outcome(snapshot, full_history)
+                row = {**snapshot, **outcome}
+                row["return_5d"] = row.get("fwd_5d_ret")
+                row["return_10d"] = row.get("fwd_10d_ret")
+                persist_backtest_event(row)
+                rows.append(row)
+        return pd.DataFrame(rows)
+
+
+class WalkForwardReplay:
+    def __init__(
+        self,
+        symbols: List[str],
+        data_store: dict,
+        benchmark_store: dict,
+        *,
+        start_date: str,
+        end_date: str,
+        train_months:Optional[int] = None,
+        test_months:Optional[int] = None,
+    ):
+        self.symbols = symbols
+        self.data_store = data_store
+        self.benchmark_store = benchmark_store
+        self.start_date = pd.Timestamp(start_date)
+        self.end_date = pd.Timestamp(end_date)
+        self.train_months = train_months or cfg.WALK_FORWARD_IN_SAMPLE_MONTHS
+        self.test_months = test_months or cfg.WALK_FORWARD_OUT_OF_SAMPLE_MONTHS
+
+    def _windows(self) -> List[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp, pd.Timestamp]]:
+        windows = []
+        cur = self.start_date
+        while True:
+            train_start = cur
+            train_end = cur + pd.DateOffset(months=self.train_months) - pd.Timedelta(days=1)
+            test_start = train_end + pd.Timedelta(days=1)
+            test_end = test_start + pd.DateOffset(months=self.test_months) - pd.Timedelta(days=1)
+            if test_end > self.end_date:
+                break
+            windows.append((train_start, train_end, test_start, test_end))
+            cur = cur + pd.DateOffset(months=self.test_months)
+        return windows
+
+    def run(self) -> pd.DataFrame:
+        all_rows: List[dict] = []
+        for window_idx, (train_start, train_end, test_start, test_end) in enumerate(self._windows(), start=1):
+            history_df = pd.DataFrame(all_rows)
+            engine = HistoricalEventStudy(
+                self.symbols,
+                self.data_store,
+                self.benchmark_store,
+                start_date=test_start.strftime("%Y-%m-%d"),
+                end_date=test_end.strftime("%Y-%m-%d"),
+                replay_mode="backtest-walkforward",
+                calibration_enabled=True,
+                prior_history=history_df[history_df["evaluation_date"] < test_start.strftime("%Y-%m-%d")] if not history_df.empty else pd.DataFrame(),
+            )
+            test_rows = engine.run()
+            if not test_rows.empty:
+                test_rows["train_start"] = train_start.strftime("%Y-%m-%d")
+                test_rows["train_end"] = train_end.strftime("%Y-%m-%d")
+                test_rows["window"] = window_idx
+                all_rows.extend(test_rows.to_dict("records"))
+        return pd.DataFrame(all_rows)
+
+
+def _load_backtest_store(symbols: List[str], smoke_mode: bool = False) -> Tuple[dict, dict]:
+    if smoke_mode:
+        symbol_store = {symbol: smoke._data_bundle(symbol, idx) for idx, symbol in enumerate(symbols, start=10)}
+        benchmark_store = {symbol: smoke._data_bundle(symbol, idx + 1) for idx, symbol in enumerate(cfg.BENCHMARKS)}
+        return symbol_store, benchmark_store
+    symbol_store = {symbol: mdata.load_all(symbol, force=False) for symbol in symbols}
+    benchmark_store = {symbol: mdata.load_all(symbol, force=False) for symbol in cfg.BENCHMARKS}
+    return symbol_store, benchmark_store
+
+
+def _save_frame(df: pd.DataFrame, stem: str) -> Path:
+    path = BACKTEST_REPORT_DIR / f"{stem}_{date.today().isoformat()}.json"
+    run_health.atomic_write_json(path, df.to_dict("records"))
+    return path
+
+
+def run_event_backtest(
+    symbols: List[str],
+    *,
+    start_date: str,
+    end_date: str,
+    smoke_mode: bool = False,
+) -> Tuple[pd.DataFrame, Path]:
+    db.initialize()
+    data_store, benchmark_store = _load_backtest_store(symbols, smoke_mode=smoke_mode)
+    engine = HistoricalEventStudy(
+        symbols,
+        data_store,
+        benchmark_store,
+        start_date=start_date,
+        end_date=end_date,
+        replay_mode="backtest-events",
+        calibration_enabled=False,
+    )
+    df = engine.run()
+    return df, _save_frame(df, "backtest_events")
+
+
+def run_walkforward_backtest(
+    symbols: List[str],
+    *,
+    start_date: str,
+    end_date: str,
+    smoke_mode: bool = False,
+) -> Tuple[pd.DataFrame, Path]:
+    db.initialize()
+    data_store, benchmark_store = _load_backtest_store(symbols, smoke_mode=smoke_mode)
+    engine = WalkForwardReplay(
+        symbols,
+        data_store,
+        benchmark_store,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    df = engine.run()
+    return df, _save_frame(df, "backtest_walkforward")
+
+
+def calibrate_thresholds_from_backtest(replay_mode:Optional[str] = None) -> Tuple[dict, Path]:
+    history = db.load_backtest_events(replay_mode=replay_mode)
+    profile = calibration_setups.derive_state_threshold_profile({}, signal_history=history)
+    path = BACKTEST_REPORT_DIR / f"threshold_profile_{replay_mode or 'all'}_{date.today().isoformat()}.json"
+    run_health.atomic_write_json(path, profile)
+    return profile, path
+
+
+def review_backtest_results(replay_mode:Optional[str] = None) -> Tuple[dict, Path]:
+    history = db.load_backtest_events(replay_mode=replay_mode)
+    summary = calibration_setups.summarize_by_setup(history)
+    best = calibration_setups.best_segments(history)
+    report = {"summary": summary, "best_segments": best[:20], "replay_mode": replay_mode or "all"}
+    path = BACKTEST_REPORT_DIR / f"review_backtest_{replay_mode or 'all'}_{date.today().isoformat()}.json"
+    run_health.atomic_write_json(path, report)
+    return report, path

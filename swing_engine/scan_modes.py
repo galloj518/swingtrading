@@ -2,12 +2,14 @@
 Scan-mode orchestration helpers.
 """
 from __future__ import annotations
+from typing import Optional, List, Dict
 
 from datetime import datetime
 import json
 from datetime import date, timedelta
 
 from . import calibration
+from . import calibration_setups
 from . import charts
 from . import checklist
 from . import config as cfg
@@ -26,6 +28,8 @@ from .runtime_logging import get_logger, log_event
 
 
 LOGGER = get_logger()
+RUNTIME_MODE_RESEARCH = "research"
+RUNTIME_MODE_PRODUCTION = "production"
 
 
 def _unavailable_packet(symbol: str, reason: str) -> dict:
@@ -93,12 +97,12 @@ def _load_vix(force: bool = False):
     return None
 
 
-def _open_position_risk_map() -> dict[str, float]:
+def _open_position_risk_map() -> Dict[str, float]:
     try:
         open_trades = db.get_open_trades()
     except Exception:
         return {}
-    risk_map: dict[str, float] = {}
+    risk_map: Dict[str, float] = {}
     for trade in open_trades:
         symbol = str(trade.get("symbol", "")).upper()
         entry = float(trade.get("entry_price") or 0)
@@ -110,7 +114,7 @@ def _open_position_risk_map() -> dict[str, float]:
     return risk_map
 
 
-def build_scan_context(force: bool = False) -> dict:
+def build_scan_context(force: bool = False, runtime_mode: str = RUNTIME_MODE_RESEARCH) -> dict:
     db.initialize()
     mdata.clean_old_cache()
     spy_daily = _load_spy(force)
@@ -163,20 +167,34 @@ def build_scan_context(force: bool = False) -> dict:
             packet_failures.append(symbol)
             log_event(LOGGER, 30, "packet_build_fallback", symbol=symbol, reason=type(exc).__name__)
     packets.enrich_group_strength(packets_map, regime=regime)
+    if runtime_mode == RUNTIME_MODE_PRODUCTION:
+        signal_history = None
+        threshold_profile = cfg.get_production_threshold_profile()
+    else:
+        try:
+            signal_history = calibration._load_signals()
+        except Exception:
+            signal_history = None
+        threshold_profile = calibration_setups.derive_state_threshold_profile(packets_map, signal_history=signal_history)
+    packets.apply_threshold_profile(packets_map, threshold_profile, regime=regime)
     regime["breakout_overlay"] = regime_mod.calc_breakout_regime_overlay(packets_map)
     benchmark_status = {symbol: bool(data_status.get(symbol, {}).get("daily_available")) for symbol in cfg.BENCHMARKS}
     regime["benchmark_status"] = benchmark_status
     regime["quality"] = "healthy" if all(benchmark_status.values()) else "degraded"
-    calibration_profile = calibration.build_calibration_profile()
-    packets.enrich_calibration(packets_map, calibration_profile, regime=regime)
+    calibration_profile = None
+    if runtime_mode == RUNTIME_MODE_RESEARCH:
+        calibration_profile = calibration.build_calibration_profile()
+        packets.enrich_calibration(packets_map, calibration_profile, regime=regime)
     checklists = {symbol: checklist.generate_checklist(packet, regime) for symbol, packet in packets_map.items() if symbol in cfg.WATCHLIST}
     return {
+        "runtime_mode": runtime_mode,
         "spy_daily": spy_daily,
         "regime": regime,
         "packets": packets_map,
         "data_store": {**watchlist_data, **bench_data},
         "checklists": checklists,
         "calibration_profile": calibration_profile,
+        "threshold_profile": threshold_profile,
         "benchmark_status": benchmark_status,
         "benchmark_symbols": list(cfg.BENCHMARKS),
         "watch_symbols": list(cfg.WATCHLIST),
@@ -185,22 +203,31 @@ def build_scan_context(force: bool = False) -> dict:
     }
 
 
-def _ranked_symbols(context: dict) -> list[str]:
+def _ranked_symbols(context: dict) -> List[str]:
     checklists_map = context["checklists"]
     packets_map = context["packets"]
     watch_symbols = [symbol for symbol in cfg.WATCHLIST if symbol in packets_map]
     return sorted(
         watch_symbols,
         key=lambda symbol: (
+            packets_map[symbol]["score"].get("production_promotion", {}).get("priority_rank", 99),
+            -packets_map[symbol]["score"].get("production_promotion", {}).get("production_score", 0),
             checklists_map[symbol]["actionability"]["rank"],
             -packets_map[symbol]["score"].get("tradeability", {}).get("score", packets_map[symbol]["score"].get("score", 0)),
-            -packets_map[symbol]["score"].get("score", 0),
             symbol,
         ),
     )
 
 
-def _save_report(context: dict, mode: str, narratives: dict | None = None) -> None:
+def _log_watch_signals(context: dict, run_mode: str) -> None:
+    for symbol in cfg.WATCHLIST:
+        packet = context["packets"].get(symbol)
+        if not packet:
+            continue
+        signals.log_signal(packet, context["regime"].get("regime", ""), run_mode=run_mode)
+
+
+def _save_report(context: dict, mode: str, narratives:Optional[dict] = None) -> None:
     packets_map = context["packets"]
     report = {
         "date": date.today().isoformat(),
@@ -214,12 +241,12 @@ def _save_report(context: dict, mode: str, narratives: dict | None = None) -> No
     run_health.atomic_write_json(report_path, report)
 
 
-def _chart_symbols(context: dict) -> list[str]:
+def _chart_symbols(context: dict) -> List[str]:
     packets_map = context["packets"]
     checklists_map = context["checklists"]
     watchlists = dashboard._prepare_watchlists(packets_map, checklists_map)
-    selected: list[str] = []
-    for section in ("triggered", "breakout", "structural"):
+    selected: List[str] = []
+    for section in ("actionable", "near_trigger", "stalking", "continuation"):
         for row in watchlists[section]:
             if row["symbol"] not in selected:
                 selected.append(row["symbol"])
@@ -242,7 +269,7 @@ def _generate_chart_payload(context: dict) -> dict:
     )
 
 
-def _finalize_context(mode: str, context: dict, started_at: float, narratives: dict | None = None, include_dashboard: bool = True) -> dict:
+def _finalize_context(mode: str, context: dict, started_at: float, narratives:Optional[dict] = None, include_dashboard: bool = True) -> dict:
     narratives = narratives or {}
     context["run_health"] = run_health.collect_run_health(mode, context, started_at)
     run_health.persist_run_health(context["run_health"])
@@ -276,11 +303,9 @@ def run_structural(force: bool = False, include_dashboard: bool = True) -> dict:
     print(f"\n{'='*60}\n  STRUCTURAL SCAN - {date.today().isoformat()}\n{'='*60}")
     started_at = run_health.start_timer()
     context = build_scan_context(force=force)
+    _log_watch_signals(context, "run-structural")
     for symbol in cfg.WATCHLIST:
-        packet = context["packets"][symbol]
-        if packet["score"]["structural_score"] >= cfg.STRUCTURAL_MIN_SCORE:
-            signals.log_signal(packet, context["regime"].get("regime", ""))
-        packets.save_packet(symbol, packet)
+        packets.save_packet(symbol, context["packets"][symbol])
     return _finalize_context("run-structural", context, started_at, include_dashboard=include_dashboard)
 
 
@@ -288,6 +313,7 @@ def run_breakout_watch(force: bool = False, include_dashboard: bool = True) -> d
     print(f"\n{'='*60}\n  BREAKOUT WATCH SCAN - {date.today().isoformat()}\n{'='*60}")
     started_at = run_health.start_timer()
     context = build_scan_context(force=force)
+    _log_watch_signals(context, "run-breakout-watch")
     for symbol in cfg.WATCHLIST:
         packets.save_packet(symbol, context["packets"][symbol])
     return _finalize_context("run-breakout-watch", context, started_at, include_dashboard=include_dashboard)
@@ -297,6 +323,7 @@ def run_triggers(force: bool = False, include_dashboard: bool = True) -> dict:
     print(f"\n{'='*60}\n  INTRADAY TRIGGER MONITOR - {date.today().isoformat()}\n{'='*60}")
     started_at = run_health.start_timer()
     context = build_scan_context(force=force)
+    _log_watch_signals(context, "run-triggers")
     for symbol in cfg.WATCHLIST:
         packets.save_packet(symbol, context["packets"][symbol])
     return _finalize_context("run-triggers", context, started_at, include_dashboard=include_dashboard)
@@ -317,6 +344,7 @@ def run_combined(force: bool = False, include_narratives: bool = False) -> dict:
     print(f"\n{'='*60}\n  COMBINED RUN - {date.today().isoformat()}\n{'='*60}")
     started_at = run_health.start_timer()
     context = build_scan_context(force=force)
+    _log_watch_signals(context, "run")
     narratives = {}
     if include_narratives:
         ranked = _ranked_symbols(context)

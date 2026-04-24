@@ -16,7 +16,7 @@ from __future__ import annotations
 import pickle
 from datetime import date
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -88,7 +88,7 @@ def get_dynamic_peers(
     corr_matrix: pd.DataFrame,
     threshold: float = None,
     max_peers: int = 8,
-) -> list[str]:
+) -> List[str]:
     """
     Return symbols highly correlated with `symbol` over the rolling window.
 
@@ -113,7 +113,7 @@ def get_dynamic_peers(
 
 def calc_dynamic_group_risk(
     symbol: str,
-    open_positions: dict[str, float],
+    open_positions: Dict[str, float],
     corr_matrix: Optional[pd.DataFrame],
 ) -> float:
     """
@@ -164,7 +164,7 @@ def calc_dynamic_group_risk(
 # Static group fallbacks
 # ---------------------------------------------------------------------------
 
-def _static_peers(symbol: str) -> list[str]:
+def _static_peers(symbol: str) -> List[str]:
     """Return static group members when no correlation data is available."""
     for members in cfg.CORRELATION_GROUPS.values():
         if symbol.upper() in [m.upper() for m in members]:
@@ -180,7 +180,7 @@ def _same_static_group(symbol: str, other: str) -> bool:
     return False
 
 
-def _static_group_risk(symbol: str, open_positions: dict[str, float]) -> float:
+def _static_group_risk(symbol: str, open_positions: Dict[str, float]) -> float:
     """Sum risk dollars for all positions in the same static group."""
     total = 0.0
     for other, risk_dollars in open_positions.items():
@@ -189,7 +189,7 @@ def _static_group_risk(symbol: str, open_positions: dict[str, float]) -> float:
     return round(total, 2)
 
 
-def correlation_summary(corr_matrix: Optional[pd.DataFrame], symbols: list[str]) -> dict:
+def correlation_summary(corr_matrix: Optional[pd.DataFrame], symbols: List[str]) -> dict:
     """
     Produce a summary of the highest-correlation pairs for the dashboard.
 

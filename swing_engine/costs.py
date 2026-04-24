@@ -7,6 +7,7 @@ and signal scoring reflect real-world execution economics.
 No new dependencies — pure Python math.
 """
 from __future__ import annotations
+from typing import Optional
 
 from . import config as cfg
 
@@ -24,9 +25,9 @@ def calc_round_trip_cost(
     entry: float,
     shares: int,
     avg_dollar_volume: float,
-    stop: float | None = None,
-    target_1: float | None = None,
-    target_2: float | None = None,
+    stop:Optional[float] = None,
+    target_1:Optional[float] = None,
+    target_2:Optional[float] = None,
 ) -> dict:
     """
     Estimate the full round-trip execution cost for a position.

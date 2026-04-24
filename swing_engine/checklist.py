@@ -2,6 +2,7 @@
 Deterministic checklist and actionability logic.
 """
 from __future__ import annotations
+from typing import Optional
 
 from . import config as cfg
 
@@ -14,7 +15,7 @@ def _as_bool(val) -> bool:
     return bool(val)
 
 
-def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
+def evaluate_actionability(packet: dict, checks:Optional[list] = None) -> dict:
     score = packet.get("score", {})
     setup = packet.get("setup", {})
     dq = packet.get("data_quality", {})
@@ -27,13 +28,18 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
     trigger_score = float(score.get("trigger_readiness_score", 0) or 0)
     total = float(score.get("score", 0) or 0)
     freshness = str(dq.get("intraday_freshness_label", "missing"))
+    confidence_class = str(score.get("confidence_classification", "STANDARD"))
+    production = score.get("production_promotion", {})
+    extended_subtype = str(production.get("extended_subtype") or "")
 
     if setup_state == "DATA_UNAVAILABLE" or freshness == "missing":
         return {"label": "DATA UNAVAILABLE", "detail": dq.get("detail", "Fresh data unavailable"), "rank": 8, "actionable_now": False}
     if setup_state in {"FAILED", "BLOCKED"} or structural < 45:
         return {"label": "BLOCK", "detail": "Structure, failure state, or risk gates block action", "rank": 7, "actionable_now": False}
     if setup_state == "EXTENDED":
-        return {"label": "WAIT PULLBACK", "detail": score.get("decision_summary") or "Setup is too extended through the pivot to buy now", "rank": 6, "actionable_now": False}
+        if extended_subtype == "EXTENDED_CONTINUATION":
+            return {"label": "CONTINUATION ONLY", "detail": production.get("extended_detail") or "Trend remains valid, but this is no longer a first-entry breakout.", "rank": 4, "actionable_now": False}
+        return {"label": "WAIT PULLBACK", "detail": production.get("extended_detail") or score.get("decision_summary") or "Setup is too extended through the pivot to buy now", "rank": 6, "actionable_now": False}
 
     if setup_state == "ACTIONABLE_BREAKOUT":
         return {"label": "BUY BREAKOUT", "detail": setup.get("trigger") or "Breakout trigger is live now", "rank": 0, "actionable_now": True}
@@ -44,8 +50,10 @@ def evaluate_actionability(packet: dict, checks: list | None = None) -> dict:
 
     if setup_state == "TRIGGER_WATCH":
         return {"label": "WATCH TRIGGER", "detail": setup.get("trigger") or "Setup is close to a live trigger", "rank": 1, "actionable_now": False}
-    if setup_state == "POTENTIAL_BREAKOUT":
-        return {"label": "WATCH CONTINUATION", "detail": setup.get("description") or score.get("decision_summary") or "Constructive early breakout candidate", "rank": 2, "actionable_now": False}
+    if setup_state == "STALKING":
+        return {"label": "RESEARCH ONLY", "detail": setup.get("description") or score.get("decision_summary") or "Retained for research logging, not live production promotion.", "rank": 5, "actionable_now": False}
+    if confidence_class == "LOW_CONFIDENCE":
+        return {"label": "LOW CONFIDENCE", "detail": score.get("decision_summary") or "Include for research, but do not treat as actionable.", "rank": 5, "actionable_now": False}
 
     if entry_zone and not _as_bool(entry_zone.get("in_zone")) and setup_family in {"breakout_retest", "reclaim_and_go"}:
         return {"label": "WAIT PULLBACK", "detail": entry_zone.get("price_vs_zone") or "Wait for price to pull back into support", "rank": 4, "actionable_now": False}
@@ -68,6 +76,7 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
         {"item": "Structural", "value": f"{score.get('structural_score', '--')}/100", "passed": float(score.get("structural_score", 0) or 0) >= cfg.STRUCTURAL_MIN_SCORE},
         {"item": "Breakout Readiness", "value": f"{score.get('breakout_readiness_score', '--')}/100", "passed": float(score.get("breakout_readiness_score", 0) or 0) >= cfg.BREAKOUT_WATCH_MIN_SCORE},
         {"item": "Trigger Readiness", "value": f"{score.get('trigger_readiness_score', '--')}/100", "passed": float(score.get("trigger_readiness_score", 0) or 0) >= 55},
+        {"item": "Production Gates", "value": ", ".join(score.get("production_promotion", {}).get("hard_gate_failures", [])) or "passed", "passed": bool(score.get("production_promotion", {}).get("hard_gate_passed"))},
         {"item": "Setup", "value": f"{setup.get('setup_family', '--')} / {setup.get('state', '--')}", "passed": setup.get("state") not in {"FAILED", "BLOCKED", "DATA_UNAVAILABLE"}},
         {"item": "Pivot / Zone", "value": f"Pivot {setup.get('pivot_level', '--')} | {entry_zone.get('price_vs_zone', '--')}", "passed": setup.get("pivot_level") is not None},
         {"item": "Data Quality", "value": f"{dq.get('score', '--')}/100 ({dq.get('intraday_freshness_label', '--')})", "passed": float(dq.get("score", 0) or 0) >= 45},
@@ -82,7 +91,7 @@ def generate_checklist(packet: dict, regime: dict) -> dict:
         "checks": checks,
         "passed": passed,
         "total": len(checks),
-        "all_critical_pass": all(item["passed"] for item in checks[:5] + checks[9:11]),
+        "all_critical_pass": all(item["passed"] for item in checks[:6] + checks[10:12]),
         "verdict": verdict,
         "actionability": actionability,
     }

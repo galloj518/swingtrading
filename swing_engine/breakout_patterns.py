@@ -2,6 +2,7 @@
 Deterministic breakout pattern classification.
 """
 from __future__ import annotations
+from typing import Optional
 
 import pandas as pd
 
@@ -12,11 +13,12 @@ def _clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
     return max(low, min(high, value))
 
 
-def _pattern_result(name: str, score: float, stage: str, pivot: float | None, confidence: float, detail: str, invalidation: float | None = None) -> dict:
+def _pattern_result(name: str, score: float, stage: str, pivot:Optional[float], confidence: float, detail: str, invalidation:Optional[float] = None) -> dict:
     return {
         "setup_family": name,
         "score": round(score, 1),
         "stage": stage,
+        "production_visibility": "research_only" if stage == "stalking" else "production_candidate" if stage == "trigger_watch" else "forming",
         "pivot_level": round(pivot, 2) if pivot is not None else None,
         "confidence": round(confidence, 1),
         "invalidation_level": round(invalidation, 2) if invalidation is not None else None,
@@ -38,12 +40,13 @@ def near_high_breakout(daily_df: pd.DataFrame, breakout_features: dict) -> dict:
     pivot = breakout_features.get("pattern", {}).get("pivot_high_10d")
     pivot_class = pivot_position.get("classification")
     dist = near_high.get("dist_20d_high_pct")
+    early_quality = float(early_setup.get("orderly_contraction_score") or 0.0)
     if dist is None or pivot_class == "too_far_through_pivot":
         stage = "forming"
-    elif pivot_class in {"at_pivot", "just_through_pivot"}:
+    elif pivot_class in {"at_pivot", "just_through_pivot"} and score >= 52:
         stage = "trigger_watch"
-    elif pivot_class == "below_pivot_but_near" and dist <= 3.0:
-        stage = "potential_breakout"
+    elif pivot_class == "below_pivot_but_near" and dist <= 4.2 and early_quality >= 40:
+        stage = "stalking"
     else:
         stage = "forming"
     return _pattern_result(
@@ -65,7 +68,7 @@ def volatility_contraction(daily_df: pd.DataFrame, breakout_features: dict) -> d
         float(contraction.get("tight_close_score") or 0.0) * 0.35 +
         float(contraction.get("volume_dryup_score") or 0.0) * 0.20
     )
-    stage = "trigger_watch" if score >= 72 and pivot_class in {"at_pivot", "just_through_pivot"} else "potential_breakout" if score >= 58 and pivot_class == "below_pivot_but_near" else "forming"
+    stage = "trigger_watch" if score >= 62 and pivot_class in {"at_pivot", "just_through_pivot"} else "stalking" if score >= 48 and pivot_class == "below_pivot_but_near" else "forming"
     return _pattern_result(
         "volatility_contraction",
         score,
@@ -86,7 +89,7 @@ def flat_base(daily_df: pd.DataFrame, breakout_features: dict) -> dict:
     pivot_class = breakout_features.get("pivot_position", {}).get("classification")
     width = float(pattern.get("pivot_width_pct") or 99.0)
     score = _clamp(90.0 - width * 8.5 + float(near_high.get("score") or 0.0) * 0.18)
-    stage = "trigger_watch" if width <= 4.0 and score >= 68 and pivot_class in {"at_pivot", "just_through_pivot"} else "potential_breakout" if score >= 54 and pivot_class == "below_pivot_but_near" else "forming"
+    stage = "trigger_watch" if width <= 5.2 and score >= 60 and pivot_class in {"at_pivot", "just_through_pivot"} else "stalking" if score >= 48 and pivot_class == "below_pivot_but_near" else "forming"
     return _pattern_result(
         "flat_base",
         score,
@@ -104,7 +107,7 @@ def shelf_breakout(daily_df: pd.DataFrame, breakout_features: dict) -> dict:
     pivot_class = breakout_features.get("pivot_position", {}).get("classification")
     width = float(pattern.get("pivot_width_pct") or 99.0)
     score = _clamp(84.0 - width * 7.0 + float(contraction.get("tight_close_score") or 0.0) * 0.25)
-    stage = "trigger_watch" if width <= 5.0 and score >= 65 and pivot_class in {"at_pivot", "just_through_pivot"} else "potential_breakout" if score >= 52 and pivot_class == "below_pivot_but_near" else "forming"
+    stage = "trigger_watch" if width <= 6.0 and score >= 58 and pivot_class in {"at_pivot", "just_through_pivot"} else "stalking" if score >= 46 and pivot_class == "below_pivot_but_near" else "forming"
     return _pattern_result(
         "shelf_breakout",
         score,
@@ -125,7 +128,7 @@ def flag_pennant(daily_df: pd.DataFrame, breakout_features: dict, continuation_p
         (1.05 - contraction) * 35.0 +
         float(continuation_pattern.get("score") or 0.0) * 0.45
     )
-    stage = "trigger_watch" if score >= 70 and pivot_class in {"at_pivot", "just_through_pivot"} else "potential_breakout" if score >= 55 and pivot_class == "below_pivot_but_near" else "forming"
+    stage = "trigger_watch" if score >= 62 and pivot_class in {"at_pivot", "just_through_pivot"} else "stalking" if score >= 48 and pivot_class == "below_pivot_but_near" else "forming"
     return _pattern_result(
         "flag_pennant",
         score,
@@ -140,8 +143,8 @@ def flag_pennant(daily_df: pd.DataFrame, breakout_features: dict, continuation_p
 def breakout_retest(daily_df: pd.DataFrame, breakout_integrity: dict, breakout_features: dict) -> dict:
     state = breakout_integrity.get("state")
     dist_atr = float(breakout_integrity.get("distance_atr") or 0.0)
-    score = 78.0 if state == "retest_holding" else 62.0 if state == "breakout_watch" and -0.3 <= dist_atr <= 0.6 else 34.0
-    stage = "trigger_watch" if state == "retest_holding" else "potential_breakout" if score >= 55 else "forming"
+    score = 78.0 if state == "retest_holding" else 62.0 if state == "breakout_watch" and -0.4 <= dist_atr <= 0.7 else 42.0 if state == "active_breakout" else 34.0
+    stage = "trigger_watch" if state in {"retest_holding", "active_breakout"} else "stalking" if score >= 50 else "forming"
     return _pattern_result(
         "breakout_retest",
         score,
@@ -159,7 +162,7 @@ def reclaim_and_go(daily_df: pd.DataFrame, daily_state: dict, breakout_features:
     prior_high = breakout_features.get("intraday_context", {}).get("prior_day_high") or breakout_features.get("pattern", {}).get("pivot_high_10d")
     dist = ((close / sma20) - 1.0) * 100.0 if close and sma20 else 0.0
     score = _clamp(62.0 + (4.0 - abs(dist)) * 6.0)
-    stage = "trigger_watch" if abs(dist) <= 1.5 else "potential_breakout" if abs(dist) <= 2.5 else "forming"
+    stage = "trigger_watch" if abs(dist) <= 1.8 else "stalking" if abs(dist) <= 3.0 else "forming"
     return _pattern_result(
         "reclaim_and_go",
         score,

@@ -2,15 +2,27 @@
 Deterministic intraday trigger detection.
 """
 from __future__ import annotations
+from typing import Optional
 
 import pandas as pd
+
+from . import config as cfg
 
 
 def _clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
     return max(low, min(high, value))
 
 
-def _result(trigger_type: str | None, triggered_now: bool, score: float, trigger_level: float | None, invalidation_level: float | None, detail: str, freshness_sensitive: bool = True) -> dict:
+def _result(trigger_type:Optional[str], triggered_now: bool, score: float, trigger_level:Optional[float], invalidation_level:Optional[float], detail: str, freshness_sensitive: bool = True) -> dict:
+    weight = float(cfg.PRODUCTION_TRIGGER_WEIGHTS.get(trigger_type, 0.56))
+    if trigger_type in cfg.PRODUCTION_DEMOTED_TRIGGER_TYPES:
+        production_preference = "demoted"
+    elif weight >= 0.95:
+        production_preference = "preferred"
+    elif weight >= 0.7:
+        production_preference = "supported"
+    else:
+        production_preference = "secondary"
     return {
         "trigger_type": trigger_type,
         "triggered_now": bool(triggered_now),
@@ -19,6 +31,7 @@ def _result(trigger_type: str | None, triggered_now: bool, score: float, trigger
         "invalidation_level": round(invalidation_level, 2) if invalidation_level is not None else None,
         "detail": detail,
         "freshness_sensitive": freshness_sensitive,
+        "production_preference": production_preference,
     }
 
 
@@ -32,7 +45,7 @@ def _unavailable(detail: str, state: str = "data_unavailable") -> dict:
     }
 
 
-def _safe_float(value, default: float | None = None) -> float | None:
+def _safe_float(value, default:Optional[float] = None) -> Optional[float]:
     try:
         if value is None or pd.isna(value):
             return default
@@ -72,12 +85,12 @@ def _session_vwap(df: pd.DataFrame) -> pd.Series:
     return pd.to_numeric(vwap, errors="coerce")
 
 
-def evaluate_intraday_triggers(intraday_df: pd.DataFrame, daily_refs: dict, pivot_level: float | None, data_quality: dict | None = None) -> dict:
+def evaluate_intraday_triggers(intraday_df: pd.DataFrame, daily_refs: dict, pivot_level:Optional[float], data_quality:Optional[dict] = None) -> dict:
     data_quality = data_quality or {}
     try:
         session = _session_df(intraday_df)
         freshness_label = str(data_quality.get("intraday_freshness_label", "missing"))
-        freshness_penalty = 0.0 if freshness_label == "fresh" else 8.0 if freshness_label == "mildly_stale" else 18.0 if freshness_label == "stale" else 35.0
+        freshness_penalty = 0.0 if freshness_label in {"fresh", "historical"} else 8.0 if freshness_label == "mildly_stale" else 18.0 if freshness_label == "stale" else 35.0
         if session.empty or len(session) < 8:
             return _unavailable("Intraday data unavailable")
 

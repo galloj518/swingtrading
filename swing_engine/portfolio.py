@@ -18,7 +18,7 @@ Usage in pipeline:
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
+from typing import Optional, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -102,7 +102,7 @@ def _sector_for(symbol: str) -> str:
 # ---------------------------------------------------------------------------
 
 def calc_portfolio_exposure(
-    open_trades: list[dict],
+    open_trades: List[dict],
     packets: dict,
     spy_daily: pd.DataFrame,
     data_store: Optional[dict] = None,
@@ -128,7 +128,7 @@ def calc_portfolio_exposure(
     total_dollar_exposure = 0.0
     total_beta_exposure = 0.0
     total_open_risk = 0.0
-    sector_breakdown: dict[str, float] = {}
+    sector_breakdown: Dict[str, float] = {}
 
     for trade in open_trades:
         sym = trade.get("symbol", "")
@@ -236,7 +236,7 @@ def _exposure_warnings(
     open_risk_pct: float,
     max_single_pct: float,
     largest_sector_pct: float,
-) -> list[str]:
+) -> List[str]:
     """Generate caution flags when exposure metrics exceed thresholds."""
     warnings = []
     if net_beta_pct > 80:

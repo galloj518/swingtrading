@@ -3,13 +3,21 @@ __pycache__/
 .pytest_cache/
 pytest-cache-files-*/
 .pytest_tmp/
+.pytest_tmp_manual/
+.pytest_signal_manual/
 .mypy_cache/
 .ipynb_checkpoints/
 .venv/
 venv/
+.env/
 .env
 .env.*
 *.env
+.python-version
+
+.DS_Store
+Thumbs.db
+Desktop.ini
 
 data/cache/
 data/*_packet_*.json
@@ -18,11 +26,23 @@ data/swing_engine.sqlite3
 data/*.sqlite3-journal
 data/*.sqlite3-shm
 data/*.sqlite3-wal
+data/*.sqlite
+data/*.db
+*.sqlite
+*.sqlite3
+*.db
 reports/
+reports/backtests/
+reports/analysis/
+reports/diagnostics/
 dashboard.html
 !templates/dashboard.html
 tmp_*/
 tmp_dbrd*/
+.merge_tmp_repo/
 .claude/
+cache/
+tmp/
+*.log
 
 site/

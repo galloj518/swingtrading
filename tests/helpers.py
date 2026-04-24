@@ -1,11 +1,12 @@
 from __future__ import annotations
+from typing import Optional
 
 from datetime import datetime, timezone
 
 import pandas as pd
 
 
-def make_bundle(daily: pd.DataFrame, intraday: pd.DataFrame | None = None) -> dict:
+def make_bundle(daily: pd.DataFrame, intraday:Optional[ pd.DataFrame] = None) -> dict:
     intraday = intraday if intraday is not None else pd.DataFrame(columns=["date", "open", "high", "low", "close", "volume"])
     weekly = (
         daily.set_index("date")
