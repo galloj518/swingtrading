@@ -27,6 +27,62 @@ def _actionability(packet: dict, cl:Optional[dict]) -> dict:
     return checklist.evaluate_actionability(packet)
 
 
+def _packet_display(packet: dict, action: dict) -> dict:
+    score = packet.get("score", {})
+    production = score.get("production_promotion", {})
+    band_profile = production.get("band_profile", {})
+    trigger_primary = packet.get("intraday_trigger", {}).get("primary", {})
+    sizing = packet.get("position_sizing", {})
+    execution = packet.get("execution_policy", {})
+    pivot_position = score.get("pivot_position", {})
+    dominant_negative_flags = list(production.get("dominant_negative_flags", []))
+
+    execution_lane = execution.get("execution_lane") or sizing.get("execution_lane")
+    execution_posture = execution.get("execution_posture") or sizing.get("execution_posture")
+    recommended_lane = execution.get("recommended_lane") or sizing.get("recommended_lane")
+    recommended_size_class = execution.get("recommended_size_class") or sizing.get("recommended_size_class")
+    recommended_action = execution.get("recommended_action") or sizing.get("recommended_action")
+    near_action_status = execution.get("near_action_status") or sizing.get("near_action_status")
+
+    execution_policy_parts = [
+        f"lane={execution_lane or '--'}",
+        f"posture={execution_posture or '--'}",
+        f"size={recommended_size_class or '--'}",
+        f"action={recommended_action or '--'}",
+    ]
+    if near_action_status:
+        execution_policy_parts.append(f"status={near_action_status}")
+
+    return {
+        "symbol": packet.get("symbol"),
+        "setup_family": score.get("setup_family"),
+        "setup_state": score.get("setup_state"),
+        "actionability_label": action.get("label"),
+        "actionability_detail": action.get("detail"),
+        "production_score": production.get("production_score"),
+        "pivot_zone": production.get("pivot_zone"),
+        "trigger_band": (band_profile.get("trigger_readiness_score") or {}).get("label"),
+        "breakout_band": (band_profile.get("breakout_readiness_score") or {}).get("label"),
+        "structural_band": (band_profile.get("structural_score") or {}).get("label"),
+        "dominant_negative_flags": dominant_negative_flags,
+        "sizing_tier": sizing.get("sizing_tier"),
+        "execution_lane": execution_lane,
+        "execution_posture": execution_posture,
+        "recommended_lane": recommended_lane,
+        "recommended_size_class": recommended_size_class,
+        "recommended_action": recommended_action,
+        "near_action_status": near_action_status,
+        "execution_policy": execution_policy_parts,
+        "trigger_level": trigger_primary.get("trigger_level"),
+        "stop": trigger_primary.get("invalidation_level") or packet.get("entry_zone", {}).get("stop"),
+        "reward_risk_now": pivot_position.get("risk_reward_now"),
+        "trigger_type": trigger_primary.get("trigger_type"),
+        "last_close": packet.get("daily", {}).get("last_close"),
+        "intraday_freshness_label": packet.get("data_quality", {}).get("intraday_freshness_label"),
+        "extended_subtype": production.get("extended_subtype"),
+    }
+
+
 def _prepare_watchlists(packets: dict, checklists: dict) -> dict:
     actionable = []
     near_trigger = []
@@ -38,26 +94,34 @@ def _prepare_watchlists(packets: dict, checklists: dict) -> dict:
             continue
         action = _actionability(packet, checklists.get(symbol))
         production_meta = packet.get("score", {}).get("production_promotion", {})
+        display = _packet_display(packet, action)
         row = {
             "symbol": symbol,
             "packet": packet,
             "action": action,
+            "display": display,
             "score": _trade_score(packet),
             "production_score": float(production_meta.get("production_score", 0.0) or 0.0),
             "priority_rank": int(production_meta.get("priority_rank", 99) or 99),
         }
-        state = packet.get("score", {}).get("setup_state")
+        state = str(display.get("setup_state") or "")
         tier = production_meta.get("tier")
-        if state in {"ACTIONABLE_BREAKOUT", "ACTIONABLE_RECLAIM", "ACTIONABLE_RETEST"} and tier == "production":
+        execution_lane = str(display.get("execution_lane") or "")
+        dominant_negative_flags = list(display.get("dominant_negative_flags", []))
+        if state in {"ACTIONABLE_BREAKOUT", "ACTIONABLE_RECLAIM", "ACTIONABLE_RETEST"} and execution_lane == "actionable":
             actionable.append(row)
-        elif state == "TRIGGER_WATCH" and tier == "production":
+        elif (
+            execution_lane == "near_action"
+            and not dominant_negative_flags
+            and state not in {"FAILED", "BLOCKED", "EXTENDED", "DATA_UNAVAILABLE"}
+        ):
             near_trigger.append(row)
-        elif state in {"STALKING", "FORMING"}:
-            stalking.append(row)
         elif tier == "continuation":
             continuation.append(row)
-        elif state in {"FAILED", "BLOCKED", "DATA_UNAVAILABLE"} or (state == "EXTENDED" and production_meta.get("extended_subtype") == "EXTENDED_LATE"):
+        elif dominant_negative_flags or state in {"FAILED", "BLOCKED", "DATA_UNAVAILABLE"} or (state == "EXTENDED" and production_meta.get("extended_subtype") == "EXTENDED_LATE"):
             avoid.append(row)
+        elif state in {"STALKING", "FORMING"}:
+            stalking.append(row)
         else:
             stalking.append(row)
     sort_key = lambda item: (item["priority_rank"], -item["production_score"], -item["score"], item["symbol"])
@@ -76,12 +140,16 @@ def _normalize_chart_images(chart_images:Optional[dict], output_path: Path) -> d
     for symbol, payload in (chart_images or {}).items():
         entry = dict(payload or {})
         for key, value in list(entry.items()):
+            if key.endswith("_b64") and value:
+                entry[key.replace("_b64", "_url")] = f"data:image/png;base64,{value}"
+        for key, value in list(entry.items()):
             if key.endswith("_path") and value:
                 path = Path(value)
+                url_key = key.replace("_path", "_url")
                 try:
-                    entry[key.replace("_path", "_url")] = str(path.relative_to(output_dir)).replace("\\", "/")
+                    entry.setdefault(url_key, str(path.relative_to(output_dir)).replace("\\", "/"))
                 except ValueError:
-                    entry[key.replace("_path", "_url")] = path.as_posix()
+                    entry.setdefault(url_key, None)
         normalized[symbol] = entry
     return normalized
 

@@ -7,7 +7,9 @@ from typing import List, Dict, Optional
 
 from datetime import date
 from pathlib import Path
+import re
 
+from . import charts
 from . import config as cfg
 from . import dashboard
 from . import run_health
@@ -176,7 +178,42 @@ def _decision_output_path() -> Path:
     return cfg.DECISION_REPORT_OUTPUT_PATH
 
 
-def _write_production_dashboard(context: dict) -> str:
+def _chart_symbols_for_dashboard(context: dict) -> List[str]:
+    watchlists = dashboard._prepare_watchlists(context["packets"], context["checklists"])
+    ordered: List[str] = []
+    for section_name in ("actionable", "near_trigger", "stalking", "continuation", "avoid"):
+        for row in watchlists[section_name]:
+            symbol = row["symbol"]
+            if symbol not in ordered:
+                ordered.append(symbol)
+    for symbol in cfg.BENCHMARKS:
+        if symbol in context["packets"] and symbol not in ordered:
+            ordered.append(symbol)
+    return ordered
+
+
+def _generate_production_chart_payload(context: dict) -> dict:
+    symbols = _chart_symbols_for_dashboard(context)
+    emphasized = []
+    watchlists = dashboard._prepare_watchlists(context["packets"], context["checklists"])
+    for section_name in ("actionable", "near_trigger"):
+        for row in watchlists[section_name]:
+            symbol = row["symbol"]
+            if symbol not in emphasized:
+                emphasized.append(symbol)
+    emphasized = emphasized[: cfg.TOP_EXECUTION_INTRADAY_COUNT]
+    output_dir = cfg.DOCS_DIR / "charts"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return charts.generate_all_charts(
+        symbols,
+        context.get("data_store", {}),
+        context["packets"],
+        output_dir=output_dir,
+        intraday_emphasis_symbols=emphasized,
+    )
+
+
+def _write_production_dashboard(context: dict) -> dict:
     run_summary = {
         "run_mode": "production",
         "runtime_mode": context.get("runtime_mode"),
@@ -185,15 +222,78 @@ def _write_production_dashboard(context: dict) -> str:
         "overall_status": context.get("regime", {}).get("quality", "unknown"),
         "benchmark_status": context.get("benchmark_status", {}),
     }
+    chart_images = _generate_production_chart_payload(context)
     output_path = dashboard.generate_dashboard(
         context["regime"],
         context["packets"],
         context["checklists"],
-        chart_images={},
+        chart_images=chart_images,
         output_path=cfg.DASHBOARD_OUTPUT_PATH,
         run_summary=run_summary,
     )
-    return str(output_path)
+    return {"dashboard_path": str(output_path), "chart_images": chart_images}
+
+
+def _validate_production_outputs(context: dict, dashboard_path: Path, report_path: Path) -> dict:
+    validation = {
+        "dashboard_exists": dashboard_path.exists(),
+        "decision_report_exists": report_path.exists(),
+        "chart_reference_count": 0,
+        "missing_chart_references": [],
+        "card_mismatches": [],
+    }
+    if not dashboard_path.exists():
+        return validation
+
+    html = dashboard_path.read_text(encoding="utf-8")
+    image_refs = re.findall(r'<img[^>]+src="([^"]+)"', html)
+    validation["chart_reference_count"] = len(image_refs)
+    for src in image_refs:
+        if src.startswith("data:image/"):
+            continue
+        candidate = (dashboard_path.parent / src).resolve()
+        if not candidate.exists():
+            validation["missing_chart_references"].append(src)
+
+    watchlists = dashboard._prepare_watchlists(context["packets"], context["checklists"])
+    all_rows = []
+    for section_name in ("actionable", "near_trigger", "stalking", "continuation", "avoid"):
+        all_rows.extend(watchlists[section_name])
+
+    for row in all_rows:
+        display = row.get("display", {})
+        symbol = str(display.get("symbol") or row.get("symbol") or "")
+        marker = f'data-symbol="{symbol}"'
+        start = html.find(marker)
+        if start < 0:
+            validation["card_mismatches"].append(f"{symbol}: missing dashboard card")
+            continue
+        next_idx = html.find('data-symbol="', start + len(marker))
+        block = html[start: next_idx if next_idx > start else len(html)]
+        expected_pairs = {
+            "setup_state": str(display.get("setup_state") or "--"),
+            "production_score": str(display.get("production_score") if display.get("production_score") is not None else "--"),
+            "pivot_zone": str(display.get("pivot_zone") or "--"),
+            "trigger_band": str(display.get("trigger_band") or "--"),
+            "breakout_band": str(display.get("breakout_band") or "--"),
+            "structural_band": str(display.get("structural_band") or "--"),
+            "sizing_tier": str(display.get("sizing_tier") or "--"),
+        }
+        for field_name, expected in expected_pairs.items():
+            if expected not in block:
+                validation["card_mismatches"].append(f"{symbol}: {field_name} missing/inconsistent")
+        dominant_negative_flags = display.get("dominant_negative_flags") or []
+        if dominant_negative_flags:
+            for flag in dominant_negative_flags:
+                if str(flag) not in block:
+                    validation["card_mismatches"].append(f"{symbol}: dominant negative {flag} missing")
+        execution_policy = display.get("execution_policy") or []
+        for part in execution_policy:
+            if str(part) not in block:
+                validation["card_mismatches"].append(f"{symbol}: execution policy {part} missing")
+                break
+
+    return validation
 
 
 def run_decision_report(force: bool = False, save: bool = True) -> dict:
@@ -203,14 +303,26 @@ def run_decision_report(force: bool = False, save: bool = True) -> dict:
     print(report_text)
     output_path: Optional[Path] = None
     dashboard_path: Optional[str] = None
+    validation: Optional[dict] = None
     if save:
         output_path = _decision_output_path()
         run_health.atomic_write_text(output_path, report_text, encoding="utf-8")
-        dashboard_path = _write_production_dashboard(context)
+        dashboard_result = _write_production_dashboard(context)
+        dashboard_path = dashboard_result["dashboard_path"]
+        validation = _validate_production_outputs(context, Path(dashboard_path), output_path)
+        print(
+            "Dashboard validation:"
+            f" dashboard_exists={validation['dashboard_exists']}"
+            f" decision_report_exists={validation['decision_report_exists']}"
+            f" chart_refs={validation['chart_reference_count']}"
+            f" missing_chart_refs={len(validation['missing_chart_references'])}"
+            f" card_mismatches={len(validation['card_mismatches'])}"
+        )
     return {
         "context": context,
         "sections": sections,
         "report_text": report_text,
         "output_path": str(output_path) if output_path else None,
         "dashboard_path": dashboard_path,
+        "validation": validation,
     }

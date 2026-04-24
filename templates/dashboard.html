@@ -19,7 +19,7 @@
   .card-grid { grid-template-columns: 1fr; }
   .metric { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(131, 158, 182, 0.18); }
   .metric .label { color: #7f93a8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; }
-  .metric .value { font-size: 1.4rem; font-weight: 700; margin-top: 6px; }
+  .metric .value { font-size: 1.2rem; font-weight: 700; margin-top: 6px; word-break: break-word; }
   .card { padding: 14px; }
   .controls-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: end; }
   .control label { display: block; color: #8da4bb; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
@@ -38,7 +38,7 @@
   .stale { background: #261603; color: #ffd66b; }
   .bad { background: #2d0b10; color: #ff8a8a; }
   table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid rgba(106, 132, 156, 0.16); font-size: 0.9rem; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid rgba(106, 132, 156, 0.16); font-size: 0.9rem; vertical-align: top; }
   .mono { font-family: "IBM Plex Mono", Consolas, monospace; }
   .card[hidden] { display: none !important; }
   @media (max-width: 900px) {
@@ -54,7 +54,7 @@
       <div>
         <div class="muted">Deterministic Breakout Stack</div>
         <h1>Swing Engine</h1>
-        <div class="muted">Structural scan, breakout-readiness scan, and intraday trigger monitor with freshness-aware yfinance data.</div>
+        <div class="muted">Production dashboard sourced directly from packet values.</div>
       </div>
       <div class="muted">Generated {{ generated_at }}</div>
     </div>
@@ -118,7 +118,7 @@
       <div class="control">
         <label for="sortBy">Sort By</label>
         <select id="sortBy">
-          <option value="structural">Structural score</option>
+          <option value="production">Production score</option>
           <option value="breakout">Breakout readiness</option>
           <option value="trigger">Trigger readiness</option>
         </select>
@@ -134,10 +134,10 @@
     <h2>Desk Snapshot</h2>
     <div class="grid summary-grid">
       <div class="metric"><div class="label">Actionable</div><div class="value">{{ sections.actionable|length }}</div></div>
-      <div class="metric"><div class="label">Near Trigger</div><div class="value">{{ sections.near_trigger|length }}</div></div>
-      <div class="metric"><div class="label">Stalking / Early</div><div class="value">{{ sections.stalking|length }}</div></div>
-      <div class="metric"><div class="label">Continuation Bucket</div><div class="value">{{ sections.continuation|length }}</div></div>
-      <div class="metric"><div class="label">Avoid</div><div class="value">{{ sections.avoid|length }}</div></div>
+      <div class="metric"><div class="label">Near Action</div><div class="value">{{ sections.near_trigger|length }}</div></div>
+      <div class="metric"><div class="label">Research</div><div class="value">{{ sections.stalking|length }}</div></div>
+      <div class="metric"><div class="label">Continuation</div><div class="value">{{ sections.continuation|length }}</div></div>
+      <div class="metric"><div class="label">Reject / Avoid</div><div class="value">{{ sections.avoid|length }}</div></div>
     </div>
   </div>
 
@@ -156,98 +156,101 @@
     </table>
   </div>
 
-  {% for title, rows in [("Actionable", sections.actionable), ("Near Trigger", sections.near_trigger), ("Stalking / Early Setup", sections.stalking), ("Continuation", sections.continuation), ("Avoid", sections.avoid)] %}
+  {% for title, rows in [("Actionable Now", sections.actionable), ("Near Action / Starter Candidates", sections.near_trigger), ("Research Only", sections.stalking), ("Continuation", sections.continuation), ("Reject / Avoid", sections.avoid)] %}
   <div class="section">
     <h2>{{ title }}</h2>
     <div class="grid card-grid">
       {% for row in rows %}
       {% set packet = row.packet %}
       {% set charts = chart_images.get(row.symbol, {}) %}
-      {% set production = packet.score.production_promotion %}
+      {% set display = row.display %}
       <div class="card symbol-card"
-           data-symbol="{{ row.symbol }}"
-           data-state="{{ packet.score.setup_state }}"
-           data-family="{{ packet.score.setup_family }}"
-           data-tier="{{ production.tier }}"
-           data-freshness="{{ packet.data_quality.intraday_freshness_label }}"
-           data-structural="{{ packet.score.structural_score }}"
+           data-symbol="{{ display.symbol }}"
+           data-state="{{ display.setup_state }}"
+           data-family="{{ display.setup_family }}"
+           data-tier="{{ display.execution_lane }}"
+           data-freshness="{{ display.intraday_freshness_label }}"
+           data-production="{{ display.production_score or 0 }}"
            data-breakout="{{ packet.score.breakout_readiness_score }}"
            data-trigger="{{ packet.score.trigger_readiness_score }}"
            data-actionable="{{ 'true' if row.action.actionable_now else 'false' }}">
         <div class="row">
           <div>
-            <h3>{{ row.symbol }}</h3>
-            <span class="badge state">{{ packet.score.setup_family }}</span>
-            <span class="badge state">{{ packet.score.setup_state }}</span>
-            {% if production.extended_subtype %}
-            <span class="badge state">{{ production.extended_subtype }}</span>
+            <h3>{{ display.symbol }}</h3>
+            <span class="badge state">{{ display.setup_family }}</span>
+            <span class="badge state">{{ display.setup_state }}</span>
+            {% if display.extended_subtype %}
+            <span class="badge state">{{ display.extended_subtype }}</span>
             {% endif %}
-            {% set fresh_class = 'fresh' if packet.data_quality.intraday_freshness_label == 'fresh' else 'stale' if packet.data_quality.intraday_freshness_label in ['mildly_stale', 'stale'] else 'bad' %}
-            <span class="badge {{ fresh_class }}">{{ packet.data_quality.intraday_freshness_label }}</span>
+            {% set fresh_class = 'fresh' if display.intraday_freshness_label == 'fresh' else 'stale' if display.intraday_freshness_label in ['mildly_stale', 'stale'] else 'bad' %}
+            <span class="badge {{ fresh_class }}">{{ display.intraday_freshness_label }}</span>
           </div>
-          <div class="mono">{{ packet.daily.last_close }}</div>
+          <div class="mono">{{ display.last_close }}</div>
         </div>
-        <div class="muted">{{ row.action.label }}: {{ row.action.detail }}</div>
+        <div class="muted">{{ display.actionability_label }}: {{ display.actionability_detail }}</div>
         <div style="margin-top: 10px;" class="grid summary-grid">
-          <div class="metric"><div class="label">Structural</div><div class="value">{{ packet.score.structural_score }}</div></div>
-          <div class="metric"><div class="label">Readiness</div><div class="value">{{ packet.score.breakout_readiness_score }}</div></div>
-          <div class="metric"><div class="label">Trigger</div><div class="value">{{ packet.score.trigger_readiness_score }}</div></div>
+          <div class="metric"><div class="label">Production Score</div><div class="value">{{ display.production_score }}</div></div>
+          <div class="metric"><div class="label">Pivot Zone</div><div class="value">{{ display.pivot_zone or '--' }}</div></div>
+          <div class="metric"><div class="label">Sizing Tier</div><div class="value">{{ display.sizing_tier or '--' }}</div></div>
         </div>
         <table style="margin-top: 10px;">
-          <tr><th>Stage</th><td>{{ packet.setup.stage }}</td></tr>
-          <tr><th>Pivot</th><td class="mono">{{ packet.setup.pivot_level }}</td></tr>
-          <tr><th>Trigger</th><td>{{ packet.intraday_trigger.primary.trigger_type }}</td></tr>
-          <tr><th>Trigger Level</th><td class="mono">{{ packet.intraday_trigger.primary.trigger_level }}</td></tr>
-          <tr><th>Production Tier</th><td>{{ production.tier }}</td></tr>
-          <tr><th>Production Score</th><td>{{ production.production_score }}</td></tr>
-          <tr><th>Hard Gates</th><td>{% if production.hard_gate_failures %}{{ production.hard_gate_failures|join(', ') }}{% else %}passed{% endif %}</td></tr>
-          <tr><th>Trigger Preference</th><td>{{ production.trigger_preference.label }}{% if production.trigger_preference.trigger_type %} ({{ production.trigger_preference.trigger_type }}){% endif %}</td></tr>
-          <tr><th>Extension vs Pivot</th><td>{{ packet.score.pivot_position.classification }} | {{ packet.score.pivot_position.distance_pct }}% | {{ packet.score.pivot_position.extension_atr }} ATR</td></tr>
-          <tr><th>Entry Zone</th><td class="mono">{{ packet.entry_zone.entry_low }} - {{ packet.entry_zone.entry_high }}</td></tr>
-          <tr><th>Stop</th><td class="mono">{{ packet.entry_zone.stop }}</td></tr>
-          <tr><th>Freshness</th><td>{{ packet.data_quality.intraday_freshness_minutes }} min old</td></tr>
-          <tr><th>RS20</th><td>{{ packet.relative_strength.rs_20d }}</td></tr>
-          <tr><th>Reason Surfaced</th><td>{{ packet.score.decision_summary }}</td></tr>
-          <tr><th>AVWAP Context</th><td>{{ packet.avwap_context.detail }}</td></tr>
-          {% if production.extended_subtype %}
-          <tr><th>Extended Subtype</th><td>{{ production.extended_subtype }} | {{ production.extended_detail }}</td></tr>
-          {% endif %}
-          <tr><th>Threshold Provenance</th><td>{{ packet.score.threshold_provenance_summary }}</td></tr>
-          <tr><th>Calibration Confidence</th><td>{{ packet.score.calibration_confidence }}</td></tr>
+          <tr><th>Symbol</th><td>{{ display.symbol }}</td></tr>
+          <tr><th>Setup State</th><td>{{ display.setup_state }}</td></tr>
+          <tr><th>Production Score</th><td>{{ display.production_score }}</td></tr>
+          <tr><th>Pivot Zone</th><td>{{ display.pivot_zone or '--' }}</td></tr>
+          <tr><th>Trigger Band</th><td>{{ display.trigger_band or '--' }}</td></tr>
+          <tr><th>Breakout Band</th><td>{{ display.breakout_band or '--' }}</td></tr>
+          <tr><th>Structural Band</th><td>{{ display.structural_band or '--' }}</td></tr>
+          <tr><th>Dominant Negatives</th><td>{% if display.dominant_negative_flags %}{{ display.dominant_negative_flags|join(', ') }}{% else %}--{% endif %}</td></tr>
+          <tr><th>Sizing Tier</th><td>{{ display.sizing_tier or '--' }}</td></tr>
+          <tr><th>Execution Policy</th><td>{{ display.execution_policy|join('; ') }}</td></tr>
+          <tr><th>Trigger Type</th><td>{{ display.trigger_type or '--' }}</td></tr>
+          <tr><th>Trigger Level</th><td class="mono">{{ display.trigger_level if display.trigger_level is not none else '--' }}</td></tr>
+          <tr><th>Stop</th><td class="mono">{{ display.stop if display.stop is not none else '--' }}</td></tr>
+          <tr><th>Reward / Risk Now</th><td>{{ display.reward_risk_now if display.reward_risk_now is not none else '--' }}</td></tr>
         </table>
         <div class="chart-grid">
-          {% if charts.daily_url %}
           <div class="chart-panel">
             <div class="chart-title">Daily Chart</div>
+            {% if charts.daily_url %}
             <img src="{{ charts.daily_url }}" alt="{{ row.symbol }} daily chart">
+            {% else %}
+            <div class="chart-empty">Daily chart unavailable</div>
+            {% endif %}
           </div>
-          {% endif %}
-          {% if charts.weekly_url %}
           <div class="chart-panel">
             <div class="chart-title">Weekly Chart</div>
+            {% if charts.weekly_url %}
             <img src="{{ charts.weekly_url }}" alt="{{ row.symbol }} weekly chart">
+            {% else %}
+            <div class="chart-empty">Weekly chart unavailable</div>
+            {% endif %}
           </div>
-          {% endif %}
-          {% if charts.intra_15m_url %}
+          {% if display.execution_lane in ['actionable', 'near_action'] or charts.intra_15m_url or charts.intra_30m_url or charts.intra_60m_url %}
           <div class="chart-panel">
             <div class="chart-title">15m Execution</div>
+            {% if charts.intra_15m_url %}
             <img src="{{ charts.intra_15m_url }}" alt="{{ row.symbol }} 15 minute chart">
+            {% else %}
+            <div class="chart-empty">15m chart unavailable</div>
+            {% endif %}
           </div>
-          {% endif %}
-          {% if charts.intra_30m_url %}
           <div class="chart-panel">
             <div class="chart-title">30m Execution</div>
+            {% if charts.intra_30m_url %}
             <img src="{{ charts.intra_30m_url }}" alt="{{ row.symbol }} 30 minute chart">
+            {% else %}
+            <div class="chart-empty">30m chart unavailable</div>
+            {% endif %}
           </div>
-          {% endif %}
-          {% if charts.intra_60m_url %}
           <div class="chart-panel">
             <div class="chart-title">60m Execution</div>
+            {% if charts.intra_60m_url %}
             <img src="{{ charts.intra_60m_url }}" alt="{{ row.symbol }} 60 minute chart">
+            {% else %}
+            <div class="chart-empty">60m chart unavailable</div>
+            {% endif %}
           </div>
-          {% endif %}
-          {% if not charts.daily_url and not charts.weekly_url and not charts.intra_15m_url and not charts.intra_30m_url and not charts.intra_60m_url %}
-          <div class="chart-empty">Charts unavailable</div>
           {% endif %}
         </div>
         {% if narratives.get(row.symbol) %}
@@ -296,7 +299,7 @@
     const sortBy = controls.sortBy.value;
     if (sortBy === 'breakout') return parseFloat(card.dataset.breakout || '0');
     if (sortBy === 'trigger') return parseFloat(card.dataset.trigger || '0');
-    return parseFloat(card.dataset.structural || '0');
+    return parseFloat(card.dataset.production || '0');
   }
 
   function applyControls() {
