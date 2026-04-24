@@ -7,6 +7,7 @@ never part of the frequent scan path unless explicitly requested.
 from __future__ import annotations
 
 import os
+import copy
 from datetime import date
 from pathlib import Path
 
@@ -18,14 +19,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 CACHE_DIR = DATA_DIR / "cache"
 REPORTS_DIR = BASE_DIR / "reports"
+RESEARCH_REPORTS_DIR = REPORTS_DIR / "research"
 TEMPLATES_DIR = BASE_DIR / "templates"
+DOCS_DIR = BASE_DIR / "docs"
 DB_PATH = DATA_DIR / "swing_engine.sqlite3"
-DASHBOARD_OUTPUT_PATH = BASE_DIR / "dashboard.html"
+DASHBOARD_OUTPUT_PATH = DOCS_DIR / "dashboard.html"
+DECISION_REPORT_OUTPUT_PATH = DOCS_DIR / "decision_report.txt"
 RUN_HEALTH_OUTPUT_DIR = REPORTS_DIR
 OFFLINE_SMOKE_OUTPUT_DIR = REPORTS_DIR
 CHARTS_OUTPUT_DIR = REPORTS_DIR / "charts"
 
-for _path in (DATA_DIR, CACHE_DIR, REPORTS_DIR, TEMPLATES_DIR, CHARTS_OUTPUT_DIR):
+for _path in (DATA_DIR, CACHE_DIR, REPORTS_DIR, RESEARCH_REPORTS_DIR, TEMPLATES_DIR, CHARTS_OUTPUT_DIR, DOCS_DIR):
     _path.mkdir(parents=True, exist_ok=True)
 
 
@@ -141,7 +145,7 @@ SETUP_FAMILY_TOGGLES = {
 
 SETUP_STATES = (
     "FORMING",
-    "POTENTIAL_BREAKOUT",
+    "STALKING",
     "TRIGGER_WATCH",
     "ACTIONABLE_BREAKOUT",
     "ACTIONABLE_RETEST",
@@ -158,6 +162,8 @@ ACTIONABILITY_LABELS = (
     "BUY RETEST",
     "WATCH TRIGGER",
     "WATCH CONTINUATION",
+    "CONTINUATION ONLY",
+    "RESEARCH ONLY",
     "WAIT PULLBACK",
     "WAIT FOR TIGHTENING",
     "BLOCK",
@@ -285,10 +291,388 @@ DYNAMIC_CORR_LOOKBACK = 60
 DYNAMIC_CORR_THRESHOLD = 0.65
 
 BACKTEST_START_DATE = "2023-01-01"
+BACKTEST_END_DATE = date.today().isoformat()
+BACKTEST_SYMBOLS = WATCHLIST[:8]
+BACKTEST_CALIBRATION_ENABLED = True
+BACKTEST_REPLAY_LOOKBACK_BARS = max(DAILY_SMA_PERIODS) + 20
 WALK_FORWARD_IN_SAMPLE_MONTHS = 12
 WALK_FORWARD_OUT_OF_SAMPLE_MONTHS = 3
 WALK_FORWARD_STEP_MONTHS = 3
 CALIBRATION_MIN_SAMPLES_WEIGHT = 6
+OUTCOME_FORWARD_WINDOWS = (1, 3, 5, 10, 20)
+OUTCOME_ANALYSIS_HORIZON_DAYS = 20
+RESEARCH_MIN_GROUP_SIZE = CALIBRATION_MIN_SAMPLES_WEIGHT
+RESEARCH_MIN_MODEL_ROWS = CALIBRATION_MIN_SAMPLES_WEIGHT * 4
+RESEARCH_BOOTSTRAP_SYMBOLS = ("SMOKEA", "SMOKEB", "SMOKEC", "SMOKED", "SMOKEE", "SMOKEF")
+
+# Calibration fallback thresholds preserved from the repo's pre-existing live
+# scoring defaults. Provenance: legacy_preserved.
+RR_MIN_ACTIONABLE = 1.15
+RR_MIN_POTENTIAL = 1.35
+OVERHEAD_MIN_SCORE = 55.0
+ORDERLINESS_MIN_SCORE = 58.0
+RS20_SUPPORTIVE_MIN = 0.0
+RVOL_SUPPORTIVE_MIN = 1.0
+
+
+# =============================================================================
+# PRODUCTION PROMOTION RULES
+# =============================================================================
+# These gates are derived from the repo's own replay research artifacts dated
+# 2026-04-22. They are intentionally narrow production-promotion gates rather
+# than broad research-state filters.
+#
+# Provenance:
+# - outcome_backed_band: grouped expectancy bins from research outputs dated
+#   2026-04-22
+# - legacy_preserved: existing repo constants intentionally retained where the
+#   research output did not provide a stronger replacement
+# - provisional_if_needed: only used where replay evidence is still sparse
+PRODUCTION_PRIMARY_STATES = (
+    "ACTIONABLE_BREAKOUT",
+    "TRIGGER_WATCH",
+    "ACTIONABLE_RECLAIM",
+    "ACTIONABLE_RETEST",
+)
+RESEARCH_ONLY_STATES = ("STALKING",)
+EXTENDED_SUBTYPES = ("EXTENDED_CONTINUATION", "EXTENDED_LATE")
+
+# Outcome-backed primary-edge bands used in the live promotion path.
+PRODUCTION_BAND_PROVENANCE = {
+    "pivot_distance_pct": "outcome_backed_band",
+    "pivot_position": "outcome_backed_band",
+    "trigger_readiness_score": "outcome_backed_band",
+    "breakout_readiness_score": "outcome_backed_band",
+    "structural_score": "outcome_backed_band",
+    "extension_atr": "outcome_backed_band",
+    "overhead_supply_score": "outcome_backed_band",
+    "rvol": "outcome_backed_band",
+    "larger_ma_supportive": "outcome_backed_band",
+    "tightening_to_short_ma": "outcome_backed_band",
+    "short_ma_rising": "provisional_if_needed",
+    "avwap_supportive": "outcome_backed_band",
+    "avwap_resistance": "outcome_backed_band",
+    "trigger_type": "outcome_backed_band",
+    "extended_subtype": "provisional_if_needed",
+}
+
+# Outcome-backed band specs intentionally use quantile/distribution methodology
+# instead of narrow literal bin edges. Runtime cut points are derived from the
+# repo's replay outcomes and current packet distributions.
+PRODUCTION_BAND_SPECS = {
+    "pivot_distance_pct": {
+        "mode": "target_abs",
+        "target": 0.0,
+        "favorable_quantile": 0.35,
+        "acceptable_quantile": 0.7,
+        "fallback_scale": PIVOT_PROXIMITY_PCT,
+        "provenance": "outcome_backed_band",
+    },
+    "trigger_readiness_score": {
+        "mode": "high",
+        "unfavorable_quantile": 0.25,
+        "favorable_quantile": 0.75,
+        "fallback_min": 0.0,
+        "fallback_max": 100.0,
+        "provenance": "outcome_backed_band",
+    },
+    "breakout_readiness_score": {
+        "mode": "high",
+        "unfavorable_quantile": 0.25,
+        "favorable_quantile": 0.75,
+        "fallback_min": 0.0,
+        "fallback_max": 100.0,
+        "provenance": "outcome_backed_band",
+    },
+    "structural_score": {
+        "mode": "high",
+        "unfavorable_quantile": 0.25,
+        "favorable_quantile": 0.75,
+        "fallback_min": 0.0,
+        "fallback_max": 100.0,
+        "provenance": "outcome_backed_band",
+    },
+    "extension_atr": {
+        "mode": "target_abs",
+        "target": 0.0,
+        "favorable_quantile": 0.35,
+        "acceptable_quantile": 0.7,
+        "fallback_scale": MAX_BREAKOUT_EXTENSION_ATR,
+        "provenance": "outcome_backed_band",
+    },
+    "overhead_supply_score": {
+        "mode": "low",
+        "favorable_quantile": 0.25,
+        "unfavorable_quantile": 0.75,
+        "fallback_min": 0.0,
+        "fallback_max": 100.0,
+        "provenance": "outcome_backed_band",
+    },
+    "rvol": {
+        "mode": "target_abs",
+        "target": 1.0,
+        "favorable_quantile": 0.35,
+        "acceptable_quantile": 0.75,
+        "fallback_scale": 1.0,
+        "provenance": "outcome_backed_band",
+    },
+}
+
+PRODUCTION_PIVOT_POSITION_BANDS = {
+    "favorable": ("at_pivot",),
+    "acceptable": ("below_pivot_but_near",),
+    "unfavorable": ("far_below_pivot", "too_far_through_pivot"),
+}
+
+PRODUCTION_PIVOT_ZONES = {
+    "prime": {"min_exclusive": -0.05, "max_inclusive": 0.0},
+    "near": {"min_exclusive": -0.07, "max_inclusive": -0.05},
+}
+
+PRODUCTION_MA_CONFIRMATION = {
+    "larger_ma_supportive_required": True,
+    "tightening_to_short_ma_bonus": 10.0,
+    "short_ma_rising_bonus": 4.0,
+}
+
+PRODUCTION_AVWAP_CONFLUENCE = {
+    "supportive_bonus": 6.0,
+    "resistance_penalty": 12.0,
+}
+
+PRODUCTION_EXTENSION_CONTINUATION_MAX = 1.8
+
+PRODUCTION_INTERACTION_WEIGHTS = {
+    "pivot_zone_prime_bonus": 5.0,
+    "pivot_zone_near_bonus": 1.5,
+    "pivot_zone_far_penalty": 18.0,
+    "approaching_pivot_cluster_bonus": 7.0,
+    "pivot_trigger_alignment_bonus": 8.0,
+    "pivot_breakout_alignment_bonus": 7.0,
+    "trigger_breakout_structure_bonus": 12.0,
+    "ma_confirmation_cluster_bonus": 9.0,
+    "elite_cluster_bonus": 14.0,
+    "extended_continuation_bonus": 8.0,
+    "approaching_pivot_conflict_penalty": 12.0,
+    "negative_conflict_penalty": 16.0,
+    "overhead_conflict_penalty": 18.0,
+    "late_extension_conflict_penalty": 18.0,
+    "far_below_pivot_conflict_penalty": 18.0,
+}
+
+PRODUCTION_SIZING_LADDER = {
+    "full": {"min_score": 92.0, "risk_multiplier": 1.0},
+    "medium": {"min_score": 80.0, "risk_multiplier": 0.7},
+    "small": {"min_score": 68.0, "risk_multiplier": 0.45},
+    "starter": {"min_score": 55.0, "risk_multiplier": 0.25},
+    "none": {"min_score": 0.0, "risk_multiplier": 0.0},
+}
+
+PRODUCTION_TRIGGER_WEIGHTS = {
+    "opening_range_breakout": 1.00,
+    "prior_day_high_break": 0.84,
+    "vwap_reclaim_hold": 0.74,
+    "intraday_consolidation_breakout": 0.38,
+}
+PRODUCTION_DEMOTED_TRIGGER_TYPES = ("intraday_consolidation_breakout",)
+PRODUCTION_PRIMARY_SECTION_ORDER = (
+    "actionable",
+    "near_trigger",
+    "stalking",
+    "continuation",
+    "avoid",
+)
+
+# Stable production runtime profile used by lightweight GitHub/daily runs.
+# This is intentionally config-backed so production does not need to derive
+# threshold or band distributions from research artifacts at runtime.
+PRODUCTION_THRESHOLD_PROFILE = {
+    "confidence": {
+        "label": "provisional_insufficient_history",
+        "sample_size": 3,
+        "setup_state_diversity": 1,
+        "setup_family_diversity": 1,
+    },
+    "pivot_distance": {
+        "just_through_max_atr": 0.9,
+        "too_far_through_atr": 1.35,
+        "provenance": {
+            "just_through_max_atr": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.MAX_RETEST_EXTENSION_ATR",
+                "provisional": False,
+            },
+            "too_far_through_atr": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.MAX_BREAKOUT_EXTENSION_ATR",
+                "provisional": False,
+            },
+        },
+    },
+    "actionability": {
+        "rr_min_actionable": 1.15,
+        "rr_min_potential": 1.35,
+        "overhead_min": 55.0,
+        "orderliness_min": 58.0,
+        "provenance": {
+            "rr_min_actionable": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.RR_MIN_ACTIONABLE",
+                "provisional": False,
+            },
+            "rr_min_potential": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.RR_MIN_POTENTIAL",
+                "provisional": False,
+            },
+            "overhead_min": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.OVERHEAD_MIN_SCORE",
+                "provisional": False,
+            },
+            "orderliness_min": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.ORDERLINESS_MIN_SCORE",
+                "provisional": False,
+            },
+        },
+    },
+    "participation": {
+        "rs20_supportive_min": 0.0,
+        "rvol_supportive_min": 1.0,
+        "provenance": {
+            "rs20_supportive_min": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.RS20_SUPPORTIVE_MIN",
+                "provisional": False,
+            },
+            "rvol_supportive_min": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.RVOL_SUPPORTIVE_MIN",
+                "provisional": False,
+            },
+        },
+    },
+    "score_gates": {
+        "structural_min": 55.0,
+        "breakout_watch_min": 58.0,
+        "trigger_watch_min": 62.0,
+        "provenance": {
+            "structural_min": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.STRUCTURAL_MIN_SCORE",
+                "provisional": False,
+            },
+            "breakout_watch_min": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.BREAKOUT_WATCH_MIN_SCORE",
+                "provisional": False,
+            },
+            "trigger_watch_min": {
+                "method_used": "legacy_preserved",
+                "variable_source": "cfg.TRIGGER_WATCH_MIN_SCORE",
+                "provisional": False,
+            },
+        },
+    },
+    "distribution_diagnostics": {
+        "current_packet_extension_atr_median": -0.92,
+        "current_packet_reward_risk_median": 0.07,
+    },
+    "band_distributions": {
+        "pivot_distance_pct": {
+            "mode": "target_abs",
+            "feature": "pivot_distance_pct",
+            "sample_size": 94,
+            "method_used": "provisional_if_needed",
+            "provisional": True,
+            "min": -21.17,
+            "median": -2.735,
+            "max": -0.07,
+            "target": 0.0,
+            "favorable_cutoff": 2.1525,
+            "acceptable_cutoff": 4.235,
+        },
+        "trigger_readiness_score": {
+            "mode": "high",
+            "feature": "trigger_readiness_score",
+            "sample_size": 94,
+            "method_used": "provisional_if_needed",
+            "provisional": True,
+            "min": 38.8,
+            "median": 56.9,
+            "max": 65.9,
+            "unfavorable_cutoff": 56.9,
+            "favorable_cutoff": 63.4,
+        },
+        "breakout_readiness_score": {
+            "mode": "high",
+            "feature": "breakout_readiness_score",
+            "sample_size": 94,
+            "method_used": "provisional_if_needed",
+            "provisional": True,
+            "min": 28.0,
+            "median": 50.8,
+            "max": 74.6,
+            "unfavorable_cutoff": 44.025,
+            "favorable_cutoff": 59.25,
+        },
+        "structural_score": {
+            "mode": "high",
+            "feature": "structural_score",
+            "sample_size": 94,
+            "method_used": "provisional_if_needed",
+            "provisional": True,
+            "min": 28.5,
+            "median": 50.0,
+            "max": 71.2,
+            "unfavorable_cutoff": 39.825,
+            "favorable_cutoff": 57.95,
+        },
+        "extension_atr": {
+            "mode": "target_abs",
+            "feature": "extension_atr",
+            "sample_size": 94,
+            "method_used": "provisional_if_needed",
+            "provisional": True,
+            "min": -4.51,
+            "median": -0.92,
+            "max": -0.05,
+            "target": 0.0,
+            "favorable_cutoff": 0.681,
+            "acceptable_cutoff": 1.253,
+        },
+        "overhead_supply_score": {
+            "mode": "low",
+            "feature": "overhead_supply_score",
+            "sample_size": 94,
+            "method_used": "provisional_if_needed",
+            "provisional": True,
+            "min": 7.6,
+            "median": 41.25,
+            "max": 66.4,
+            "favorable_cutoff": 30.275,
+            "unfavorable_cutoff": 52.1,
+        },
+        "rvol": {
+            "mode": "target_abs",
+            "feature": "rvol",
+            "sample_size": 94,
+            "method_used": "provisional_if_needed",
+            "provisional": True,
+            "min": 0.0,
+            "median": 0.49,
+            "max": 2.4,
+            "target": 1.0,
+            "favorable_cutoff": 0.46,
+            "acceptable_cutoff": 0.65,
+        },
+    },
+}
+
+
+def get_production_threshold_profile() -> dict:
+    return copy.deepcopy(PRODUCTION_THRESHOLD_PROFILE)
 
 
 # =============================================================================

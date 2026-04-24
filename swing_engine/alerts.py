@@ -7,6 +7,7 @@ Both channels silently no-op when not configured — safe to call always.
 No new dependencies: uses smtplib, email, and urllib.request (all stdlib).
 """
 from __future__ import annotations
+from typing import List
 
 import json
 import smtplib
@@ -32,7 +33,7 @@ def _is_webhook_configured() -> bool:
     return bool(cfg.ALERT_WEBHOOK_URL)
 
 
-def _build_email_body(packets: dict, regime: dict, alerted: list[str]) -> str:
+def _build_email_body(packets: dict, regime: dict, alerted: List[str]) -> str:
     """Build plain-text email body summarising today's top setups."""
     lines = [
         f"Swing Engine Alert — {date.today().isoformat()}",
@@ -81,7 +82,7 @@ def _build_email_body(packets: dict, regime: dict, alerted: list[str]) -> str:
     return "\n".join(lines)
 
 
-def _build_webhook_payload(packets: dict, regime: dict, alerted: list[str]) -> dict:
+def _build_webhook_payload(packets: dict, regime: dict, alerted: List[str]) -> dict:
     """Build a Slack-compatible blocks payload for the webhook."""
     regime_str = (
         f"*{regime.get('regime', '?').upper()}* | "
@@ -201,7 +202,7 @@ def send_webhook_alert(payload: dict) -> bool:
 # Main dispatch
 # ---------------------------------------------------------------------------
 
-def dispatch_alerts(packets: dict, regime: dict) -> list[str]:
+def dispatch_alerts(packets: dict, regime: dict) -> List[str]:
     """
     Filter packets for high-quality setups and dispatch alerts to all
     configured channels (email + webhook).

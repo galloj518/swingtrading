@@ -125,7 +125,7 @@
       </div>
       <label class="control toggle"><input id="hideExtended" type="checkbox" checked> Hide EXTENDED</label>
       <label class="control toggle"><input id="hideBlocked" type="checkbox" checked> Hide BLOCKED / DATA_UNAVAILABLE</label>
-      <label class="control toggle"><input id="onlyPotential" type="checkbox"> Show only POTENTIAL_BREAKOUT</label>
+      <label class="control toggle"><input id="onlyPotential" type="checkbox"> Show only STALKING</label>
       <label class="control toggle"><input id="onlyActionable" type="checkbox"> Show only actionable setups</label>
     </div>
   </div>
@@ -133,10 +133,11 @@
   <div class="section">
     <h2>Desk Snapshot</h2>
     <div class="grid summary-grid">
-      <div class="metric"><div class="label">Structural Leaders</div><div class="value">{{ sections.structural|length }}</div></div>
-      <div class="metric"><div class="label">Breakout Watch</div><div class="value">{{ sections.breakout|length }}</div></div>
-      <div class="metric"><div class="label">Triggered Now</div><div class="value">{{ sections.triggered|length }}</div></div>
-      <div class="metric"><div class="label">Failed / Blocked</div><div class="value">{{ sections.failed|length }}</div></div>
+      <div class="metric"><div class="label">Actionable</div><div class="value">{{ sections.actionable|length }}</div></div>
+      <div class="metric"><div class="label">Near Trigger</div><div class="value">{{ sections.near_trigger|length }}</div></div>
+      <div class="metric"><div class="label">Stalking / Early</div><div class="value">{{ sections.stalking|length }}</div></div>
+      <div class="metric"><div class="label">Continuation Bucket</div><div class="value">{{ sections.continuation|length }}</div></div>
+      <div class="metric"><div class="label">Avoid</div><div class="value">{{ sections.avoid|length }}</div></div>
     </div>
   </div>
 
@@ -155,17 +156,19 @@
     </table>
   </div>
 
-  {% for title, rows in [("Structural Leaders", sections.structural), ("Breakout Watchlist", sections.breakout), ("Actionable Triggers Now", sections.triggered), ("Failed / Avoid", sections.failed)] %}
+  {% for title, rows in [("Actionable", sections.actionable), ("Near Trigger", sections.near_trigger), ("Stalking / Early Setup", sections.stalking), ("Continuation", sections.continuation), ("Avoid", sections.avoid)] %}
   <div class="section">
     <h2>{{ title }}</h2>
     <div class="grid card-grid">
       {% for row in rows %}
       {% set packet = row.packet %}
       {% set charts = chart_images.get(row.symbol, {}) %}
+      {% set production = packet.score.production_promotion %}
       <div class="card symbol-card"
            data-symbol="{{ row.symbol }}"
            data-state="{{ packet.score.setup_state }}"
            data-family="{{ packet.score.setup_family }}"
+           data-tier="{{ production.tier }}"
            data-freshness="{{ packet.data_quality.intraday_freshness_label }}"
            data-structural="{{ packet.score.structural_score }}"
            data-breakout="{{ packet.score.breakout_readiness_score }}"
@@ -176,6 +179,9 @@
             <h3>{{ row.symbol }}</h3>
             <span class="badge state">{{ packet.score.setup_family }}</span>
             <span class="badge state">{{ packet.score.setup_state }}</span>
+            {% if production.extended_subtype %}
+            <span class="badge state">{{ production.extended_subtype }}</span>
+            {% endif %}
             {% set fresh_class = 'fresh' if packet.data_quality.intraday_freshness_label == 'fresh' else 'stale' if packet.data_quality.intraday_freshness_label in ['mildly_stale', 'stale'] else 'bad' %}
             <span class="badge {{ fresh_class }}">{{ packet.data_quality.intraday_freshness_label }}</span>
           </div>
@@ -192,6 +198,10 @@
           <tr><th>Pivot</th><td class="mono">{{ packet.setup.pivot_level }}</td></tr>
           <tr><th>Trigger</th><td>{{ packet.intraday_trigger.primary.trigger_type }}</td></tr>
           <tr><th>Trigger Level</th><td class="mono">{{ packet.intraday_trigger.primary.trigger_level }}</td></tr>
+          <tr><th>Production Tier</th><td>{{ production.tier }}</td></tr>
+          <tr><th>Production Score</th><td>{{ production.production_score }}</td></tr>
+          <tr><th>Hard Gates</th><td>{% if production.hard_gate_failures %}{{ production.hard_gate_failures|join(', ') }}{% else %}passed{% endif %}</td></tr>
+          <tr><th>Trigger Preference</th><td>{{ production.trigger_preference.label }}{% if production.trigger_preference.trigger_type %} ({{ production.trigger_preference.trigger_type }}){% endif %}</td></tr>
           <tr><th>Extension vs Pivot</th><td>{{ packet.score.pivot_position.classification }} | {{ packet.score.pivot_position.distance_pct }}% | {{ packet.score.pivot_position.extension_atr }} ATR</td></tr>
           <tr><th>Entry Zone</th><td class="mono">{{ packet.entry_zone.entry_low }} - {{ packet.entry_zone.entry_high }}</td></tr>
           <tr><th>Stop</th><td class="mono">{{ packet.entry_zone.stop }}</td></tr>
@@ -199,6 +209,11 @@
           <tr><th>RS20</th><td>{{ packet.relative_strength.rs_20d }}</td></tr>
           <tr><th>Reason Surfaced</th><td>{{ packet.score.decision_summary }}</td></tr>
           <tr><th>AVWAP Context</th><td>{{ packet.avwap_context.detail }}</td></tr>
+          {% if production.extended_subtype %}
+          <tr><th>Extended Subtype</th><td>{{ production.extended_subtype }} | {{ production.extended_detail }}</td></tr>
+          {% endif %}
+          <tr><th>Threshold Provenance</th><td>{{ packet.score.threshold_provenance_summary }}</td></tr>
+          <tr><th>Calibration Confidence</th><td>{{ packet.score.calibration_confidence }}</td></tr>
         </table>
         <div class="chart-grid">
           {% if charts.daily_url %}
@@ -272,7 +287,7 @@
     if (controls.freshness.value && freshness !== controls.freshness.value) return false;
     if (controls.hideExtended.checked && state === 'EXTENDED') return false;
     if (controls.hideBlocked.checked && ['BLOCKED', 'DATA_UNAVAILABLE'].includes(state)) return false;
-    if (controls.onlyPotential.checked && state !== 'POTENTIAL_BREAKOUT') return false;
+    if (controls.onlyPotential.checked && state !== 'STALKING') return false;
     if (controls.onlyActionable.checked && !actionable) return false;
     return true;
   }

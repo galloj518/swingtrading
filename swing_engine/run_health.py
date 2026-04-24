@@ -2,6 +2,7 @@
 Run health collection and atomic output helpers.
 """
 from __future__ import annotations
+from typing import List, Tuple
 
 import json
 import os
@@ -31,7 +32,7 @@ def start_timer() -> float:
     return time.perf_counter()
 
 
-def _source_counts(data_status: dict, symbols: list[str]) -> tuple[int, int, int]:
+def _source_counts(data_status: dict, symbols: List[str]) -> Tuple[int, int, int]:
     live = 0
     cache_fallback = 0
     unavailable = 0
@@ -66,6 +67,7 @@ def collect_run_health(mode: str, context: dict, started_at: float) -> dict:
         or packets.get(symbol, {}).get("data_quality", {}).get("intraday_freshness_label") in {"missing", "stale", "very_stale"}
     )
     setup_state_counts = Counter(packets.get(symbol, {}).get("score", {}).get("setup_state", "UNKNOWN") for symbol in watch_symbols)
+    setup_family_counts = Counter(packets.get(symbol, {}).get("score", {}).get("setup_family", "UNKNOWN") for symbol in watch_symbols)
     actionability_counts = Counter(packets.get(symbol, {}).get("actionability", {}).get("label", "UNKNOWN") for symbol in watch_symbols)
     benchmark_available_count = sum(1 for available in benchmark_status.values() if available)
     regime_degraded = bool(regime.get("quality") == "degraded" or benchmark_available_count < len(benchmark_symbols))
@@ -85,6 +87,9 @@ def collect_run_health(mode: str, context: dict, started_at: float) -> dict:
     else:
         overall_status = "healthy"
 
+    dominant_setup_state = setup_state_counts.most_common(1)[0] if setup_state_counts else (None, 0)
+    setup_state_imbalance_ratio = round((dominant_setup_state[1] / total_symbols), 3) if total_symbols else 0.0
+
     return {
         "run_mode": mode,
         "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -103,6 +108,10 @@ def collect_run_health(mode: str, context: dict, started_at: float) -> dict:
         "intraday_trigger_degraded_ratio": round(trigger_ratio, 3),
         "overall_status": overall_status,
         "setup_state_counts": dict(sorted(setup_state_counts.items())),
+        "setup_family_counts": dict(sorted(setup_family_counts.items())),
+        "dominant_setup_state": dominant_setup_state[0],
+        "dominant_setup_state_ratio": setup_state_imbalance_ratio,
+        "setup_state_imbalance": bool(setup_state_imbalance_ratio >= 0.9),
         "actionability_counts": dict(sorted(actionability_counts.items())),
     }
 

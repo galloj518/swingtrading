@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Tuple
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -31,9 +31,9 @@ except Exception:
 UTC = ZoneInfo("UTC")
 EASTERN = ZoneInfo("America/New_York")
 EMPTY_MARKET_FRAME = pd.DataFrame(columns=["date", "open", "high", "low", "close", "volume"])
-_MEMORY_CACHE: dict[tuple[str, str], tuple[pd.DataFrame, dict]] = {}
+_MEMORY_CACHE: Dict[Tuple[str, str], Tuple[pd.DataFrame, dict]] = {}
 _CONSECUTIVE_FETCH_FAILURES = 0
-_LIVE_FETCH_DISABLED_UNTIL: datetime | None = None
+_LIVE_FETCH_DISABLED_UNTIL:Optional[datetime] = None
 LOGGER = get_logger()
 
 
@@ -46,7 +46,7 @@ def _cache_base(symbol: str, timeframe: str) -> Path:
     return cfg.CACHE_DIR / f"{safe_symbol}_{timeframe}"
 
 
-def _cache_paths(symbol: str, timeframe: str) -> tuple[Path, Path]:
+def _cache_paths(symbol: str, timeframe: str) -> Tuple[Path, Path]:
     base = _cache_base(symbol, timeframe)
     return base.with_suffix(".csv"), base.with_suffix(".json")
 
@@ -55,7 +55,7 @@ def _empty_market_frame() -> pd.DataFrame:
     return EMPTY_MARKET_FRAME.copy()
 
 
-def _serialize_timestamp(value: datetime | None) -> str | None:
+def _serialize_timestamp(value:Optional[datetime]) -> Optional[str]:
     if value is None:
         return None
     if value.tzinfo is None:
@@ -63,7 +63,7 @@ def _serialize_timestamp(value: datetime | None) -> str | None:
     return value.astimezone(UTC).isoformat()
 
 
-def _parse_timestamp(value: str | None) -> datetime | None:
+def _parse_timestamp(value:Optional[str]) -> Optional[datetime]:
     if not value:
         return None
     try:
@@ -75,7 +75,7 @@ def _parse_timestamp(value: str | None) -> datetime | None:
     return parsed
 
 
-def _read_cache(symbol: str, timeframe: str) -> tuple[pd.DataFrame, dict]:
+def _read_cache(symbol: str, timeframe: str) -> Tuple[pd.DataFrame, dict]:
     csv_path, meta_path = _cache_paths(symbol, timeframe)
     if not csv_path.exists():
         return pd.DataFrame(), {}
@@ -178,7 +178,7 @@ def _clone_cached(df: pd.DataFrame, meta: dict) -> pd.DataFrame:
     return _attach_meta(df.copy(), dict(meta))
 
 
-def _get_memory_cache(symbol: str, timeframe: str) -> tuple[pd.DataFrame, dict] | None:
+def _get_memory_cache(symbol: str, timeframe: str) -> Optional[Tuple[pd.DataFrame, dict]]:
     cached = _MEMORY_CACHE.get((symbol, timeframe))
     if not cached:
         return None
@@ -246,7 +246,7 @@ def _fetch_intraday(symbol: str) -> pd.DataFrame:
     return _download_history(symbol, period=f"{cfg.INTRADAY_LOOKBACK_DAYS}d", interval="5m")
 
 
-def _unavailable_meta(symbol: str, timeframe: str, reason: str, freshness_label: str | None = None) -> dict:
+def _unavailable_meta(symbol: str, timeframe: str, reason: str, freshness_label:Optional[str] = None) -> dict:
     meta = {
         "symbol": symbol,
         "timeframe": timeframe,
@@ -475,7 +475,7 @@ def load_macro_signals(force: bool = False) -> dict:
     return result
 
 
-def clean_old_cache(days_old: int | None = None) -> None:
+def clean_old_cache(days_old:Optional[int] = None) -> None:
     days_old = days_old or cfg.CACHE_RETENTION_DAYS
     cutoff = datetime.now() - timedelta(days=days_old)
     removed = 0

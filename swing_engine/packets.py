@@ -3,6 +3,7 @@ Packet builder: assembles deterministic structural, breakout, and trigger
 layers into the central packet object.
 """
 from __future__ import annotations
+from typing import Optional, List
 
 import json
 from datetime import datetime, date
@@ -25,7 +26,7 @@ from .runtime_logging import get_logger, log_event
 LOGGER = get_logger()
 
 
-def _find_group_name(symbol: str) -> str | None:
+def _find_group_name(symbol: str) -> Optional[str]:
     for group_name, symbols in cfg.CORRELATION_GROUPS.items():
         if symbol in symbols:
             return group_name
@@ -129,10 +130,66 @@ def _refresh_trade_plan(packet: dict) -> None:
     packet.setdefault("score", {})["tradeability"] = scoring.calc_tradeability(
         packet.get("score", {}), packet.get("entry_zone", {}), packet.get("setup", {}), data_quality=packet.get("data_quality", {})
     )
+    packet["live_profile"] = dict(packet.get("score", {}).get("production_promotion", {}))
+    packet["pivot_zone"] = packet.get("score", {}).get("production_promotion", {}).get("pivot_zone")
+    entry_zone = packet.get("entry_zone", {})
+    data_quality = packet.get("data_quality", {})
+    production_meta = packet.get("score", {}).get("production_promotion", {})
+    band_profile = production_meta.get("band_profile", {})
+    if entry_zone.get("price") and entry_zone.get("stop"):
+        packet["position_sizing"] = sizing.calc_position_size(
+            entry_zone["price"],
+            entry_zone["stop"],
+            symbol=packet.get("symbol", ""),
+            avg_volume=packet.get("daily", {}).get("avg_volume", 0),
+            avg_dollar_volume=packet.get("daily", {}).get("avg_dollar_volume", 0),
+            rvol=packet.get("daily", {}).get("rvol", 1.0),
+            target_1=entry_zone.get("target_1"),
+            target_2=entry_zone.get("target_2"),
+            setup_family=packet.get("score", {}).get("setup_family"),
+            setup_state=packet.get("score", {}).get("setup_state"),
+            freshness_label=data_quality.get("intraday_freshness_label"),
+            trigger_score=packet.get("score", {}).get("trigger_readiness_score"),
+            production_score=production_meta.get("production_score"),
+            live_tier=production_meta.get("tier"),
+            elite_cluster_flag=bool(production_meta.get("elite_cluster_flag")),
+            extended_subtype=production_meta.get("extended_subtype"),
+            approaching_pivot_cluster_flag=bool(production_meta.get("approaching_pivot_cluster_flag")),
+            approaching_pivot_confidence=production_meta.get("approaching_pivot_confidence"),
+            pivot_zone=production_meta.get("pivot_zone"),
+            trigger_band=(band_profile.get("trigger_readiness_score") or {}).get("label"),
+            breakout_band=(band_profile.get("breakout_readiness_score") or {}).get("label"),
+            structural_band=(band_profile.get("structural_score") or {}).get("label"),
+            dominant_negative_flags=list(production_meta.get("dominant_negative_flags", [])),
+        )
+    else:
+        packet["position_sizing"] = {}
+    packet["execution_policy"] = {
+        "execution_lane": packet.get("position_sizing", {}).get("execution_lane"),
+        "execution_posture": packet.get("position_sizing", {}).get("execution_posture"),
+        "starter_position_flag": packet.get("position_sizing", {}).get("starter_position_flag"),
+        "max_intended_size": packet.get("position_sizing", {}).get("max_intended_size"),
+        "recommended_lane": packet.get("position_sizing", {}).get("recommended_lane"),
+        "recommended_size_class": packet.get("position_sizing", {}).get("recommended_size_class"),
+        "recommended_action": packet.get("position_sizing", {}).get("recommended_action"),
+        "near_action_status": packet.get("position_sizing", {}).get("near_action_status"),
+    }
     packet["actionability"] = checklist.evaluate_actionability(packet)
 
 
-def build_packet(symbol: str, data: dict, spy_daily: pd.DataFrame | None = None, existing_group_risk: float = 0.0, corr_matrix: pd.DataFrame | None = None, open_positions: dict | None = None, regime: dict | None = None) -> dict:
+def _threshold_provenance_summary(profile:Optional[dict]) -> str:
+    profile = profile or {}
+    methods: List[str] = []
+    for section in profile.values():
+        provenance = (section or {}).get("provenance", {})
+        for meta in provenance.values():
+            method = str((meta or {}).get("method_used", "")).strip()
+            if method and method not in methods:
+                methods.append(method)
+    return ", ".join(methods) if methods else "unavailable"
+
+
+def build_packet(symbol: str, data: dict, spy_daily:Optional[pd.DataFrame] = None, existing_group_risk: float = 0.0, corr_matrix:Optional[pd.DataFrame] = None, open_positions:Optional[dict] = None, regime:Optional[dict] = None, threshold_profile:Optional[dict] = None) -> dict:
     daily = data.get("daily", pd.DataFrame()).copy()
     weekly = data.get("weekly", pd.DataFrame()).copy()
     intraday = data.get("intraday", pd.DataFrame()).copy()
@@ -211,7 +268,9 @@ def build_packet(symbol: str, data: dict, spy_daily: pd.DataFrame | None = None,
         breakout_features=breakout_features,
         breakout_patterns=pattern_block,
         intraday_trigger=trigger_block,
+        threshold_profile=threshold_profile,
     )
+    score_result["threshold_provenance_summary"] = _threshold_provenance_summary(threshold_profile)
 
     entry_zone = scoring.calc_entry_zone(
         daily_state,
@@ -272,8 +331,12 @@ def build_packet(symbol: str, data: dict, spy_daily: pd.DataFrame | None = None,
     }
     packet["setup"] = scoring.classify_setup(packet)
     packet["score"]["tradeability"] = scoring.calc_tradeability(packet["score"], entry_zone, packet["setup"], data_quality=data_quality)
+    packet["live_profile"] = dict(packet["score"].get("production_promotion", {}))
+    packet["pivot_zone"] = packet["score"].get("production_promotion", {}).get("pivot_zone")
 
     if entry_zone.get("price") and entry_zone.get("stop"):
+        production_meta = score_result.get("production_promotion", {})
+        band_profile = production_meta.get("band_profile", {})
         packet["position_sizing"] = sizing.calc_position_size(
             entry_zone["price"],
             entry_zone["stop"],
@@ -290,9 +353,30 @@ def build_packet(symbol: str, data: dict, spy_daily: pd.DataFrame | None = None,
             setup_state=score_result.get("setup_state"),
             freshness_label=data_quality.get("intraday_freshness_label"),
             trigger_score=score_result.get("trigger_readiness_score"),
+            production_score=production_meta.get("production_score"),
+            live_tier=production_meta.get("tier"),
+            elite_cluster_flag=bool(production_meta.get("elite_cluster_flag")),
+            extended_subtype=production_meta.get("extended_subtype"),
+            approaching_pivot_cluster_flag=bool(production_meta.get("approaching_pivot_cluster_flag")),
+            approaching_pivot_confidence=production_meta.get("approaching_pivot_confidence"),
+            pivot_zone=production_meta.get("pivot_zone"),
+            trigger_band=(band_profile.get("trigger_readiness_score") or {}).get("label"),
+            breakout_band=(band_profile.get("breakout_readiness_score") or {}).get("label"),
+            structural_band=(band_profile.get("structural_score") or {}).get("label"),
+            dominant_negative_flags=list(production_meta.get("dominant_negative_flags", [])),
         )
     else:
         packet["position_sizing"] = {}
+    packet["execution_policy"] = {
+        "execution_lane": packet.get("position_sizing", {}).get("execution_lane"),
+        "execution_posture": packet.get("position_sizing", {}).get("execution_posture"),
+        "starter_position_flag": packet.get("position_sizing", {}).get("starter_position_flag"),
+        "max_intended_size": packet.get("position_sizing", {}).get("max_intended_size"),
+        "recommended_lane": packet.get("position_sizing", {}).get("recommended_lane"),
+        "recommended_size_class": packet.get("position_sizing", {}).get("recommended_size_class"),
+        "recommended_action": packet.get("position_sizing", {}).get("recommended_action"),
+        "near_action_status": packet.get("position_sizing", {}).get("near_action_status"),
+    }
 
     packet["actionability"] = checklist.evaluate_actionability(packet)
     return packet
@@ -305,7 +389,7 @@ def save_packet(symbol: str, packet: dict) -> Path:
     return path
 
 
-def enrich_group_strength(packets: dict, regime: dict | None = None) -> None:
+def enrich_group_strength(packets: dict, regime:Optional[dict] = None) -> None:
     regime = regime or {}
     for symbol, packet in packets.items():
         group_name = packet.get("group_name")
@@ -360,6 +444,42 @@ def enrich_group_strength(packets: dict, regime: dict | None = None) -> None:
         _refresh_trade_plan(packet)
 
 
+def apply_threshold_profile(packets: dict, threshold_profile:Optional[dict], regime:Optional[dict] = None) -> None:
+    regime = regime or {}
+    for symbol, packet in packets.items():
+        if symbol in cfg.BENCHMARKS:
+            continue
+        packet["score"] = scoring.score_symbol(
+            packet.get("daily", {}),
+            packet.get("weekly", {}),
+            packet.get("intraday", {}),
+            packet.get("avwap_map", {}),
+            packet.get("relative_strength", {}),
+            packet.get("confluence", {}),
+            packet.get("events", {}),
+            packet.get("earnings", {}),
+            regime=regime,
+            chart_quality=packet.get("chart_quality"),
+            overhead_supply=packet.get("overhead_supply"),
+            breakout_integrity=packet.get("breakout_integrity"),
+            base_quality=packet.get("base_quality"),
+            continuation_pattern=packet.get("continuation_pattern"),
+            institutional_sponsorship=packet.get("institutional_sponsorship"),
+            weekly_close_quality=packet.get("weekly_close_quality"),
+            failed_breakout_memory=packet.get("failed_breakout_memory"),
+            catalyst_context=packet.get("catalyst_context"),
+            clean_air=packet.get("clean_air"),
+            data_quality=packet.get("data_quality"),
+            group_strength=packet.get("group_strength"),
+            breakout_features=packet.get("breakout_features"),
+            breakout_patterns=packet.get("breakout_patterns"),
+            intraday_trigger=packet.get("intraday_trigger"),
+            threshold_profile=threshold_profile,
+        )
+        packet["score"]["threshold_provenance_summary"] = _threshold_provenance_summary(threshold_profile)
+        _refresh_trade_plan(packet)
+
+
 def _safe_float(value, default: float = 0.0) -> float:
     try:
         if value is None:
@@ -369,7 +489,7 @@ def _safe_float(value, default: float = 0.0) -> float:
         return default
 
 
-def enrich_calibration(packets: dict, calibration_profile: dict, regime: dict | None = None) -> None:
+def enrich_calibration(packets: dict, calibration_profile: dict, regime:Optional[dict] = None) -> None:
     from . import calibration
 
     regime = regime or {}

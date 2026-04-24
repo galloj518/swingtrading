@@ -2,6 +2,7 @@
 US equity market-hours helpers used for intraday freshness decisions.
 """
 from __future__ import annotations
+from typing import Optional, Tuple
 
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -17,7 +18,7 @@ def now_eastern() -> datetime:
     return datetime.now(tz=EASTERN)
 
 
-def _session_bounds(current: datetime) -> tuple[datetime, datetime, datetime, datetime]:
+def _session_bounds(current: datetime) -> Tuple[datetime, datetime, datetime, datetime]:
     market_open = current.replace(hour=9, minute=30, second=0, microsecond=0)
     market_close = current.replace(hour=16, minute=0, second=0, microsecond=0)
     premarket_open = current.replace(hour=4, minute=0, second=0, microsecond=0)
@@ -25,7 +26,7 @@ def _session_bounds(current: datetime) -> tuple[datetime, datetime, datetime, da
     return premarket_open, market_open, market_close, postmarket_close
 
 
-def classify_market_session(current: datetime | None = None) -> str:
+def classify_market_session(current:Optional[datetime] = None) -> str:
     current = current.astimezone(EASTERN) if current else now_eastern()
     if current.weekday() >= 5:
         return "closed"
@@ -40,7 +41,7 @@ def classify_market_session(current: datetime | None = None) -> str:
     return "closed"
 
 
-def intraday_max_age_minutes(session: str | None = None) -> int:
+def intraday_max_age_minutes(session:Optional[str] = None) -> int:
     session = session or classify_market_session()
     return {
         "premarket": cfg.PREMARKET_INTRADAY_MAX_AGE_MINUTES,
@@ -50,7 +51,7 @@ def intraday_max_age_minutes(session: str | None = None) -> int:
     }.get(session, cfg.OFFSESSION_INTRADAY_MAX_AGE_MINUTES)
 
 
-def intraday_freshness_label(age_minutes: float | None, session: str | None = None) -> str:
+def intraday_freshness_label(age_minutes:Optional[float], session:Optional[str] = None) -> str:
     if age_minutes is None:
         return "missing"
     session = session or classify_market_session()
@@ -66,14 +67,14 @@ def intraday_freshness_label(age_minutes: float | None, session: str | None = No
     return "very_stale"
 
 
-def minutes_since(ts: datetime | None, current: datetime | None = None) -> float | None:
+def minutes_since(ts:Optional[datetime], current:Optional[datetime] = None) -> Optional[float]:
     if ts is None:
         return None
     current = current.astimezone(ts.tzinfo) if current and ts.tzinfo else (current or datetime.now(tz=ts.tzinfo))
     return max(0.0, (current - ts).total_seconds() / 60.0)
 
 
-def should_refresh_intraday(fetched_at: datetime | None, force: bool = False, current: datetime | None = None) -> bool:
+def should_refresh_intraday(fetched_at:Optional[datetime], force: bool = False, current:Optional[datetime] = None) -> bool:
     if force or fetched_at is None:
         return True
     current = current.astimezone(EASTERN) if current else now_eastern()
@@ -82,7 +83,7 @@ def should_refresh_intraday(fetched_at: datetime | None, force: bool = False, cu
     return label not in {"fresh"}
 
 
-def market_context(current: datetime | None = None) -> dict:
+def market_context(current:Optional[datetime] = None) -> dict:
     current = current.astimezone(EASTERN) if current else now_eastern()
     _, market_open, market_close, _ = _session_bounds(current)
     return {

@@ -2,6 +2,7 @@
 Small structured logging helpers for deterministic scan runs.
 """
 from __future__ import annotations
+from typing import Optional
 
 import json
 import logging
@@ -12,7 +13,7 @@ from . import config as cfg
 LOGGER_NAME = "swing_engine"
 
 
-def configure_logging(level: str | None = None) -> logging.Logger:
+def configure_logging(level:Optional[str] = None) -> logging.Logger:
     logger = logging.getLogger(LOGGER_NAME)
     if not logger.handlers:
         handler = logging.StreamHandler()
