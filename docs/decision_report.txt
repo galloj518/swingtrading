@@ -1,30 +1,12 @@
 ============================================================
 ACTIONABLE NOW
 ============================================================
-1. IFNNY
-   State: ACTIONABLE_BREAKOUT
-   Score: 100.0
-   Pivot Zone: prime
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: --
-   Sizing Tier: medium
-   Execution Posture: execute
-   Recommended Lane: actionable
-   Recommended Size: medium
-   Recommended Action: execute
-   Trigger: 63.86
-   Stop: 62.62
-   Target: 72.16
-   RR: 0.0
-   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, pivot_zone:prime
+None
 
 ============================================================
 NEAR ACTION / STARTER CANDIDATES
 ============================================================
-1. CLS
+1. BE
    State: TRIGGER_WATCH
    Score: 98.0
    Pivot Zone: near
@@ -37,15 +19,34 @@ NEAR ACTION / STARTER CANDIDATES
    Recommended Lane: near_action
    Recommended Size: starter
    Recommended Action: starter_only
-   Trigger: 407.09
-   Stop: 403.0
-   Target: 486.8
-   RR: 0.22
+   Trigger: 236.42
+   Stop: 233.0
+   Target: 307.81
+   RR: 0.24
    Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
    Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near
-2. IVZ
+2. OCUL
    State: TRIGGER_WATCH
-   Score: 95.0
+   Score: 98.0
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: --
+   Sizing Tier: medium
+   Execution Posture: starter_position_small
+   Recommended Lane: near_action
+   Recommended Size: starter
+   Recommended Action: starter_only
+   Trigger: 9.5
+   Stop: 9.37
+   Target: 11.9
+   RR: 1.02
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near
+3. IVZ
+   State: TRIGGER_WATCH
+   Score: 91.3
    Pivot Zone: near
    Trigger Band: favorable
    Breakout Band: favorable
@@ -56,29 +57,10 @@ NEAR ACTION / STARTER CANDIDATES
    Recommended Lane: near_action
    Recommended Size: starter
    Recommended Action: starter_only
-   Trigger: 25.38
+   Trigger: 25.43
    Stop: 25.17
    Target: 29.16
-   RR: 0.64
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, approaching_pivot_cluster, pivot_zone:near
-3. AAPL
-   State: FORMING
-   Score: 94.4
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: acceptable
-   Dominant Negatives: --
-   Sizing Tier: watchlist
-   Execution Posture: watchlist
-   Recommended Lane: near_action
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 271.54
-   Stop: 270.1
-   Target: 299.83
-   RR: 0.83
+   RR: 0.51
    Clusters: pivot_trigger_alignment, pivot_breakout_alignment, approaching_pivot_cluster
    Notes: pivot_trigger_alignment, pivot_breakout_alignment, approaching_pivot_cluster, pivot_zone:near
 4. CIEN
@@ -94,10 +76,29 @@ NEAR ACTION / STARTER CANDIDATES
    Recommended Lane: near_action
    Recommended Size: watchlist
    Recommended Action: watch
-   Trigger: 515.43
+   Trigger: 515.98
    Stop: 505.55
    Target: 648.61
-   RR: 0.2
+   RR: 0.26
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, forming_readiness_cap, pivot_zone:near
+5. NVT
+   State: FORMING
+   Score: 79.9
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: --
+   Sizing Tier: watchlist
+   Execution Posture: watchlist
+   Recommended Lane: near_action
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 143.19
+   Stop: 142.59
+   Target: 162.59
+   RR: 0.29
    Clusters: pivot_trigger_alignment, approaching_pivot_cluster
    Notes: pivot_trigger_alignment, approaching_pivot_cluster, forming_readiness_cap, pivot_zone:near
 
@@ -120,29 +121,10 @@ RESEARCH ONLY
    Trigger: 258.79
    Stop: 257.68
    Target: 289.08
-   RR: 0.19
+   RR: 0.1
    Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
    Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near
-2. APD
-   State: ACTIONABLE_RETEST
-   Score: 98.0
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: --
-   Sizing Tier: full
-   Execution Posture: execute
-   Recommended Lane: actionable
-   Recommended Size: full
-   Recommended Action: execute
-   Trigger: 303.54
-   Stop: 300.89
-   Target: 321.69
-   RR: 0.17
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster, elite_cluster
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster, elite_cluster, pivot_zone:near
-3. MU
+2. MU
    State: ACTIONABLE_RETEST
    Score: 98.0
    Pivot Zone: near
@@ -158,10 +140,10 @@ RESEARCH ONLY
    Trigger: 493.62
    Stop: 489.36
    Target: 604.52
-   RR: 0.08
+   RR: 0.12
    Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
    Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near
-4. VIAV
+3. VIAV
    State: ACTIONABLE_RETEST
    Score: 98.0
    Pivot Zone: near
@@ -177,9 +159,28 @@ RESEARCH ONLY
    Trigger: 47.0
    Stop: 46.89
    Target: 58.51
-   RR: 0.07
+   RR: 0.11
    Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
    Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near
+4. APD
+   State: STALKING
+   Score: 49.9
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: acceptable
+   Dominant Negatives: --
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 303.54
+   Stop: 300.89
+   Target: 321.69
+   RR: 0.29
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, ma_confirmation_cluster, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, ma_confirmation_cluster, approaching_pivot_cluster, pivot_zone:near
 5. GOOG
    State: STALKING
    Score: 49.9
@@ -193,17 +194,36 @@ RESEARCH ONLY
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 338.0
-   Stop: 334.05
+   Trigger: 336.44
+   Stop: 335.28
    Target: 368.72
-   RR: 1.15
+   RR: 1.12
    Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster
    Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster, pivot_zone:near
 
 ============================================================
 REJECT / AVOID
 ============================================================
-1. EXAS
+1. IFNNY
+   State: EXTENDED
+   Score: 100.0
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: --
+   Sizing Tier: medium
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 63.19
+   Stop: 62.62
+   Target: 72.16
+   RR: 0.02
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, extended_continuation_cluster
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, extended_continuation_cluster, prime_ready_alignment_bonus, pivot_zone:prime
+2. EXAS
    State: DATA_UNAVAILABLE
    Score: 96.4
    Pivot Zone: near
@@ -222,9 +242,9 @@ REJECT / AVOID
    RR: 0.07
    Clusters: pivot_breakout_alignment, ma_confirmation_cluster
    Notes: pivot_breakout_alignment, ma_confirmation_cluster, pivot_zone:near, negative:weak_trigger_readiness
-2. NVT
+3. VRT
    State: FAILED
-   Score: 94.4
+   Score: 91.8
    Pivot Zone: near
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -235,53 +255,15 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 142.59
-   Stop: 142.59
-   Target: 162.59
-   RR: 0.39
+   Trigger: 319.6
+   Stop: 319.6
+   Target: 382.17
+   RR: 0.56
    Clusters: pivot_trigger_alignment, approaching_pivot_cluster
    Notes: pivot_trigger_alignment, approaching_pivot_cluster, pivot_zone:near
-3. BE
-   State: FAILED
-   Score: 90.7
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: --
-   Sizing Tier: medium
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 233.0
-   Stop: 233.0
-   Target: 307.81
-   RR: 0.5
-   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, pivot_zone:near
-4. GNRC
-   State: FAILED
-   Score: 88.8
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: --
-   Sizing Tier: medium
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 219.0
-   Stop: 219.0
-   Target: 251.95
-   RR: 0.76
-   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, pivot_zone:near
-5. TROW
+4. PLD
    State: FORMING
-   Score: 63.0
+   Score: 63.9
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -292,53 +274,53 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 99.1
-   Stop: 98.75
-   Target: 108.52
-   RR: 0.91
+   Trigger: 142.42
+   Stop: 141.25
+   Target: 157.17
+   RR: 1.82
    Clusters: ma_confirmation_cluster
    Notes: ma_confirmation_cluster, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
-6. WMB
-   State: BLOCKED
-   Score: 50.1
+5. TROW
+   State: FORMING
+   Score: 62.6
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
    Structural Band: acceptable
    Dominant Negatives: far_from_pivot
-   Sizing Tier: none
+   Sizing Tier: starter
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 71.47
-   Stop: 71.01
-   Target: 77.84
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:far_from_pivot
-7. GOOGL
+   Trigger: 99.14
+   Stop: 98.75
+   Target: 108.52
+   RR: 0.92
+   Clusters: ma_confirmation_cluster
+   Notes: ma_confirmation_cluster, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
+6. SMA
    State: FORMING
-   Score: 49.2
+   Score: 58.0
    Pivot Zone: far_below
    Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot
-   Sizing Tier: none
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: starter
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 339.56
-   Stop: 335.39
-   Target: 371.69
-   RR: 1.26
-   Clusters: ma_confirmation_cluster, negative_conflict_structure_vs_location
-   Notes: ma_confirmation_cluster, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
-8. BP
-   State: FORMING
-   Score: 48.8
+   Trigger: 32.26
+   Stop: 31.75
+   Target: 35.5
+   RR: 2.53
+   Clusters: ma_confirmation_cluster
+   Notes: ma_confirmation_cluster, forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+7. PYPL
+   State: FAILED
+   Score: 54.0
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -349,15 +331,15 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 46.44
-   Stop: 46.06
-   Target: 50.82
+   Trigger: 49.56
+   Stop: 49.56
+   Target: 57.64
    RR: 0.0
-   Clusters: --
-   Notes: forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-9. BLK
-   State: FORMING
-   Score: 48.3
+   Clusters: ma_confirmation_cluster
+   Notes: ma_confirmation_cluster, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
+8. KVUE
+   State: BLOCKED
+   Score: 47.5
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: favorable
@@ -368,15 +350,15 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 1050.41
-   Stop: 1045.11
-   Target: 1184.85
-   RR: 1.57
+   Trigger: 17.53
+   Stop: 17.51
+   Target: 18.53
+   RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:far_from_pivot
-10. ORLY
+9. BP
    State: FORMING
-   Score: 47.3
+   Score: 46.9
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -387,33 +369,14 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 92.91
-   Stop: 91.66
-   Target: 99.25
+   Trigger: 46.23
+   Stop: 46.06
+   Target: 52.86
    RR: 0.0
    Clusters: --
    Notes: forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
-11. KVUE
+10. WMB
    State: BLOCKED
-   Score: 47.2
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: acceptable
-   Dominant Negatives: far_from_pivot
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 17.6
-   Stop: 17.51
-   Target: 18.54
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:far_from_pivot
-12. ROL
-   State: FORMING
    Score: 46.7
    Pivot Zone: far_below
    Trigger Band: favorable
@@ -425,15 +388,53 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 56.33
-   Stop: 55.9
-   Target: 60.93
-   RR: 1.71
+   Trigger: 71.65
+   Stop: 71.4
+   Target: 77.83
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:far_from_pivot
+11. ORLY
+   State: FORMING
+   Score: 45.3
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: far_from_pivot
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 93.44
+   Stop: 91.66
+   Target: 99.21
+   RR: 0.0
    Clusters: --
    Notes: forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
-13. PLD
+12. AAPL
+   State: FAILED
+   Score: 44.5
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: far_from_pivot
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 270.1
+   Stop: 270.1
+   Target: 299.83
+   RR: 1.33
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:far_from_pivot
+13. GOOGL
    State: FORMING
-   Score: 46.6
+   Score: 44.1
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -444,53 +445,15 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 142.35
-   Stop: 141.25
-   Target: 157.17
-   RR: 1.56
+   Trigger: 337.98
+   Stop: 336.67
+   Target: 371.69
+   RR: 1.32
    Clusters: ma_confirmation_cluster, negative_conflict_structure_vs_location
    Notes: ma_confirmation_cluster, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
-14. VICI
-   State: FORMING
-   Score: 45.5
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 28.53
-   Stop: 28.41
-   Target: 29.94
-   RR: 2.72
-   Clusters: --
-   Notes: forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-15. OCUL
-   State: FORMING
-   Score: 44.6
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 9.49
-   Stop: 9.37
-   Target: 11.9
-   RR: 1.2
-   Clusters: trigger_breakout_structure, negative_conflict_structure_vs_location
-   Notes: trigger_breakout_structure, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-16. LZB
-   State: FORMING
-   Score: 43.8
+14. LZB
+   State: FAILED
+   Score: 42.3
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -501,13 +464,32 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 35.74
+   Trigger: 35.45
    Stop: 35.45
    Target: 40.49
    RR: 1.9
    Clusters: --
-   Notes: forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
-17. CRDO
+   Notes: pivot_zone:far_below, negative:far_from_pivot
+15. CLS
+   State: EXTENDED
+   Score: 42.0
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 410.61
+   Stop: 403.0
+   Target: 489.03
+   RR: 0.04
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster, prime_ready_alignment_bonus, pivot_zone:prime, negative:overhead_supply
+16. CRDO
    State: EXTENDED
    Score: 42.0
    Pivot Zone: prime
@@ -523,10 +505,48 @@ REJECT / AVOID
    Trigger: 194.74
    Stop: 186.57
    Target: 244.72
-   RR: 0.04
+   RR: 0.05
    Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster
    Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster, prime_ready_alignment_bonus, pivot_zone:prime, negative:overhead_supply
-18. NVDA
+17. ALAB
+   State: ACTIONABLE_RETEST
+   Score: 42.0
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   Execution Posture: execute
+   Recommended Lane: actionable
+   Recommended Size: none
+   Recommended Action: execute
+   Trigger: 204.49
+   Stop: 202.62
+   Target: 264.25
+   RR: 0.1
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+18. EOSE
+   State: FORMING
+   Score: 42.0
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 7.26
+   Stop: 6.98
+   Target: 10.63
+   RR: 0.32
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+19. NVDA
    State: EXTENDED
    Score: 42.0
    Pivot Zone: prime
@@ -541,48 +561,29 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 203.22
    Stop: 199.81
-   Target: 226.94
-   RR: 0.0
+   Target: 229.88
+   RR: 0.02
    Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
    Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, prime_ready_alignment_bonus, pivot_zone:prime, negative:overhead_supply
-19. ALAB
-   State: FORMING
-   Score: 42.0
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 211.75
-   Stop: 202.62
-   Target: 264.25
-   RR: 0.05
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
-20. EOSE
-   State: FORMING
+20. GNRC
+   State: FAILED
    Score: 42.0
    Pivot Zone: near
    Trigger Band: favorable
    Breakout Band: acceptable
-   Structural Band: favorable
+   Structural Band: acceptable
    Dominant Negatives: overhead_supply
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 7.26
-   Stop: 6.98
-   Target: 10.54
-   RR: 0.82
+   Trigger: 219.0
+   Stop: 219.0
+   Target: 252.04
+   RR: 0.77
    Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
 21. NDAQ
    State: FAILED
    Score: 42.0
@@ -599,30 +600,49 @@ REJECT / AVOID
    Trigger: 87.24
    Stop: 87.24
    Target: 98.16
-   RR: 1.46
+   RR: 1.65
    Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger
    Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-22. SMA
-   State: FORMING
-   Score: 41.8
+22. ROL
+   State: FAILED
+   Score: 41.6
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
-   Structural Band: favorable
+   Structural Band: acceptable
    Dominant Negatives: far_from_pivot, weak_breakout_readiness
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 32.24
-   Stop: 31.75
-   Target: 35.5
-   RR: 2.39
-   Clusters: ma_confirmation_cluster, negative_conflict_structure_vs_location
-   Notes: ma_confirmation_cluster, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot, negative:weak_breakout_readiness
-23. PNC
-   State: FAILED
+   Trigger: 55.9
+   Stop: 55.9
+   Target: 60.93
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:far_from_pivot, negative:weak_breakout_readiness
+23. CBZ
+   State: FORMING
+   Score: 41.4
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: far_from_pivot
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 29.88
+   Stop: 29.14
+   Target: 36.9
+   RR: 0.0
+   Clusters: --
+   Notes: forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
+24. VICI
+   State: BLOCKED
    Score: 41.1
    Pivot Zone: far_below
    Trigger Band: favorable
@@ -634,15 +654,15 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 222.38
-   Stop: 222.38
-   Target: 242.01
+   Trigger: 28.56
+   Stop: 28.43
+   Target: 29.93
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-24. MSFT
-   State: FAILED
-   Score: 40.9
+25. MSFT
+   State: FORMING
+   Score: 40.0
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -653,15 +673,34 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 415.86
-   Stop: 415.86
+   Trigger: 419.28
+   Stop: 418.03
    Target: 476.45
-   RR: 2.78
+   RR: 2.6
    Clusters: ma_confirmation_cluster, negative_conflict_structure_vs_location
-   Notes: ma_confirmation_cluster, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-25. FDS
+   Notes: ma_confirmation_cluster, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
+26. MLM
+   State: BLOCKED
+   Score: 39.9
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 615.61
+   Stop: 609.69
+   Target: 674.67
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
+27. FDS
    State: FAILED
-   Score: 39.5
+   Score: 39.4
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -674,18 +713,18 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 225.75
    Stop: 225.75
-   Target: 269.25
+   Target: 269.73
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-26. T
+28. T
    State: FAILED
-   Score: 39.4
+   Score: 38.9
    Pivot Zone: far_below
    Trigger Band: favorable
-   Breakout Band: unfavorable
+   Breakout Band: acceptable
    Structural Band: acceptable
-   Dominant Negatives: far_from_pivot, weak_breakout_readiness
+   Dominant Negatives: far_from_pivot
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
@@ -696,10 +735,10 @@ REJECT / AVOID
    Target: 29.35
    RR: 0.0
    Clusters: --
-   Notes: pivot_zone:far_below, negative:far_from_pivot, negative:weak_breakout_readiness
-27. KR
+   Notes: pivot_zone:far_below, negative:far_from_pivot
+29. KR
    State: FAILED
-   Score: 39.0
+   Score: 37.0
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -712,13 +751,32 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 67.77
    Stop: 67.77
-   Target: 76.38
+   Target: 76.48
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:far_from_pivot, negative:weak_structure
-28. CBZ
+30. PEP
+   State: BLOCKED
+   Score: 36.7
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_structure
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 155.75
+   Stop: 155.07
+   Target: 166.71
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
+31. PNC
    State: FAILED
-   Score: 38.3
+   Score: 36.6
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -729,15 +787,15 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 29.14
-   Stop: 29.14
-   Target: 36.9
+   Trigger: 222.38
+   Stop: 222.38
+   Target: 242.04
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-29. PKG
-   State: BLOCKED
-   Score: 38.3
+32. PKG
+   State: FAILED
+   Score: 36.4
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -748,53 +806,15 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 212.31
+   Trigger: 209.41
    Stop: 209.41
    Target: 242.89
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-30. COHR
-   State: FORMING
-   Score: 38.3
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 333.3
-   Stop: 328.01
-   Target: 449.07
-   RR: 2.46
-   Clusters: ma_confirmation_cluster, negative_conflict_structure_vs_location
-   Notes: ma_confirmation_cluster, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot, negative:weak_breakout_readiness
-31. PYPL
-   State: FORMING
-   Score: 38.0
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 49.89
-   Stop: 49.56
-   Target: 57.64
-   RR: 3.46
-   Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger
-   Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot
-32. BRK.B
+33. HD
    State: BLOCKED
-   Score: 37.9
+   Score: 35.0
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -805,127 +825,32 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 468.54
-   Stop: 466.58
-   Target: 496.94
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
-33. MLM
-   State: BLOCKED
-   Score: 37.8
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 614.16
-   Stop: 609.69
-   Target: 674.57
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-34. HD
-   State: BLOCKED
-   Score: 37.7
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_structure
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 338.99
+   Trigger: 338.42
    Stop: 335.62
-   Target: 372.64
+   Target: 372.58
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
-35. PEP
-   State: BLOCKED
-   Score: 37.5
+34. EZPW
+   State: FAILED
+   Score: 34.9
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_structure
+   Structural Band: favorable
+   Dominant Negatives: far_from_pivot
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 156.15
-   Stop: 155.5
-   Target: 166.74
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
-36. BDX
-   State: BLOCKED
-   Score: 37.4
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_structure
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 155.38
-   Stop: 154.16
-   Target: 165.54
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
-37. MUA
-   State: BLOCKED
-   Score: 37.0
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_structure
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 10.54
-   Stop: 10.49
-   Target: 11.12
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
-38. PPG
-   State: BLOCKED
-   Score: 36.2
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 110.3
-   Stop: 109.49
-   Target: 124.57
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-39. ETN
+   Trigger: 31.58
+   Stop: 31.58
+   Target: 36.18
+   RR: 0.42
+   Clusters: negative_conflict_structure_vs_location
+   Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
+35. ETN
    State: FAILED
    Score: 34.4
    Pivot Zone: far_below
@@ -940,13 +865,13 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 425.54
    Stop: 425.54
-   Target: 477.61
-   RR: 0.44
+   Target: 478.12
+   RR: 0.43
    Clusters: negative_conflict_structure_vs_location
    Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-40. EZPW
-   State: FAILED
-   Score: 34.2
+36. AVGO
+   State: FORMING
+   Score: 34.4
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -957,53 +882,53 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 31.58
-   Stop: 31.58
-   Target: 36.18
-   RR: 0.5
+   Trigger: 416.6
+   Stop: 408.86
+   Target: 481.45
+   RR: 0.66
    Clusters: negative_conflict_structure_vs_location
-   Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-41. SGI
-   State: FORMING
-   Score: 33.6
+   Notes: negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
+37. MUA
+   State: BLOCKED
+   Score: 34.2
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_structure
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 78.92
-   Stop: 78.75
-   Target: 94.31
+   Trigger: 10.56
+   Stop: 10.55
+   Target: 11.12
    RR: 0.0
    Clusters: --
-   Notes: forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-42. NFLX
-   State: FAILED
-   Score: 33.3
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
+38. GEV
+   State: FORMING
+   Score: 33.9
    Pivot Zone: far_below
    Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: far_from_pivot
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 91.91
-   Stop: 91.91
-   Target: 109.67
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-43. PWR
+   Trigger: 1139.0
+   Stop: 1130.94
+   Target: 1345.39
+   RR: 0.28
+   Clusters: negative_conflict_structure_vs_location
+   Notes: negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
+39. PWR
    State: FAILED
-   Score: 32.8
+   Score: 33.7
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -1017,69 +942,31 @@ REJECT / AVOID
    Trigger: 626.41
    Stop: 626.41
    Target: 698.84
-   RR: 0.65
+   RR: 0.47
    Clusters: negative_conflict_structure_vs_location
    Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-44. HROW
+40. BRK.B
    State: BLOCKED
-   Score: 32.7
+   Score: 33.3
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 38.53
-   Stop: 37.94
-   Target: 45.12
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-45. ADP
-   State: BLOCKED
-   Score: 32.2
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
    Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Dominant Negatives: late_extension, far_from_pivot, weak_structure
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 196.2
-   Stop: 195.21
-   Target: 216.65
+   Trigger: 468.64
+   Stop: 466.58
+   Target: 496.9
    RR: 0.0
    Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-46. JNJ
-   State: BLOCKED
-   Score: 31.6
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 229.99
-   Stop: 227.06
-   Target: 254.55
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
-47. EME
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
+41. EME
    State: FAILED
-   Score: 30.8
+   Score: 32.9
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -1092,32 +979,51 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 862.61
    Stop: 862.61
-   Target: 968.03
-   RR: 0.75
+   Target: 968.69
+   RR: 0.43
    Clusters: negative_conflict_structure_vs_location
    Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-48. VRT
+42. NFLX
    State: FAILED
-   Score: 30.7
+   Score: 32.8
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot, weak_breakout_readiness
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 319.6
-   Stop: 319.6
-   Target: 382.17
-   RR: 0.79
-   Clusters: negative_conflict_structure_vs_location
-   Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot, negative:weak_breakout_readiness
-49. CNXC
+   Trigger: 91.91
+   Stop: 91.91
+   Target: 109.65
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+43. SGI
+   State: FORMING
+   Score: 30.7
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 79.18
+   Stop: 78.94
+   Target: 94.32
+   RR: 0.0
+   Clusters: --
+   Notes: forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot
+44. CNXC
    State: BLOCKED
-   Score: 30.6
+   Score: 30.5
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1130,13 +1036,51 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 26.58
    Stop: 26.04
-   Target: 34.86
+   Target: 34.87
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-50. AXP
+45. BLK
+   State: FORMING
+   Score: 30.4
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, far_from_pivot
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 1051.26
+   Stop: 1045.11
+   Target: 1185.06
+   RR: 1.47
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
+46. ADP
    State: FAILED
    Score: 30.3
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_structure
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 195.21
+   Stop: 195.21
+   Target: 216.61
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
+47. HROW
+   State: BLOCKED
+   Score: 29.4
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1147,91 +1091,15 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 314.27
-   Stop: 314.27
-   Target: 358.61
+   Trigger: 38.79
+   Stop: 38.57
+   Target: 45.15
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-51. AVGO
-   State: FAILED
-   Score: 30.1
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 408.86
-   Stop: 408.86
-   Target: 481.45
-   RR: 1.0
-   Clusters: negative_conflict_structure_vs_location
-   Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-52. SE
+48. MMM
    State: BLOCKED
-   Score: 29.9
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 84.79
-   Stop: 83.0
-   Target: 101.21
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-53. ZTS
-   State: BLOCKED
-   Score: 29.8
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 116.85
-   Stop: 115.51
-   Target: 129.68
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-54. ABBV
-   State: BLOCKED
-   Score: 29.6
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 199.16
-   Stop: 198.04
-   Target: 224.05
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-55. MMM
-   State: BLOCKED
-   Score: 29.4
+   Score: 29.3
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1244,32 +1112,32 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 145.07
    Stop: 144.0
-   Target: 163.88
+   Target: 163.86
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-56. LITE
-   State: FORMING
-   Score: 28.8
+49. BDX
+   State: FAILED
+   Score: 28.9
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot, weak_breakout_readiness
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 852.87
-   Stop: 829.13
-   Target: 1175.52
-   RR: 1.73
-   Clusters: negative_conflict_structure_vs_location
-   Notes: negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot, negative:weak_breakout_readiness
-57. REGN
+   Trigger: 154.16
+   Stop: 154.16
+   Target: 165.65
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
+50. REGN
    State: FAILED
-   Score: 28.7
+   Score: 28.5
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1282,32 +1150,13 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 741.34
    Stop: 741.34
-   Target: 822.36
+   Target: 822.69
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-58. GEV
+51. ERIE
    State: FAILED
-   Score: 28.6
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 1130.94
-   Stop: 1130.94
-   Target: 1345.39
-   RR: 0.43
-   Clusters: negative_conflict_structure_vs_location
-   Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot, negative:weak_breakout_readiness
-59. MDT
-   State: BLOCKED
-   Score: 28.2
+   Score: 28.1
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1318,13 +1167,13 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 83.77
-   Stop: 83.05
-   Target: 92.17
+   Trigger: 243.96
+   Stop: 243.96
+   Target: 277.99
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-60. WDAY
+52. WDAY
    State: FAILED
    Score: 27.7
    Pivot Zone: far_below
@@ -1339,11 +1188,11 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 116.0
    Stop: 116.0
-   Target: 147.68
+   Target: 147.67
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-61. WFC
+53. WFC
    State: FAILED
    Score: 27.6
    Pivot Zone: far_below
@@ -1358,13 +1207,51 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 79.46
    Stop: 79.46
-   Target: 88.78
+   Target: 88.76
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure
-62. DOCN
+54. PPG
    State: FAILED
-   Score: 26.9
+   Score: 27.4
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 109.49
+   Stop: 109.49
+   Target: 124.53
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+55. AXP
+   State: FAILED
+   Score: 27.1
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 314.27
+   Stop: 314.27
+   Target: 358.88
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+56. DOCN
+   State: FAILED
+   Score: 27.0
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -1378,12 +1265,12 @@ REJECT / AVOID
    Trigger: 93.94
    Stop: 93.94
    Target: 129.86
-   RR: 0.71
+   RR: 0.68
    Clusters: negative_conflict_structure_vs_location
    Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-63. TXN
+57. TXN
    State: FAILED
-   Score: 26.7
+   Score: 26.5
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1396,13 +1283,127 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 274.0
    Stop: 274.0
-   Target: 325.63
-   RR: 0.36
+   Target: 325.93
+   RR: 0.39
    Clusters: negative_conflict_structure_vs_location
    Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+58. ZTS
+   State: FAILED
+   Score: 26.5
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 115.51
+   Stop: 115.51
+   Target: 129.67
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
+59. JNJ
+   State: FAILED
+   Score: 25.4
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 227.06
+   Stop: 227.06
+   Target: 254.49
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
+60. COHR
+   State: FORMING
+   Score: 25.2
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: favorable
+   Dominant Negatives: far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 333.94
+   Stop: 328.01
+   Target: 449.07
+   RR: 2.23
+   Clusters: negative_conflict_structure_vs_location
+   Notes: negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot, negative:weak_breakout_readiness
+61. ABBV
+   State: FAILED
+   Score: 25.0
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 198.04
+   Stop: 198.04
+   Target: 224.01
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
+62. SE
+   State: BLOCKED
+   Score: 24.9
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 84.41
+   Stop: 84.02
+   Target: 101.24
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
+63. MDT
+   State: FAILED
+   Score: 24.6
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 83.05
+   Stop: 83.05
+   Target: 92.21
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
 64. ABT
    State: FAILED
-   Score: 24.5
+   Score: 24.4
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1415,13 +1416,13 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 91.87
    Stop: 91.87
-   Target: 112.14
+   Target: 107.54
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
 65. ACN
    State: FAILED
-   Score: 23.9
+   Score: 23.6
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1434,7 +1435,7 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 175.64
    Stop: 175.64
-   Target: 216.83
+   Target: 216.9
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
@@ -1451,7 +1452,7 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 261.48
+   Trigger: 261.57
    Stop: 253.51
    Target: 305.0
    RR: 0.0
@@ -1476,66 +1477,47 @@ REJECT / AVOID
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:far_from_pivot, negative:weak_trigger_readiness, negative:weak_breakout_readiness
-68. ERIE
+68. EYPT
    State: FORMING
-   Score: 22.3
+   Score: 20.2
    Pivot Zone: far_below
    Trigger Band: favorable
-   Breakout Band: acceptable
+   Breakout Band: unfavorable
    Structural Band: acceptable
-   Dominant Negatives: overhead_supply, far_from_pivot
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 248.9
-   Stop: 243.96
-   Target: 278.43
+   Trigger: 13.85
+   Stop: 13.54
+   Target: 16.66
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-69. AAOI
+   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+69. TTD
    State: FORMING
-   Score: 22.1
+   Score: 19.8
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
-   Structural Band: favorable
+   Structural Band: acceptable
    Dominant Negatives: overhead_supply, far_from_pivot, weak_breakout_readiness
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 149.33
-   Stop: 140.0
-   Target: 238.0
-   RR: 2.35
-   Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:weak_breakout_readiness
-70. TTD
-   State: FORMING
-   Score: 20.6
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 23.37
+   Trigger: 23.27
    Stop: 22.98
    Target: 27.46
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-71. KOD
+   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:weak_breakout_readiness
+70. KOD
    State: FAILED
-   Score: 19.6
+   Score: 19.3
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -1552,28 +1534,9 @@ REJECT / AVOID
    RR: 0.0
    Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
    Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-72. CMCSA
-   State: FAILED
-   Score: 18.1
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 29.48
-   Stop: 29.48
-   Target: 34.94
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-73. PHR
+71. PHR
    State: BLOCKED
-   Score: 17.6
+   Score: 17.4
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1590,28 +1553,9 @@ REJECT / AVOID
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-74. EYPT
-   State: FORMING
-   Score: 16.9
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 13.78
-   Stop: 13.54
-   Target: 16.65
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-75. BW
+72. BW
    State: FAILED
-   Score: 15.2
+   Score: 14.5
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1628,9 +1572,9 @@ REJECT / AVOID
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-76. IQV
-   State: BLOCKED
-   Score: 9.8
+73. CMCSA
+   State: FAILED
+   Score: 12.4
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1641,13 +1585,32 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 162.6
-   Stop: 160.2
-   Target: 195.72
+   Trigger: 29.48
+   Stop: 29.48
+   Target: 35.03
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-77. PRGS
+74. LITE
+   State: FORMING
+   Score: 10.7
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 852.87
+   Stop: 829.13
+   Target: 1176.81
+   RR: 1.63
+   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
+   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:weak_breakout_readiness
+75. PRGS
    State: FAILED
    Score: 9.6
    Pivot Zone: far_below
@@ -1662,11 +1625,68 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 27.41
    Stop: 27.41
-   Target: 34.65
+   Target: 34.74
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-78. ICLR
+76. WAT
+   State: BLOCKED
+   Score: 9.2
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 313.24
+   Stop: 307.32
+   Target: 364.9
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+77. AAOI
+   State: BLOCKED
+   Score: 8.7
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 149.33
+   Stop: 140.0
+   Target: 238.81
+   RR: 2.15
+   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
+   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:weak_breakout_readiness
+78. IQV
+   State: FAILED
+   Score: 8.2
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 160.2
+   Stop: 160.2
+   Target: 195.69
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+79. ICLR
    State: FAILED
    Score: 8.1
    Pivot Zone: far_below
@@ -1681,70 +1701,32 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 105.48
    Stop: 105.48
-   Target: 130.71
+   Target: 130.67
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-79. IBM
-   State: BLOCKED
-   Score: 7.7
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 227.65
-   Stop: 225.0
-   Target: 274.3
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-80. WAT
+80. IBM
    State: FAILED
-   Score: 7.6
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 307.32
-   Stop: 307.32
-   Target: 364.89
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-81. CTSH
-   State: BLOCKED
    Score: 6.3
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 54.68
-   Stop: 54.26
-   Target: 69.34
+   Trigger: 225.0
+   Stop: 225.0
+   Target: 274.18
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-82. TSCO
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+81. TSCO
    State: FAILED
-   Score: 4.9
+   Score: 5.3
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1757,13 +1739,32 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 37.43
    Stop: 37.43
-   Target: 51.48
+   Target: 51.51
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
+82. CTSH
+   State: FAILED
+   Score: 5.0
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: unfavorable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Sizing Tier: none
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 54.26
+   Stop: 54.26
+   Target: 69.34
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
 83. LHX
    State: FAILED
-   Score: 4.7
+   Score: 4.9
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -1776,7 +1777,7 @@ REJECT / AVOID
    Recommended Action: observe
    Trigger: 323.83
    Stop: 323.83
-   Target: 377.98
+   Target: 378.62
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
@@ -1787,15 +1788,15 @@ REJECT / AVOID
    Trigger Band: favorable
    Breakout Band: unfavorable
    Structural Band: favorable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
+   Dominant Negatives: overhead_supply, far_from_pivot, weak_breakout_readiness
    Sizing Tier: none
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 306.17
+   Trigger: 306.41
    Stop: 303.89
-   Target: 372.01
-   RR: 2.06
+   Target: 372.19
+   RR: 1.86
    Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:weak_breakout_readiness
