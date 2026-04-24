@@ -202,7 +202,7 @@ def _generate_production_chart_payload(context: dict) -> dict:
             if symbol not in emphasized:
                 emphasized.append(symbol)
     emphasized = emphasized[: cfg.TOP_EXECUTION_INTRADAY_COUNT]
-    output_dir = cfg.DOCS_DIR / "charts"
+    output_dir = cfg.CHARTS_OUTPUT_DIR / "production"
     output_dir.mkdir(parents=True, exist_ok=True)
     return charts.generate_all_charts(
         symbols,
