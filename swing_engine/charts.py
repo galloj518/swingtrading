@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import date
 from io import BytesIO
 
+from . import avwap as avwap_mod
 from . import config as cfg
 from . import features as feat
 
@@ -85,16 +86,52 @@ def _add_smas(ax, df, periods, state, n_bars):
                 linestyle=ls, alpha=0.85, label=f"{p} SMA")
 
 
-def _add_hlines(ax, avwap_map, pivots, session_vwaps, price, n_bars):
-    """Add horizontal reference lines for AVWAPs, pivots, session VWAP."""
-    # AVWAPs
+def _select_chart_avwap_labels(avwap_map: dict, max_labels: int = 5) -> list[str]:
+    ranked = sorted(
+        avwap_map.items(),
+        key=lambda item: (
+            0 if item[1].get("active") else 1,
+            abs(float(item[1].get("distance_pct") or 999.0)),
+            item[0],
+        ),
+    )
+    labels: list[str] = []
+    for label, _ in ranked:
+        if label not in labels:
+            labels.append(label)
+        if len(labels) >= max_labels:
+            break
+    return labels
+
+
+def _add_reference_lines(ax, df_full, avwap_map, pivots, session_vwaps, price, n_bars):
+    """Add AVWAP curves plus pivot and VWAP reference lines."""
     if avwap_map:
-        for label, data in avwap_map.items():
-            v = data.get("avwap")
-            if v and price and abs(v / price - 1) < 0.20:
-                ax.axhline(y=v, color=AVWAP_COLOR, linewidth=1.4, linestyle=":", alpha=0.85)
-                ax.text(n_bars + 0.3, v, f" {label}: {v:.1f}",
-                        fontsize=7, color=AVWAP_COLOR, alpha=0.95, va="center")
+        visible_start = max(0, len(df_full) - n_bars)
+        for label in _select_chart_avwap_labels(avwap_map):
+            data = avwap_map.get(label, {})
+            series = avwap_mod.series_for_anchor(df_full, data)
+            if series.empty:
+                continue
+            full_dates = pd.to_datetime(df_full["date"]).reset_index(drop=True)
+            plot_points = []
+            for _, row in series.iterrows():
+                matches = full_dates[full_dates == pd.Timestamp(row["date"])]
+                if matches.empty:
+                    continue
+                idx = int(matches.index[0])
+                if idx < visible_start:
+                    continue
+                plot_points.append((idx - visible_start, float(row["avwap"])))
+            if len(plot_points) < 2:
+                continue
+            xs = [point[0] for point in plot_points]
+            ys = [point[1] for point in plot_points]
+            if price and abs((ys[-1] / price) - 1.0) > 0.20:
+                continue
+            ax.plot(xs, ys, color=AVWAP_COLOR, linewidth=1.25, linestyle=":", alpha=0.9)
+            ax.text(n_bars + 0.3, ys[-1], f" {label}: {ys[-1]:.1f}",
+                    fontsize=7, color=AVWAP_COLOR, alpha=0.95, va="center")
 
     # Pivots
     if pivots:
@@ -142,9 +179,9 @@ def _fig_to_b64(fig):
 def _make_chart(symbol, df_raw, sma_periods, state, avwap_map, pivots,
                 session_vwaps, n_bars, title_suffix, output_dir):
     """Generate one chart (daily or weekly)."""
-    df = df_raw.copy().tail(n_bars)
+    df_full = df_raw.copy().reset_index(drop=True)
+    df = df_full.tail(n_bars).reset_index(drop=True)
     df = feat.add_smas(df, sma_periods)
-    df = df.reset_index(drop=True)
 
     price = state.get("last_close", 0)
     n = len(df)
@@ -169,8 +206,9 @@ def _make_chart(symbol, df_raw, sma_periods, state, avwap_map, pivots,
     # SMAs
     _add_smas(ax_price, df, sma_periods, state, n)
 
-    _add_hlines(
+    _add_reference_lines(
         ax_price,
+        df_full,
         avwap_map,
         pivots if ("daily" in title_suffix.lower() or "execution" in title_suffix.lower()) else {},
         session_vwaps if ("daily" in title_suffix.lower() or "execution" in title_suffix.lower()) else {},

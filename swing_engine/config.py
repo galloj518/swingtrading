@@ -231,8 +231,13 @@ MACRO_ANCHORS = {
 DEFAULT_ANCHORS = {
     "ytd": f"{date.today().year}-01-02",
     "covid_low": "2020-03-23",
+    "russia_ukraine_war_start": "2022-02-24",
+    "trump_inauguration_2025": "2025-01-20",
     "liberation_day": "2025-04-07",
     "iran_war_start": "2026-03-10",
+}
+
+GEOPOLITICAL_EVENT_ANCHORS = {
 }
 
 COMPANY_ANCHORS = {
@@ -436,8 +441,30 @@ PRODUCTION_MA_CONFIRMATION = {
 }
 
 PRODUCTION_AVWAP_CONFLUENCE = {
-    "supportive_bonus": 6.0,
     "resistance_penalty": 12.0,
+}
+
+PRODUCTION_AVWAP_LOCATION = {
+    "blocked_distance_pct": 2.0,
+    "caution_distance_pct": 4.0,
+    "cluster_band_pct": 1.0,
+    "cluster_min_count": 2,
+    "blocked_score_penalty": 18.0,
+    "caution_score_penalty": 8.0,
+}
+
+PRODUCTION_AVWAP_HIGH_CONCERN_ANCHORS = {
+    "recent_downtrend_high",
+    "major_pivot_high",
+    "all_time_high",
+    "high_52w",
+    "recent_earnings_gap",
+}
+
+PRODUCTION_AVWAP_LOW_CONCERN_ANCHORS = {
+    "covid_low",
+    "russia_ukraine_war_start",
+    "trump_inauguration_2025",
 }
 
 PRODUCTION_EXTENSION_CONTINUATION_MAX = 1.8

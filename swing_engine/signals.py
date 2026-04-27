@@ -33,6 +33,10 @@ SIGNAL_COLUMNS = [
     "entry_low", "entry_high", "stop", "target_1", "target_2", "price_at_signal", "atr", "rs_20d",
     "short_ma_rising", "tightening_to_short_ma", "larger_ma_supportive",
     "avwap_supportive", "avwap_resistance", "avwap_context",
+    "active_avwap_anchors", "nearest_support_avwap_anchor", "nearest_resistance_avwap_anchor", "avwap_distance_pct",
+    "avwap_resistance_filter_flag", "avwap_resistance_filter_reason", "avwap_resistance_anchor", "avwap_resistance_distance_pct", "avwap_location_quality",
+    "expansion_score", "range_ratio", "volume_ratio", "atr_ratio", "expansion_quality",
+    "rsi_14", "rsi_bucket", "rsi_trend",
     "overhead_supply_score", "overhead_supply_detail",
     "regime", "event_risk", "rvol", "freshness_label", "freshness_minutes",
     "actionability_label", "data_quality_score", "calibration_provenance", "calibration_confidence",
@@ -54,14 +58,15 @@ JOURNAL_COLUMNS = [
 STRING_SIGNAL_COLUMNS = {
     "date", "symbol", "run_mode", "quality", "idea_quality", "entry_timing", "action_bias",
     "setup_type", "setup_family", "setup_stage", "setup_state", "trigger_type", "triggered_now_bucket",
-    "avwap_context", "overhead_supply_detail", "regime", "freshness_label", "actionability_label",
+    "avwap_context", "active_avwap_anchors", "nearest_support_avwap_anchor", "nearest_resistance_avwap_anchor", "avwap_resistance_filter_reason", "avwap_resistance_anchor", "avwap_location_quality", "overhead_supply_detail", "regime", "freshness_label", "actionability_label",
+    "expansion_quality", "rsi_bucket", "rsi_trend",
     "calibration_provenance", "calibration_confidence", "trigger_date", "entry_model_date",
     "outcome_status",
 }
 
 BOOLEAN_SIGNAL_COLUMNS = {
     "weekly_gate", "daily_gate", "short_ma_rising", "tightening_to_short_ma",
-    "larger_ma_supportive", "avwap_supportive", "avwap_resistance", "event_risk",
+    "larger_ma_supportive", "avwap_supportive", "avwap_resistance", "avwap_resistance_filter_flag", "event_risk",
     "triggered", "triggered_model", "hit_target_1", "hit_target_2",
     "stop_hit", "stop_before_target_1", "target_1_before_stop",
 }
@@ -145,6 +150,7 @@ def _snapshot_from_packet(packet: dict, regime_label: str = "", run_mode: str = 
     pivot_position = packet.get("score", {}).get("pivot_position", {}) or {}
     early_setup = packet.get("breakout_features", {}).get("early_setup", {}) or {}
     avwap = packet.get("breakout_features", {}).get("avwap", {}) or {}
+    avwap_filter = packet.get("avwap_resistance_filter", {}) or {}
     threshold_provenance = packet.get("score", {}).get("threshold_provenance_summary", "unavailable")
     threshold_profile = packet.get("score", {}).get("threshold_provenance", {}) or {}
     provenance_methods = []
@@ -195,6 +201,23 @@ def _snapshot_from_packet(packet: dict, regime_label: str = "", run_mode: str = 
         "avwap_supportive": avwap.get("supportive"),
         "avwap_resistance": avwap.get("overhead_resistance"),
         "avwap_context": avwap.get("detail"),
+        "active_avwap_anchors": json.dumps(avwap.get("active_anchors", []), default=str),
+        "nearest_support_avwap_anchor": avwap.get("nearest_support_label"),
+        "nearest_resistance_avwap_anchor": avwap.get("nearest_resistance_label"),
+        "avwap_distance_pct": avwap.get("distance_pct"),
+        "avwap_resistance_filter_flag": avwap_filter.get("flag"),
+        "avwap_resistance_filter_reason": avwap_filter.get("reason"),
+        "avwap_resistance_anchor": avwap_filter.get("anchor"),
+        "avwap_resistance_distance_pct": avwap_filter.get("distance_pct"),
+        "avwap_location_quality": avwap_filter.get("location_quality"),
+        "expansion_score": packet.get("score", {}).get("production_promotion", {}).get("expansion_score"),
+        "range_ratio": packet.get("score", {}).get("production_promotion", {}).get("range_ratio"),
+        "volume_ratio": packet.get("score", {}).get("production_promotion", {}).get("volume_ratio"),
+        "atr_ratio": packet.get("score", {}).get("production_promotion", {}).get("atr_ratio"),
+        "expansion_quality": packet.get("score", {}).get("production_promotion", {}).get("expansion_quality"),
+        "rsi_14": packet.get("breakout_features", {}).get("rsi", {}).get("rsi_14"),
+        "rsi_bucket": packet.get("breakout_features", {}).get("rsi", {}).get("rsi_bucket"),
+        "rsi_trend": packet.get("breakout_features", {}).get("rsi", {}).get("rsi_trend"),
         "overhead_supply_score": packet.get("overhead_supply", {}).get("score"),
         "overhead_supply_detail": packet.get("overhead_supply", {}).get("detail"),
         "regime": regime_label,

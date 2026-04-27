@@ -161,6 +161,9 @@ def _refresh_trade_plan(packet: dict) -> None:
             breakout_band=(band_profile.get("breakout_readiness_score") or {}).get("label"),
             structural_band=(band_profile.get("structural_score") or {}).get("label"),
             dominant_negative_flags=list(production_meta.get("dominant_negative_flags", [])),
+            structure_score=production_meta.get("structure_score"),
+            expansion_score=production_meta.get("expansion_score"),
+            avwap_location_quality=production_meta.get("avwap_location_quality"),
         )
     else:
         packet["position_sizing"] = {}
@@ -173,6 +176,16 @@ def _refresh_trade_plan(packet: dict) -> None:
         "recommended_size_class": packet.get("position_sizing", {}).get("recommended_size_class"),
         "recommended_action": packet.get("position_sizing", {}).get("recommended_action"),
         "near_action_status": packet.get("position_sizing", {}).get("near_action_status"),
+    }
+    production_meta = packet.get("score", {}).get("production_promotion", {}) or {}
+    packet["avwap_resistance_filter"] = {
+        "flag": production_meta.get("avwap_resistance_filter_flag"),
+        "reason": production_meta.get("avwap_resistance_filter_reason"),
+        "anchor": production_meta.get("avwap_resistance_anchor"),
+        "distance_pct": production_meta.get("avwap_resistance_distance_pct"),
+        "location_quality": production_meta.get("avwap_location_quality"),
+        "effect_on_decision": production_meta.get("avwap_effect_on_decision"),
+        "structure_score": production_meta.get("structure_score"),
     }
     packet["actionability"] = checklist.evaluate_actionability(packet)
 
@@ -199,6 +212,7 @@ def build_packet(symbol: str, data: dict, spy_daily:Optional[pd.DataFrame] = Non
         daily = feat.add_smas(daily, cfg.DAILY_SMA_PERIODS)
         daily = feat.add_atr(daily)
         daily = feat.add_relative_volume(daily)
+        daily = feat.add_rsi(daily)
     if not weekly.empty:
         weekly = feat.add_smas(weekly, cfg.WEEKLY_SMA_PERIODS)
     if not intraday.empty:
@@ -364,6 +378,9 @@ def build_packet(symbol: str, data: dict, spy_daily:Optional[pd.DataFrame] = Non
             breakout_band=(band_profile.get("breakout_readiness_score") or {}).get("label"),
             structural_band=(band_profile.get("structural_score") or {}).get("label"),
             dominant_negative_flags=list(production_meta.get("dominant_negative_flags", [])),
+            structure_score=production_meta.get("structure_score"),
+            expansion_score=production_meta.get("expansion_score"),
+            avwap_location_quality=production_meta.get("avwap_location_quality"),
         )
     else:
         packet["position_sizing"] = {}
@@ -376,6 +393,15 @@ def build_packet(symbol: str, data: dict, spy_daily:Optional[pd.DataFrame] = Non
         "recommended_size_class": packet.get("position_sizing", {}).get("recommended_size_class"),
         "recommended_action": packet.get("position_sizing", {}).get("recommended_action"),
         "near_action_status": packet.get("position_sizing", {}).get("near_action_status"),
+    }
+    packet["avwap_resistance_filter"] = {
+        "flag": score_result.get("production_promotion", {}).get("avwap_resistance_filter_flag"),
+        "reason": score_result.get("production_promotion", {}).get("avwap_resistance_filter_reason"),
+        "anchor": score_result.get("production_promotion", {}).get("avwap_resistance_anchor"),
+        "distance_pct": score_result.get("production_promotion", {}).get("avwap_resistance_distance_pct"),
+        "location_quality": score_result.get("production_promotion", {}).get("avwap_location_quality"),
+        "effect_on_decision": score_result.get("production_promotion", {}).get("avwap_effect_on_decision"),
+        "structure_score": score_result.get("production_promotion", {}).get("structure_score"),
     }
 
     packet["actionability"] = checklist.evaluate_actionability(packet)

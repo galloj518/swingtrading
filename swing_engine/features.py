@@ -9,6 +9,7 @@ from typing import Optional, List
 import numpy as np
 import pandas as pd
 
+from . import avwap as avwap_mod
 from . import config as cfg
 
 
@@ -63,6 +64,20 @@ def add_relative_volume(df: pd.DataFrame, period:Optional[int] = None) -> pd.Dat
     df["avg_volume"] = avg_volume
     df["avg_dollar_volume"] = avg_dollar_volume
     df["rvol"] = df["volume"] / avg_volume.replace(0, np.nan)
+    return df
+
+
+def add_rsi(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
+    df = df.copy()
+    close = pd.to_numeric(df.get("close"), errors="coerce")
+    delta = close.diff()
+    gain = delta.clip(lower=0.0)
+    loss = (-delta.clip(upper=0.0))
+    avg_gain = gain.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
+    avg_loss = loss.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
+    rs = avg_gain / avg_loss.replace(0, np.nan)
+    rsi = 100.0 - (100.0 / (1.0 + rs))
+    df["rsi_14"] = rsi.clip(lower=0.0, upper=100.0)
     return df
 
 
@@ -138,96 +153,15 @@ def calc_relative_strength(sym_daily: pd.DataFrame, spy_daily: pd.DataFrame, per
     return rs
 
 
-def calc_avwap(daily_df: pd.DataFrame, anchor_date: str) -> Optional[float]:
-    if daily_df.empty:
-        return None
-    sub = daily_df[daily_df["date"].dt.strftime("%Y-%m-%d") >= anchor_date]
-    if sub.empty or float(sub["volume"].sum()) <= 0:
-        return None
-    typical = (sub["high"] + sub["low"] + sub["close"]) / 3.0
-    avwap = (typical.mul(sub["volume"]).cumsum() / sub["volume"].cumsum()).iloc[-1]
-    return round(float(avwap), 2)
-
-
-def get_anchors(symbol: str) -> dict:
-    anchors = dict(cfg.DEFAULT_ANCHORS)
-    anchors.update(cfg.MACRO_ANCHORS.get(symbol, {}))
-    anchors.update(cfg.COMPANY_ANCHORS.get(symbol, {}))
-    return anchors
+def summarize_avwap_context(price: float, avwap_map: dict) -> dict:
+    return avwap_mod.summarize_context(price, avwap_map)
 
 
 def build_avwap_map(daily_df: pd.DataFrame, symbol: str) -> dict:
     if daily_df.empty:
         return {}
-    anchors = get_anchors(symbol)
-    for label, recent in {
-        "recent_high_20d": find_recent_high(daily_df, 20),
-        "recent_low_20d": find_recent_low(daily_df, 20),
-        "recent_high_60d": find_recent_high(daily_df, 60),
-        "recent_low_60d": find_recent_low(daily_df, 60),
-        "high_252d": find_recent_high(daily_df, min(252, len(daily_df))),
-        "low_252d": find_recent_low(daily_df, min(252, len(daily_df))),
-    }.items():
-        if recent and label not in anchors:
-            anchors[label] = recent["date"]
-    result = {}
-    for label, anchor_date in anchors.items():
-        avwap = calc_avwap(daily_df, anchor_date)
-        if avwap is not None:
-            result[label] = {"anchor_date": anchor_date, "avwap": avwap}
-    return result
-
-
-def summarize_avwap_context(price: float, avwap_map: dict) -> dict:
-    if not price or not avwap_map:
-        return {
-            "nearest_above": None,
-            "nearest_below": None,
-            "primary_support": None,
-            "primary_resistance": None,
-            "relevant_labels": [],
-            "detail": "No AVWAP context available",
-        }
-    levels = []
-    for label, data in avwap_map.items():
-        avwap = data.get("avwap")
-        if avwap:
-            dist_pct = ((float(avwap) / price) - 1.0) * 100.0
-            levels.append((label, float(avwap), dist_pct))
-    if not levels:
-        return {
-            "nearest_above": None,
-            "nearest_below": None,
-            "primary_support": None,
-            "primary_resistance": None,
-            "relevant_labels": [],
-            "detail": "No AVWAP context available",
-        }
-    above = sorted([item for item in levels if item[2] >= 0], key=lambda item: item[2])
-    below = sorted([item for item in levels if item[2] < 0], key=lambda item: abs(item[2]))
-    nearest_above = above[0] if above else None
-    nearest_below = below[0] if below else None
-    detail = []
-    if nearest_below:
-        detail.append(f"support {nearest_below[0]} ({nearest_below[2]:+.1f}%)")
-    if nearest_above:
-        detail.append(f"resistance {nearest_above[0]} ({nearest_above[2]:+.1f}%)")
-    return {
-        "nearest_above": {
-            "label": nearest_above[0],
-            "avwap": round(nearest_above[1], 2),
-            "dist_pct": round(nearest_above[2], 2),
-        } if nearest_above else None,
-        "nearest_below": {
-            "label": nearest_below[0],
-            "avwap": round(nearest_below[1], 2),
-            "dist_pct": round(nearest_below[2], 2),
-        } if nearest_below else None,
-        "primary_support": nearest_below[0] if nearest_below else None,
-        "primary_resistance": nearest_above[0] if nearest_above else None,
-        "relevant_labels": [item[0] for item in levels[:4]],
-        "detail": "; ".join(detail) if detail else "AVWAPs distant from price",
-    }
+    last_price = float(pd.to_numeric(daily_df["close"], errors="coerce").iloc[-1]) if not daily_df.empty else 0.0
+    return avwap_mod.build_avwap_map(daily_df, symbol, last_price)
 
 
 def calc_trend_efficiency(series: pd.Series, lookback: int = 40) -> Optional[float]:
@@ -427,6 +361,89 @@ def _tight_close_pct(daily_df: pd.DataFrame, lookback: int = 5) -> Optional[floa
     return ((float(sub["close"].max()) - float(sub["close"].min())) / base) * 100.0
 
 
+def _expansion_context(daily_df: pd.DataFrame) -> dict:
+    if daily_df.empty or len(daily_df) < 12:
+        return {
+            "range_ratio": None,
+            "volume_ratio": None,
+            "atr_ratio": None,
+            "price_velocity_3d_pct": None,
+            "price_slope_3d_pct": None,
+            "score": 0,
+            "quality": "weak",
+        }
+    df = daily_df.copy()
+    day_range = pd.to_numeric(df["high"], errors="coerce") - pd.to_numeric(df["low"], errors="coerce")
+    current_range = float(day_range.iloc[-1]) if pd.notna(day_range.iloc[-1]) else None
+    avg_range = float(day_range.iloc[-11:-1].mean()) if len(day_range.iloc[-11:-1].dropna()) > 0 else None
+    current_volume = float(pd.to_numeric(df["volume"], errors="coerce").iloc[-1]) if pd.notna(df["volume"].iloc[-1]) else None
+    avg_volume = float(pd.to_numeric(df["volume"], errors="coerce").iloc[-21:-1].mean()) if len(df.iloc[-21:-1]) > 0 else None
+    atr_now = float(pd.to_numeric(df["atr"], errors="coerce").iloc[-1]) if "atr" in df.columns and pd.notna(df["atr"].iloc[-1]) else None
+    atr_prev = float(pd.to_numeric(df["atr"], errors="coerce").iloc[-6:-1].mean()) if "atr" in df.columns and len(df.iloc[-6:-1]) > 0 else None
+    close_now = float(pd.to_numeric(df["close"], errors="coerce").iloc[-1]) if pd.notna(df["close"].iloc[-1]) else None
+    close_3 = float(pd.to_numeric(df["close"], errors="coerce").iloc[-4]) if len(df) >= 4 and pd.notna(df["close"].iloc[-4]) else None
+    range_ratio = (current_range / avg_range) if current_range is not None and avg_range and avg_range > 0 else None
+    volume_ratio = (current_volume / avg_volume) if current_volume is not None and avg_volume and avg_volume > 0 else None
+    atr_ratio = (atr_now / atr_prev) if atr_now is not None and atr_prev and atr_prev > 0 else None
+    price_velocity = (((close_now / close_3) - 1.0) * 100.0) if close_now and close_3 and close_3 > 0 else None
+    price_slope = (price_velocity / 3.0) if price_velocity is not None else None
+
+    expansion_score = 0
+    if (range_ratio or 0.0) > 1.5 and (volume_ratio or 0.0) > 1.5:
+        expansion_score = 2
+    elif (range_ratio or 0.0) > 1.2 or (volume_ratio or 0.0) > 1.2:
+        expansion_score = 1
+    quality = "strong" if expansion_score >= 2 else "moderate" if expansion_score == 1 else "weak"
+    return {
+        "range_ratio": round(range_ratio, 2) if range_ratio is not None else None,
+        "volume_ratio": round(volume_ratio, 2) if volume_ratio is not None else None,
+        "atr_ratio": round(atr_ratio, 2) if atr_ratio is not None else None,
+        "price_velocity_3d_pct": round(price_velocity, 2) if price_velocity is not None else None,
+        "price_slope_3d_pct": round(price_slope, 2) if price_slope is not None else None,
+        "score": expansion_score,
+        "quality": quality,
+    }
+
+
+def _rsi_context(daily_df: pd.DataFrame) -> dict:
+    if daily_df.empty or "rsi_14" not in daily_df.columns:
+        return {"rsi_14": None, "rsi_bucket": "unknown", "rsi_trend": "flat"}
+
+    series = pd.to_numeric(daily_df["rsi_14"], errors="coerce").dropna()
+    if series.empty:
+        return {"rsi_14": None, "rsi_bucket": "unknown", "rsi_trend": "flat"}
+
+    rsi_now = float(series.iloc[-1])
+    prior = float(series.iloc[-4]) if len(series) >= 4 else float(series.iloc[0])
+    delta = rsi_now - prior
+
+    if rsi_now < 40:
+        bucket = "below_40"
+    elif rsi_now < 50:
+        bucket = "40_to_50"
+    elif rsi_now < 60:
+        bucket = "50_to_60"
+    elif rsi_now < 70:
+        bucket = "60_to_70"
+    elif rsi_now < 75:
+        bucket = "70_to_75"
+    else:
+        bucket = "above_75"
+
+    if delta > 1.0:
+        trend = "rising"
+    elif delta < -1.0:
+        trend = "falling"
+    else:
+        trend = "flat"
+
+    return {
+        "rsi_14": round(rsi_now, 2),
+        "rsi_bucket": bucket,
+        "rsi_trend": trend,
+    }
+
+
 def assess_breakout_integrity(daily_df: pd.DataFrame) -> dict:
     if daily_df.empty or len(daily_df) < 40:
         return {"score": 45.0, "state": "unavailable", "detail": "Breakout integrity unavailable"}
@@ -493,6 +510,14 @@ def _avwap_support_context(close: float, avwap_map: dict) -> dict:
     resistance_dist = abs(float(resistance.get("dist_pct"))) if resistance and resistance.get("dist_pct") is not None else None
     supportive = support_dist is not None and support_dist <= 2.5
     overhead = resistance_dist is not None and resistance_dist <= 3.5
+    cluster_band_pct = float(cfg.PRODUCTION_AVWAP_LOCATION["cluster_band_pct"])
+    nearby_active = [
+        label
+        for label, data in (avwap_map or {}).items()
+        if data.get("distance_pct") is not None and abs(float(data.get("distance_pct"))) <= cluster_band_pct
+    ]
+    nearest_support_meta = (avwap_map or {}).get(support.get("label")) if support else None
+    nearest_resistance_meta = (avwap_map or {}).get(resistance.get("label")) if resistance else None
     support_score = (
         _linear_ratio(2.8 - support_dist, 0.0, 2.8) * 100.0
         if support_dist is not None
@@ -506,12 +531,22 @@ def _avwap_support_context(close: float, avwap_map: dict) -> dict:
     return {
         "supportive": supportive,
         "overhead_resistance": overhead,
+        "resistance": overhead,
         "support_score": round(_clamp(support_score), 1),
         "resistance_penalty": round(_clamp(resistance_penalty), 1),
         "nearest_support_label": support.get("label") if support else None,
         "nearest_support_dist_pct": round(support_dist, 2) if support_dist is not None else None,
+        "nearest_support_anchor_kind": str((nearest_support_meta or {}).get("anchor_kind") or ""),
         "nearest_resistance_label": resistance.get("label") if resistance else None,
         "nearest_resistance_dist_pct": round(resistance_dist, 2) if resistance_dist is not None else None,
+        "nearest_resistance_anchor_kind": str((nearest_resistance_meta or {}).get("anchor_kind") or ""),
+        "distance_pct": round(min(
+            value for value in [support_dist, resistance_dist] if value is not None
+        ), 2) if any(value is not None for value in [support_dist, resistance_dist]) else None,
+        "active_anchors": list(context.get("active_anchors", [])),
+        "active_anchor_count": int(context.get("active_anchor_count", 0)),
+        "nearby_anchor_labels": nearby_active,
+        "nearby_anchor_count": len(nearby_active),
         "detail": context.get("detail"),
     }
 
@@ -733,6 +768,8 @@ def compute_breakout_context(daily_df: pd.DataFrame, weekly_df: pd.DataFrame, in
     tightening_into_short_ma = abs(dist_to_short_ma_pct) <= 2.5 and close >= short_ma * 0.992
     pivot_position = _pivot_position(close, pivot_high_10, atr)
     avwap_context = _avwap_support_context(close, avwap_map)
+    expansion_context = _expansion_context(daily_df)
+    rsi_context = _rsi_context(daily_df)
     support_anchor = max(short_ma, large_ma, larger_ma_50, pivot_low_10)
     rr_to_support = ((pivot_high_10 - close) / max(close - support_anchor, atr * 0.5)) if close > support_anchor else 0.0
     orderliness = round(_clamp(contraction_score * 0.42 + tight_close_score * 0.33 + volume_dryup_score * 0.25), 1)
@@ -774,6 +811,8 @@ def compute_breakout_context(daily_df: pd.DataFrame, weekly_df: pd.DataFrame, in
             "turnover_score": round(turnover_score, 1),
             "volume_vs_average": round(volume / avg_volume, 2) if avg_volume else None,
         },
+        "expansion": expansion_context,
+        "rsi": rsi_context,
         "avwap": avwap_context,
         "early_setup": {
             "short_ma_rising": short_ma_rising,
