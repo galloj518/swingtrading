@@ -47,7 +47,7 @@ def _execution_policy_meta(
     actionable_states = {"ACTIONABLE_BREAKOUT", "ACTIONABLE_RECLAIM", "ACTIONABLE_RETEST"}
     blocked_states = {"FAILED", "BLOCKED", "EXTENDED"}
 
-    if state in actionable_states:
+    if state in actionable_states and tier in {"starter", "small", "medium", "full"} and not negatives:
         return {
             "execution_lane": "actionable",
             "execution_posture": "execute",
@@ -112,11 +112,23 @@ def _sizing_tier(
     breakout_band: Optional[str] = None,
     structural_band: Optional[str] = None,
     dominant_negative_flags: Optional[List[str]] = None,
+    structure_score: Optional[int] = None,
+    expansion_score: Optional[int] = None,
+    avwap_location_quality: Optional[str] = None,
 ) -> dict:
+    if any(flag in {"avwap_resistance_filter", "avwap_blocked", "expansion_without_structure"} for flag in list(dominant_negative_flags or [])):
+        return {"tier": "none", "risk_multiplier": 0.0}
     if setup_state == "STALKING":
         return {"tier": "none", "risk_multiplier": 0.0}
     if extended_subtype == "EXTENDED_LATE":
         return {"tier": "none", "risk_multiplier": 0.0}
+    if (
+        str(avwap_location_quality or "") != "blocked"
+        and str(setup_state or "") not in {"FAILED", "BLOCKED", "EXTENDED", "DATA_UNAVAILABLE", "STALKING"}
+        and int(structure_score or 0) >= 2
+        and int(expansion_score or 0) == 0
+    ):
+        return {"tier": "watchlist", "risk_multiplier": 0.0}
     if setup_state == "FORMING" and _qualifies_watchlist_promotion(
         setup_state,
         pivot_zone,
@@ -152,7 +164,7 @@ def _sizing_tier(
     return {"tier": "none", "risk_multiplier": 0.0}
 
 
-def calc_position_size(entry: float, stop: float, symbol: str = "", existing_group_risk: float = 0.0, leverage: float = 1.0, avg_volume: float = 0.0, avg_dollar_volume: float = 0.0, rvol: float = 1.0, corr_matrix: Optional[pd.DataFrame] = None, open_positions: Optional[dict] = None, target_1: Optional[float] = None, target_2: Optional[float] = None, setup_family:Optional[str] = None, setup_state:Optional[str] = None, freshness_label:Optional[str] = None, trigger_score:Optional[float] = None, production_score: Optional[float] = None, live_tier: Optional[str] = None, elite_cluster_flag: bool = False, extended_subtype: Optional[str] = None, approaching_pivot_cluster_flag: bool = False, approaching_pivot_confidence: Optional[str] = None, pivot_zone: Optional[str] = None, trigger_band: Optional[str] = None, breakout_band: Optional[str] = None, structural_band: Optional[str] = None, dominant_negative_flags: Optional[List[str]] = None) -> dict:
+def calc_position_size(entry: float, stop: float, symbol: str = "", existing_group_risk: float = 0.0, leverage: float = 1.0, avg_volume: float = 0.0, avg_dollar_volume: float = 0.0, rvol: float = 1.0, corr_matrix: Optional[pd.DataFrame] = None, open_positions: Optional[dict] = None, target_1: Optional[float] = None, target_2: Optional[float] = None, setup_family:Optional[str] = None, setup_state:Optional[str] = None, freshness_label:Optional[str] = None, trigger_score:Optional[float] = None, production_score: Optional[float] = None, live_tier: Optional[str] = None, elite_cluster_flag: bool = False, extended_subtype: Optional[str] = None, approaching_pivot_cluster_flag: bool = False, approaching_pivot_confidence: Optional[str] = None, pivot_zone: Optional[str] = None, trigger_band: Optional[str] = None, breakout_band: Optional[str] = None, structural_band: Optional[str] = None, dominant_negative_flags: Optional[List[str]] = None, structure_score: Optional[int] = None, expansion_score: Optional[int] = None, avwap_location_quality: Optional[str] = None) -> dict:
     risk_per_share = abs(entry - stop) * leverage
     if risk_per_share <= 0:
         return {"shares": 0, "risk_dollars": 0, "note": "Invalid stop"}
@@ -200,6 +212,9 @@ def calc_position_size(entry: float, stop: float, symbol: str = "", existing_gro
         breakout_band=breakout_band,
         structural_band=structural_band,
         dominant_negative_flags=dominant_negative_flags,
+        structure_score=structure_score,
+        expansion_score=expansion_score,
+        avwap_location_quality=avwap_location_quality,
     )
     execution_meta = _execution_policy_meta(
         setup_state,

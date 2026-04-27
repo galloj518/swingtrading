@@ -33,6 +33,21 @@ def _timing_label(score: float) -> str:
     return "A - actionable" if score >= 80 else "B - close" if score >= 66 else "C - developing" if score >= 52 else "D - early" if score >= 38 else "F - poor"
 
 
+def _band_direction(label: str) -> int:
+    return {
+        "favorable": 1,
+        "acceptable": 0,
+        "unfavorable": -1,
+    }.get(str(label or ""), 0)
+
+
+def _structure_composite_score(band_profile: dict) -> int:
+    return sum(
+        _band_direction(str((band_profile.get(key) or {}).get("label", "")))
+        for key in ("structural_score", "breakout_readiness_score", "trigger_readiness_score")
+    )
+
+
 def _weekly_gate(weekly_state: dict) -> dict:
     passed = bool(
         weekly_state.get("close_above_sma_10") and
@@ -113,10 +128,10 @@ def _breakout_score(breakout_patterns: dict, breakout_features: dict, breakout_i
     early_setup_score = _avg([
         100.0 if early_setup.get("short_ma_rising") else 20.0,
         100.0 if early_setup.get("tightening_into_short_ma") else 25.0,
-        100.0 if (early_setup.get("larger_ma_supportive") or early_setup.get("avwap_supportive")) else 35.0,
+        100.0 if early_setup.get("larger_ma_supportive") else 35.0,
         _safe_float(early_setup.get("orderly_contraction_score"), 0.0),
     ])
-    avwap_score = _clamp(_safe_float(avwap.get("support_score"), 0.0) - _safe_float(avwap.get("resistance_penalty"), 0.0) * 0.6 + (12.0 if avwap.get("supportive") else 0.0))
+    avwap_score = 50.0
     factors = {
         "primary_pattern": _safe_float(primary.get("score"), 0.0),
         "near_high_context": _safe_float(near_high.get("score"), 0.0),
@@ -204,7 +219,7 @@ def _state_from_scores(structural_score: float, breakout_score: float, breakout_
         for flag in (
             bool(early_setup.get("short_ma_rising")),
             bool(early_setup.get("tightening_into_short_ma")),
-            bool(early_setup.get("larger_ma_supportive") or early_setup.get("avwap_supportive")),
+            bool(early_setup.get("larger_ma_supportive")),
         )
         if flag
     )
@@ -476,6 +491,93 @@ def _bool_band(value: bool, favorable_score: float = 100.0, unfavorable_score: f
     return {"label": "favorable" if value else "unfavorable", "score": favorable_score if value else unfavorable_score}
 
 
+def _avwap_location_filter(state: str, avwap: dict, band_profile: dict) -> dict:
+    resistance_anchor = str(avwap.get("nearest_resistance_label") or "")
+    resistance_distance = _safe_float(avwap.get("nearest_resistance_dist_pct"), None)
+    resistance_anchor_kind = str(avwap.get("nearest_resistance_anchor_kind") or "")
+    resistance_present = bool(avwap.get("resistance")) and resistance_distance is not None
+    nearby_anchor_count = int(avwap.get("nearby_anchor_count") or 0)
+    active_anchor_count = int(avwap.get("active_anchor_count") or 0)
+    blocked_distance = float(cfg.PRODUCTION_AVWAP_LOCATION["blocked_distance_pct"])
+    caution_distance = float(cfg.PRODUCTION_AVWAP_LOCATION["caution_distance_pct"])
+    cluster_min = int(cfg.PRODUCTION_AVWAP_LOCATION["cluster_min_count"])
+    problematic_anchor = resistance_anchor in cfg.PRODUCTION_AVWAP_HIGH_CONCERN_ANCHORS
+    low_concern_anchor = resistance_anchor in cfg.PRODUCTION_AVWAP_LOW_CONCERN_ANCHORS or resistance_anchor_kind == "macro"
+    cluster_near_price = nearby_anchor_count >= cluster_min or active_anchor_count >= cluster_min
+    clean_separation = (
+        band_profile["pivot_zone"]["label"] == "prime"
+        and band_profile["trigger_readiness_score"]["label"] == "favorable"
+        and band_profile["breakout_readiness_score"]["label"] == "favorable"
+        and band_profile["structural_score"]["label"] == "favorable"
+        and resistance_distance is not None
+        and resistance_distance > blocked_distance
+    )
+    actionable_state = state in {"ACTIONABLE_BREAKOUT", "ACTIONABLE_RECLAIM", "ACTIONABLE_RETEST"}
+
+    if not resistance_present:
+        return {
+            "flag": False,
+            "reason": "no_nearby_resistance_avwap",
+            "anchor": None,
+            "distance_pct": None,
+            "location_quality": "clear",
+            "score_penalty": 0.0,
+            "hard_block": False,
+        }
+
+    blocked = (
+        resistance_distance <= blocked_distance
+        and not actionable_state
+        and not clean_separation
+        and (problematic_anchor or cluster_near_price or not low_concern_anchor)
+    )
+    caution = (
+        not blocked
+        and (
+            resistance_distance <= caution_distance
+            or cluster_near_price
+            or problematic_anchor
+        )
+    )
+
+    if blocked:
+        return {
+            "flag": True,
+            "reason": f"near_resistance_{resistance_anchor}_within_{blocked_distance:.0f}pct",
+            "anchor": resistance_anchor or None,
+            "distance_pct": round(resistance_distance, 2),
+            "location_quality": "blocked",
+            "score_penalty": float(cfg.PRODUCTION_AVWAP_LOCATION["blocked_score_penalty"]),
+            "hard_block": True,
+        }
+    if caution:
+        reasons = []
+        if resistance_distance <= caution_distance:
+            reasons.append("nearby_resistance")
+        if cluster_near_price:
+            reasons.append("anchor_cluster")
+        if problematic_anchor:
+            reasons.append("problematic_anchor")
+        return {
+            "flag": True,
+            "reason": "+".join(reasons) or "avwap_caution",
+            "anchor": resistance_anchor or None,
+            "distance_pct": round(resistance_distance, 2),
+            "location_quality": "caution",
+            "score_penalty": float(cfg.PRODUCTION_AVWAP_LOCATION["caution_score_penalty"]),
+            "hard_block": False,
+        }
+    return {
+        "flag": False,
+        "reason": "resistance_sufficiently_clear",
+        "anchor": resistance_anchor or None,
+        "distance_pct": round(resistance_distance, 2),
+        "location_quality": "clear",
+        "score_penalty": 0.0,
+        "hard_block": False,
+    }
+
+
 def _production_band_profile(
     structural_score: float,
     breakout_score: float,
@@ -503,7 +605,7 @@ def _production_band_profile(
         "larger_ma_supportive": _bool_band(bool(early_setup.get("larger_ma_supportive"))),
         "tightening_to_short_ma": _bool_band(bool(early_setup.get("tightening_into_short_ma")), favorable_score=88.0, unfavorable_score=42.0),
         "short_ma_rising": _bool_band(bool(early_setup.get("short_ma_rising")), favorable_score=82.0, unfavorable_score=48.0),
-        "avwap_supportive": _bool_band(bool(avwap.get("supportive")), favorable_score=76.0, unfavorable_score=50.0),
+        "avwap_supportive": _bool_band(bool(avwap.get("supportive")), favorable_score=50.0, unfavorable_score=50.0),
         "avwap_resistance": _bool_band(not bool(avwap.get("resistance")), favorable_score=76.0, unfavorable_score=28.0),
     }
     return profile
@@ -523,7 +625,6 @@ def _extended_subtype(
     early_setup = breakout_features.get("early_setup", {})
     extension_atr = _safe_float(pivot_position.get("extension_atr"), 0.0)
     avwap_resistance = bool(avwap.get("resistance"))
-    avwap_supportive = bool(avwap.get("supportive"))
     rs_20d = _safe_float(momentum.get("rs_20d"), 0.0)
     pivot_class = str(pivot_position.get("classification", "unavailable"))
     structural_band = _range_band("structural_score", structural_score, threshold_profile).get("label")
@@ -537,7 +638,6 @@ def _extended_subtype(
         and rs_20d > -0.23
         and extension_atr <= cfg.PRODUCTION_EXTENSION_CONTINUATION_MAX
         and bool(early_setup.get("larger_ma_supportive"))
-        and avwap_supportive
         and not avwap_resistance
     )
     subtype = "EXTENDED_CONTINUATION" if continuation_ok else "EXTENDED_LATE"
@@ -548,7 +648,7 @@ def _extended_subtype(
         "confidence": "provisional",
         "provenance": "provisional_insufficient_history",
         "detail": (
-            "Trend-valid continuation extension with supportive AVWAP context."
+            "Trend-valid continuation extension with resistance-free AVWAP context."
             if continuation_ok
             else "Late extension with poor first-entry quality."
         ),
@@ -731,6 +831,7 @@ def _production_promotion(
     pivot_position = breakout_features.get("pivot_position", {})
     early_setup = breakout_features.get("early_setup", {})
     avwap = breakout_features.get("avwap", {})
+    expansion = breakout_features.get("expansion", {})
     freshness = str(data_quality.get("intraday_freshness_label", "missing"))
     trigger_type = intraday_trigger.get("primary", {}).get("trigger_type")
     trigger_pref = _trigger_preference(trigger_type)
@@ -742,6 +843,9 @@ def _production_promotion(
         overhead_supply,
         threshold_profile,
     )
+    structure_score = _structure_composite_score(band_profile)
+    expansion_score = int(_safe_float(expansion.get("score"), 0.0))
+    expansion_quality = str(expansion.get("quality") or ("strong" if expansion_score >= 2 else "moderate" if expansion_score == 1 else "weak"))
     extended_info = _extended_subtype(
         structural_score,
         breakout_score,
@@ -783,8 +887,25 @@ def _production_promotion(
         hard_failures.append("freshness")
     if not trigger_pref.get("promotable") and state in cfg.PRODUCTION_PRIMARY_STATES:
         hard_failures.append("trigger_type")
+    if expansion_score >= 2 and structure_score <= 0:
+        hard_failures.append("expansion_without_structure")
 
     interaction_meta = _interaction_cluster_analysis(state, band_profile, extended_info, trigger_pref)
+    avwap_location_filter = _avwap_location_filter(state, avwap, band_profile)
+    avwap_location_quality = str(avwap_location_filter.get("location_quality") or "clear")
+    avwap_effect_on_decision = "none"
+    avwap_score_penalty = 0.0
+
+    if avwap_location_quality == "blocked":
+        avwap_effect_on_decision = "hard_block"
+        if "avwap_blocked" not in interaction_meta.get("dominant_negative_flags", []):
+            interaction_meta.setdefault("dominant_negative_flags", []).append("avwap_blocked")
+        if "avwap_blocked" not in hard_failures:
+            hard_failures.append("avwap_blocked")
+    elif avwap_location_quality == "caution" and structure_score <= 0:
+        avwap_effect_on_decision = "soft_penalty"
+        avwap_score_penalty = _safe_float(avwap_location_filter.get("score_penalty"), 0.0)
+
     for dominant_negative in interaction_meta.get("dominant_negative_flags", []):
         mapped = {
             "overhead_supply": "overhead_supply_score",
@@ -793,27 +914,39 @@ def _production_promotion(
             "weak_trigger_readiness": "trigger_readiness_score",
             "weak_breakout_readiness": "breakout_readiness_score",
             "weak_structure": "structural_score",
+            "avwap_blocked": "avwap_blocked",
         }.get(dominant_negative)
         if mapped and mapped not in hard_failures:
             hard_failures.append(mapped)
+    if expansion_score >= 2 and structure_score <= 0 and "expansion_without_structure" not in interaction_meta.get("dominant_negative_flags", []):
+        interaction_meta.setdefault("dominant_negative_flags", []).append("expansion_without_structure")
 
-    eligible = state in cfg.PRODUCTION_PRIMARY_STATES and not hard_failures
+    eligible = state in cfg.PRODUCTION_PRIMARY_STATES and not hard_failures and structure_score > 0
+    actionable_ready = bool(
+        state in {"ACTIONABLE_BREAKOUT", "ACTIONABLE_RECLAIM", "ACTIONABLE_RETEST"}
+        and structure_score >= 2
+        and expansion_score >= 1
+        and avwap_location_quality != "blocked"
+        and not interaction_meta.get("dominant_negative_flags")
+        and band_profile["trigger_readiness_score"]["label"] == "favorable"
+        and band_profile["breakout_readiness_score"]["label"] == "favorable"
+    )
     if state in cfg.RESEARCH_ONLY_STATES:
         tier = "research_only"
         rank = 5
     elif state == "EXTENDED" and extended_info.get("subtype") == "EXTENDED_CONTINUATION":
         tier = "continuation"
         rank = 4
-    elif eligible and state == "ACTIONABLE_BREAKOUT":
+    elif actionable_ready and state == "ACTIONABLE_BREAKOUT":
         tier = "production"
         rank = 0
     elif eligible and state == "TRIGGER_WATCH":
         tier = "production"
         rank = 1
-    elif eligible and state == "ACTIONABLE_RECLAIM":
+    elif actionable_ready and state == "ACTIONABLE_RECLAIM":
         tier = "production"
         rank = 2
-    elif eligible and state == "ACTIONABLE_RETEST":
+    elif actionable_ready and state == "ACTIONABLE_RETEST":
         tier = "production"
         rank = 3
     elif state in {"FAILED", "BLOCKED", "DATA_UNAVAILABLE"} or (state == "EXTENDED" and extended_info.get("subtype") == "EXTENDED_LATE"):
@@ -843,8 +976,6 @@ def _production_promotion(
         band_profile["extension_atr"]["score"],
         band_profile["rvol"]["score"],
         band_profile["overhead_supply_score"]["score"],
-        band_profile["avwap_supportive"]["score"] + cfg.PRODUCTION_AVWAP_CONFLUENCE["supportive_bonus"],
-        band_profile["avwap_resistance"]["score"] - cfg.PRODUCTION_AVWAP_CONFLUENCE["resistance_penalty"] if bool(avwap.get("resistance")) else band_profile["avwap_resistance"]["score"],
     ])
     base_production_score = (
         0.56 * primary_score
@@ -860,6 +991,7 @@ def _production_promotion(
             else -cfg.PRODUCTION_INTERACTION_WEIGHTS["pivot_zone_far_penalty"]
         )
     )
+    base_production_score -= avwap_score_penalty
     readiness_rebalance = _apply_readiness_rebalance(state, band_profile, base_production_score)
     production_score = round(_clamp(_safe_float(readiness_rebalance.get("score"), base_production_score)), 1)
     if state == "STALKING":
@@ -867,6 +999,12 @@ def _production_promotion(
     if band_profile["pivot_zone"]["label"] == "near":
         production_score = min(production_score, 98.0)
     if "overhead_supply_score" in hard_failures:
+        production_score = min(production_score, 42.0)
+    if avwap_location_quality == "blocked":
+        production_score = min(production_score, 42.0)
+    if structure_score >= 2 and expansion_score == 0 and avwap_location_quality != "blocked":
+        production_score = min(production_score, 79.9)
+    if expansion_score >= 2 and structure_score <= 0:
         production_score = min(production_score, 42.0)
 
     return {
@@ -876,6 +1014,13 @@ def _production_promotion(
         "hard_gate_failures": hard_failures,
         "hard_gate_passed": not hard_failures,
         "production_score": production_score,
+        "structure_score": structure_score,
+        "expansion_score": expansion_score,
+        "expansion_quality": expansion_quality,
+        "range_ratio": expansion.get("range_ratio"),
+        "volume_ratio": expansion.get("volume_ratio"),
+        "atr_ratio": expansion.get("atr_ratio"),
+        "price_velocity_3d_pct": expansion.get("price_velocity_3d_pct"),
         "band_profile": band_profile,
         "pivot_zone": band_profile["pivot_zone"]["label"],
         "band_provenance": dict(cfg.PRODUCTION_BAND_PROVENANCE),
@@ -894,6 +1039,12 @@ def _production_promotion(
         "readiness_rebalance_flags": list(readiness_rebalance.get("flags", [])),
         "readiness_rebalance_adjustment": _safe_float(readiness_rebalance.get("adjustment"), 0.0),
         "readiness_rebalance_cap": readiness_rebalance.get("score_cap"),
+        "avwap_resistance_filter_flag": bool(avwap_location_filter.get("flag")),
+        "avwap_resistance_filter_reason": avwap_location_filter.get("reason"),
+        "avwap_resistance_anchor": avwap_location_filter.get("anchor"),
+        "avwap_resistance_distance_pct": avwap_location_filter.get("distance_pct"),
+        "avwap_location_quality": avwap_location_quality,
+        "avwap_effect_on_decision": avwap_effect_on_decision,
         "research_only": state in cfg.RESEARCH_ONLY_STATES,
     }
 
