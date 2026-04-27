@@ -152,6 +152,13 @@ def _bucketed(df: pd.DataFrame) -> pd.DataFrame:
     if "avwap_supportive" in out.columns:
         avwap_supportive = pd.to_numeric(out["avwap_supportive"], errors="coerce")
         out["avwap_support_bucket"] = avwap_supportive.map({1.0: "supportive_avwap", 0.0: "no_supportive_avwap"}).fillna("unknown")
+    if "avwap_distance_pct" in out.columns:
+        avwap_distance = pd.to_numeric(out["avwap_distance_pct"], errors="coerce")
+        out["nearest_avwap_distance_bucket"] = pd.cut(
+            avwap_distance,
+            bins=[-999, 1.0, 2.0, 4.0, 8.0, 999],
+            labels=["within_1pct", "1_to_2pct", "2_to_4pct", "4_to_8pct", "over_8pct"],
+        )
     if "pivot_position" in out.columns:
         out["pivot_proximity_bucket"] = out["pivot_position"].fillna("unknown")
     if "contraction_score" in out.columns:

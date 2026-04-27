@@ -12,6 +12,10 @@ Research mode (heavy, local):
     python -m swing_engine research-taxonomy
     python -m swing_engine run-near-action-analysis
     python -m swing_engine run-near-action-path-analysis
+    python -m swing_engine run-avwap-anchor-analysis
+    python -m swing_engine run-avwap-sr-regime-analysis
+    python -m swing_engine run-avwap-intraday-analysis
+    python -m swing_engine run-avwap-structure-analysis
     python -m swing_engine run-gate-diagnostics
     python -m swing_engine run-root-cause-diagnostics
     python -m swing_engine run-pivot-consistency-audit
@@ -53,6 +57,12 @@ from typing import Optional, List, Tuple
 import sys
 
 from . import checklist
+from . import avwap_anchor_analysis
+from . import avwap_intraday_analysis
+from . import avwap_sr_regime_analysis
+from . import avwap_structure_analysis
+from . import expansion_stability_analysis
+from . import expansion_zone_analysis
 from . import backtest as bt_mod
 from . import config as cfg
 from . import data as mdata
@@ -67,6 +77,7 @@ from . import pivot_pass_analysis
 from . import research as research_mod
 from . import review
 from . import root_cause_diagnostics
+from . import rsi_analysis
 from . import scan_modes
 from . import signals
 from . import smoke
@@ -99,6 +110,13 @@ COMMAND_HELP = {
     "run-pivot-pass-analysis": "Usage: python -m swing_engine run-pivot-pass-analysis [--force]",
     "run-near-action-analysis": "Usage: python -m swing_engine run-near-action-analysis",
     "run-near-action-path-analysis": "Usage: python -m swing_engine run-near-action-path-analysis",
+    "run-avwap-anchor-analysis": "Usage: python -m swing_engine run-avwap-anchor-analysis [--force]",
+    "run-avwap-sr-regime-analysis": "Usage: python -m swing_engine run-avwap-sr-regime-analysis",
+    "run-avwap-intraday-analysis": "Usage: python -m swing_engine run-avwap-intraday-analysis",
+    "run-avwap-structure-analysis": "Usage: python -m swing_engine run-avwap-structure-analysis",
+    "run-expansion-zone-analysis": "Usage: python -m swing_engine run-expansion-zone-analysis",
+    "run-expansion-stability-analysis": "Usage: python -m swing_engine run-expansion-stability-analysis",
+    "run-rsi-analysis": "Usage: python -m swing_engine run-rsi-analysis",
     "db-sync": "Usage: python -m swing_engine db-sync",
     "portfolio": "Usage: python -m swing_engine portfolio [--force]",
     "backtest": "Usage: python -m swing_engine backtest [SYMBOL ...] [--start YYYY-MM-DD] [--force]",
@@ -287,6 +305,48 @@ def main():
         result = near_action_path_analysis.run_near_action_path_analysis(save=True)
         if result.get("output_path"):
             print(f"\n  Near-action path analysis saved: {result['output_path']}")
+    elif cmd == "run-avwap-anchor-analysis":
+        result = avwap_anchor_analysis.run_avwap_anchor_analysis(force=force, save=True)
+        if result.get("output_path"):
+            print(f"\n  AVWAP anchor analysis saved: {result['output_path']}")
+        if result.get("json_path"):
+            print(f"  AVWAP anchor JSON: {result['json_path']}")
+    elif cmd == "run-avwap-sr-regime-analysis":
+        result = avwap_sr_regime_analysis.run_avwap_sr_regime_analysis(save=True)
+        if result.get("output_path"):
+            print(f"\n  AVWAP SR regime analysis saved: {result['output_path']}")
+        if result.get("json_path"):
+            print(f"  AVWAP SR regime JSON: {result['json_path']}")
+    elif cmd == "run-avwap-intraday-analysis":
+        result = avwap_intraday_analysis.run_avwap_intraday_analysis(save=True)
+        if result.get("output_path"):
+            print(f"\n  AVWAP intraday analysis saved: {result['output_path']}")
+        if result.get("json_path"):
+            print(f"  AVWAP intraday JSON: {result['json_path']}")
+    elif cmd == "run-avwap-structure-analysis":
+        result = avwap_structure_analysis.run_avwap_structure_analysis(save=True)
+        if result.get("output_path"):
+            print(f"\n  AVWAP structure analysis saved: {result['output_path']}")
+        if result.get("json_path"):
+            print(f"  AVWAP structure JSON: {result['json_path']}")
+    elif cmd == "run-expansion-zone-analysis":
+        result = expansion_zone_analysis.run_expansion_zone_analysis(save=True)
+        if result.get("output_path"):
+            print(f"\n  Expansion zone analysis saved: {result['output_path']}")
+        if result.get("json_path"):
+            print(f"  Expansion zone JSON: {result['json_path']}")
+    elif cmd == "run-expansion-stability-analysis":
+        result = expansion_stability_analysis.run_expansion_stability_analysis(save=True)
+        if result.get("output_path"):
+            print(f"\n  Expansion stability analysis saved: {result['output_path']}")
+        if result.get("json_path"):
+            print(f"  Expansion stability JSON: {result['json_path']}")
+    elif cmd == "run-rsi-analysis":
+        result = rsi_analysis.run_rsi_analysis(save=True)
+        if result.get("output_path"):
+            print(f"\n  RSI analysis saved: {result['output_path']}")
+        if result.get("json_path"):
+            print(f"  RSI analysis JSON: {result['json_path']}")
     elif cmd == "backtest":
         symbols_to_run, start, end, smoke_mode, _ = _parse_backtest_args(args)
         _, report_path = bt_mod.run_walkforward_backtest(symbols_to_run, start_date=start, end_date=end, smoke_mode=smoke_mode)
