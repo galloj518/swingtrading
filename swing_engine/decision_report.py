@@ -213,6 +213,28 @@ def _decision_output_path() -> Path:
     return cfg.DECISION_REPORT_OUTPUT_PATH
 
 
+def _write_pages_index() -> Path:
+    output_path = cfg.PAGES_INDEX_OUTPUT_PATH
+    html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SwingTrading Dashboard</title>
+  <meta http-equiv="refresh" content="0; url=dashboard.html">
+  <link rel="canonical" href="dashboard.html">
+</head>
+<body>
+  <p>Redirecting to the latest dashboard...</p>
+  <p><a href="dashboard.html">Open dashboard</a></p>
+  <p><a href="decision_report.txt">Open decision report</a></p>
+</body>
+</html>
+"""
+    run_health.atomic_write_text(output_path, html, encoding="utf-8")
+    return output_path
+
+
 def _chart_symbols_for_dashboard(context: dict) -> List[str]:
     watchlists = dashboard._prepare_watchlists(context["packets"], context["checklists"])
     ordered: List[str] = []
@@ -345,6 +367,7 @@ def run_decision_report(force: bool = False, save: bool = True) -> dict:
         run_health.atomic_write_text(output_path, report_text, encoding="utf-8")
         dashboard_result = _write_production_dashboard(context)
         dashboard_path = dashboard_result["dashboard_path"]
+        _write_pages_index()
         validation = _validate_production_outputs(context, Path(dashboard_path), output_path)
         print(
             "Dashboard validation:"

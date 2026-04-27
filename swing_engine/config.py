@@ -23,6 +23,7 @@ RESEARCH_REPORTS_DIR = REPORTS_DIR / "research"
 TEMPLATES_DIR = BASE_DIR / "templates"
 DOCS_DIR = BASE_DIR / "docs"
 DB_PATH = DATA_DIR / "swing_engine.sqlite3"
+PAGES_INDEX_OUTPUT_PATH = DOCS_DIR / "index.html"
 DASHBOARD_OUTPUT_PATH = DOCS_DIR / "dashboard.html"
 DECISION_REPORT_OUTPUT_PATH = DOCS_DIR / "decision_report.txt"
 RUN_HEALTH_OUTPUT_DIR = REPORTS_DIR
