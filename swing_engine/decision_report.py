@@ -35,6 +35,7 @@ def _candidate_row(symbol: str, packet: dict) -> dict:
     score = packet.get("score", {})
     production = score.get("production_promotion", {})
     trigger_primary = packet.get("intraday_trigger", {}).get("primary", {})
+    rsi_context = packet.get("breakout_features", {}).get("rsi", {}) or {}
     pivot_position = score.get("pivot_position", {})
     sizing = packet.get("position_sizing", {})
     execution = packet.get("execution_policy", {})
@@ -52,6 +53,14 @@ def _candidate_row(symbol: str, packet: dict) -> dict:
         "symbol": symbol,
         "setup_state": str(score.get("setup_state", "")),
         "production_score": _safe_float(production.get("production_score"), 0.0),
+        "structure_score": int(production.get("structure_score") or 0),
+        "expansion_score": int(production.get("expansion_score") or 0),
+        "range_ratio": production.get("range_ratio"),
+        "volume_ratio": production.get("volume_ratio"),
+        "expansion_quality": str(production.get("expansion_quality") or "weak"),
+        "rsi_14": rsi_context.get("rsi_14"),
+        "rsi_bucket": str(rsi_context.get("rsi_bucket") or ""),
+        "rsi_trend": str(rsi_context.get("rsi_trend") or ""),
         "pivot_zone": str(production.get("pivot_zone") or ""),
         "trigger_band": str((band_profile.get("trigger_readiness_score") or {}).get("label", "")),
         "breakout_band": str((band_profile.get("breakout_readiness_score") or {}).get("label", "")),
@@ -62,6 +71,12 @@ def _candidate_row(symbol: str, packet: dict) -> dict:
         "readiness_rebalance_flags": rebalance_flags,
         "dominant_negative_flags": dominant_negatives,
         "sizing_tier": str(sizing.get("sizing_tier") or "none"),
+        "avwap_location_quality": str(production.get("avwap_location_quality") or ""),
+        "avwap_effect_on_decision": str(production.get("avwap_effect_on_decision") or "none"),
+        "avwap_resistance_filter_flag": bool(production.get("avwap_resistance_filter_flag")),
+        "avwap_resistance_filter_reason": str(production.get("avwap_resistance_filter_reason") or ""),
+        "avwap_resistance_anchor": str(production.get("avwap_resistance_anchor") or ""),
+        "avwap_resistance_distance_pct": production.get("avwap_resistance_distance_pct"),
         "execution_lane": str(execution.get("execution_lane") or sizing.get("execution_lane") or ""),
         "execution_posture": str(execution.get("execution_posture") or sizing.get("execution_posture") or ""),
         "recommended_lane": str(execution.get("recommended_lane") or sizing.get("recommended_lane") or ""),
@@ -79,13 +94,16 @@ def _candidate_row(symbol: str, packet: dict) -> dict:
 def _classify_section(row: dict) -> str:
     state = row["setup_state"]
     sizing_tier = row["sizing_tier"]
-    dominant_negatives = row["dominant_negative_flags"]
-    if dominant_negatives or state == "BLOCKED":
+    structure_score = int(row.get("structure_score") or 0)
+    avwap_effect = str(row.get("avwap_effect_on_decision") or "none")
+    dominant_negatives = list(row["dominant_negative_flags"])
+    non_avwap_negatives = [flag for flag in dominant_negatives if flag != "avwap_blocked"]
+    if state in {"FAILED", "BLOCKED", "EXTENDED", "DATA_UNAVAILABLE"} or non_avwap_negatives:
         return SECTION_REJECT
-    if state in {"ACTIONABLE_BREAKOUT", "ACTIONABLE_RECLAIM"} and sizing_tier in {"medium", "full"}:
+    if avwap_effect == "hard_block":
+        return SECTION_REJECT if structure_score <= 0 else SECTION_RESEARCH
+    if row.get("execution_lane") == "actionable":
         return SECTION_ACTIONABLE
-    if state in {"FAILED", "EXTENDED"}:
-        return SECTION_REJECT
     if row.get("execution_lane") == "near_action" or state == "TRIGGER_WATCH" or sizing_tier == "watchlist":
         return SECTION_NEAR
     if state in {"STALKING", "FORMING"} or sizing_tier == "none":
@@ -137,17 +155,34 @@ def _format_section(title: str, rows: List[dict]) -> str:
         clusters = ", ".join(row["interaction_cluster_flags"]) if row["interaction_cluster_flags"] else "--"
         negatives = ", ".join(row["dominant_negative_flags"]) if row["dominant_negative_flags"] else "--"
         notes = ", ".join(row["notes"]) if row["notes"] else "--"
+        avwap_distance = row["avwap_resistance_distance_pct"] if row["avwap_resistance_distance_pct"] is not None else "--"
+        range_ratio = row["range_ratio"] if row["range_ratio"] is not None else "--"
+        volume_ratio = row["volume_ratio"] if row["volume_ratio"] is not None else "--"
+        rsi_14 = row["rsi_14"] if row["rsi_14"] is not None else "--"
         lines.extend(
             [
                 f"{idx}. {row['symbol']}",
                 f"   State: {row['setup_state']}",
                 f"   Score: {row['production_score']}",
+                f"   Structure Score: {row['structure_score']}",
+                f"   Expansion Score: {row['expansion_score']}",
+                f"   Expansion Quality: {row['expansion_quality'] or '--'}",
+                f"   Range Ratio: {range_ratio}",
+                f"   Volume Ratio: {volume_ratio}",
+                f"   RSI 14: {rsi_14}",
+                f"   RSI Bucket: {row['rsi_bucket'] or '--'}",
+                f"   RSI Trend: {row['rsi_trend'] or '--'}",
                 f"   Pivot Zone: {row['pivot_zone'] or '--'}",
                 f"   Trigger Band: {row['trigger_band'] or '--'}",
                 f"   Breakout Band: {row['breakout_band'] or '--'}",
                 f"   Structural Band: {row['structural_band'] or '--'}",
                 f"   Dominant Negatives: {negatives}",
                 f"   Sizing Tier: {row['sizing_tier'] or '--'}",
+                f"   AVWAP Location: {row['avwap_location_quality'] or '--'}",
+                f"   AVWAP Effect On Decision: {row['avwap_effect_on_decision'] or '--'}",
+                f"   AVWAP Resistance Anchor: {row['avwap_resistance_anchor'] or '--'}",
+                f"   AVWAP Resistance Distance: {avwap_distance}",
+                f"   AVWAP Filter Reason: {row['avwap_resistance_filter_reason'] or '--'}",
                 f"   Execution Posture: {row['execution_posture'] or '--'}",
                 f"   Recommended Lane: {row['recommended_lane'] or '--'}",
                 f"   Recommended Size: {row['recommended_size_class'] or '--'}",
@@ -278,6 +313,7 @@ def _validate_production_outputs(context: dict, dashboard_path: Path, report_pat
             "breakout_band": str(display.get("breakout_band") or "--"),
             "structural_band": str(display.get("structural_band") or "--"),
             "sizing_tier": str(display.get("sizing_tier") or "--"),
+            "avwap_location_quality": str(display.get("avwap_location_quality") or "--"),
         }
         for field_name, expected in expected_pairs.items():
             if expected not in block:

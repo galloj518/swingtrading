@@ -190,6 +190,9 @@
         <div class="muted">{{ display.actionability_label }}: {{ display.actionability_detail }}</div>
         <div style="margin-top: 10px;" class="grid summary-grid">
           <div class="metric"><div class="label">Production Score</div><div class="value">{{ display.production_score }}</div></div>
+          <div class="metric"><div class="label">Structure Score</div><div class="value">{{ display.structure_score if display.structure_score is not none else '--' }}</div></div>
+          <div class="metric"><div class="label">Expansion Score</div><div class="value">{{ display.expansion_score if display.expansion_score is not none else '--' }}</div></div>
+          <div class="metric"><div class="label">RSI 14</div><div class="value">{{ display.rsi_14 if display.rsi_14 is not none else '--' }}</div></div>
           <div class="metric"><div class="label">Pivot Zone</div><div class="value">{{ display.pivot_zone or '--' }}</div></div>
           <div class="metric"><div class="label">Sizing Tier</div><div class="value">{{ display.sizing_tier or '--' }}</div></div>
         </div>
@@ -197,6 +200,14 @@
           <tr><th>Symbol</th><td>{{ display.symbol }}</td></tr>
           <tr><th>Setup State</th><td>{{ display.setup_state }}</td></tr>
           <tr><th>Production Score</th><td>{{ display.production_score }}</td></tr>
+          <tr><th>Structure Score</th><td>{{ display.structure_score if display.structure_score is not none else '--' }}</td></tr>
+          <tr><th>Expansion Score</th><td>{{ display.expansion_score if display.expansion_score is not none else '--' }}</td></tr>
+          <tr><th>Expansion Quality</th><td>{{ display.expansion_quality or '--' }}</td></tr>
+          <tr><th>Range Ratio</th><td>{{ display.range_ratio if display.range_ratio is not none else '--' }}</td></tr>
+          <tr><th>Volume Ratio</th><td>{{ display.volume_ratio if display.volume_ratio is not none else '--' }}</td></tr>
+          <tr><th>RSI 14</th><td>{{ display.rsi_14 if display.rsi_14 is not none else '--' }}</td></tr>
+          <tr><th>RSI Bucket</th><td>{{ display.rsi_bucket or '--' }}</td></tr>
+          <tr><th>RSI Trend</th><td>{{ display.rsi_trend or '--' }}</td></tr>
           <tr><th>Pivot Zone</th><td>{{ display.pivot_zone or '--' }}</td></tr>
           <tr><th>Trigger Band</th><td>{{ display.trigger_band or '--' }}</td></tr>
           <tr><th>Breakout Band</th><td>{{ display.breakout_band or '--' }}</td></tr>
@@ -204,6 +215,15 @@
           <tr><th>Dominant Negatives</th><td>{% if display.dominant_negative_flags %}{{ display.dominant_negative_flags|join(', ') }}{% else %}--{% endif %}</td></tr>
           <tr><th>Sizing Tier</th><td>{{ display.sizing_tier or '--' }}</td></tr>
           <tr><th>Execution Policy</th><td>{{ display.execution_policy|join('; ') }}</td></tr>
+          <tr><th>Active AVWAP Anchors</th><td>{% if display.active_avwap_anchors %}{{ display.active_avwap_anchors|join(', ') }}{% else %}--{% endif %}</td></tr>
+          <tr><th>Nearest Support AVWAP</th><td>{{ display.nearest_support_avwap_anchor or '--' }}</td></tr>
+          <tr><th>Nearest Resistance AVWAP</th><td>{{ display.nearest_resistance_avwap_anchor or '--' }}</td></tr>
+          <tr><th>Nearest AVWAP Distance %</th><td>{{ display.avwap_distance_pct if display.avwap_distance_pct is not none else '--' }}</td></tr>
+          <tr><th>AVWAP Location</th><td>{{ display.avwap_location_quality or '--' }}</td></tr>
+          <tr><th>Final Decision Logic</th><td>{{ display.avwap_effect_on_decision or 'none' }}</td></tr>
+          <tr><th>AVWAP Resistance Anchor</th><td>{{ display.avwap_resistance_anchor or '--' }}</td></tr>
+          <tr><th>AVWAP Resistance Distance</th><td>{{ display.avwap_resistance_distance_pct if display.avwap_resistance_distance_pct is not none else '--' }}</td></tr>
+          <tr><th>AVWAP Filter Reason</th><td>{{ display.avwap_resistance_filter_reason or '--' }}</td></tr>
           <tr><th>Trigger Type</th><td>{{ display.trigger_type or '--' }}</td></tr>
           <tr><th>Trigger Level</th><td class="mono">{{ display.trigger_level if display.trigger_level is not none else '--' }}</td></tr>
           <tr><th>Stop</th><td class="mono">{{ display.stop if display.stop is not none else '--' }}</td></tr>

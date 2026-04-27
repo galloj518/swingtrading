@@ -53,6 +53,9 @@ def _packet_display(packet: dict, action: dict) -> dict:
     if near_action_status:
         execution_policy_parts.append(f"status={near_action_status}")
 
+    avwap_context = packet.get("breakout_features", {}).get("avwap", {}) or {}
+    avwap_filter = packet.get("avwap_resistance_filter", {}) or {}
+    rsi_context = packet.get("breakout_features", {}).get("rsi", {}) or {}
     return {
         "symbol": packet.get("symbol"),
         "setup_family": score.get("setup_family"),
@@ -60,6 +63,14 @@ def _packet_display(packet: dict, action: dict) -> dict:
         "actionability_label": action.get("label"),
         "actionability_detail": action.get("detail"),
         "production_score": production.get("production_score"),
+        "structure_score": production.get("structure_score"),
+        "expansion_score": production.get("expansion_score"),
+        "expansion_quality": production.get("expansion_quality"),
+        "range_ratio": production.get("range_ratio"),
+        "volume_ratio": production.get("volume_ratio"),
+        "rsi_14": rsi_context.get("rsi_14"),
+        "rsi_bucket": rsi_context.get("rsi_bucket"),
+        "rsi_trend": rsi_context.get("rsi_trend"),
         "pivot_zone": production.get("pivot_zone"),
         "trigger_band": (band_profile.get("trigger_readiness_score") or {}).get("label"),
         "breakout_band": (band_profile.get("breakout_readiness_score") or {}).get("label"),
@@ -73,6 +84,16 @@ def _packet_display(packet: dict, action: dict) -> dict:
         "recommended_action": recommended_action,
         "near_action_status": near_action_status,
         "execution_policy": execution_policy_parts,
+        "active_avwap_anchors": list(avwap_context.get("active_anchors", [])),
+        "nearest_support_avwap_anchor": avwap_context.get("nearest_support_label"),
+        "nearest_resistance_avwap_anchor": avwap_context.get("nearest_resistance_label"),
+        "avwap_distance_pct": avwap_context.get("distance_pct"),
+        "avwap_location_quality": avwap_filter.get("location_quality"),
+        "avwap_effect_on_decision": avwap_filter.get("effect_on_decision"),
+        "avwap_resistance_filter_flag": avwap_filter.get("flag"),
+        "avwap_resistance_filter_reason": avwap_filter.get("reason"),
+        "avwap_resistance_anchor": avwap_filter.get("anchor"),
+        "avwap_resistance_distance_pct": avwap_filter.get("distance_pct"),
         "trigger_level": trigger_primary.get("trigger_level"),
         "stop": trigger_primary.get("invalidation_level") or packet.get("entry_zone", {}).get("stop"),
         "reward_risk_now": pivot_position.get("risk_reward_now"),
@@ -108,6 +129,9 @@ def _prepare_watchlists(packets: dict, checklists: dict) -> dict:
         tier = production_meta.get("tier")
         execution_lane = str(display.get("execution_lane") or "")
         dominant_negative_flags = list(display.get("dominant_negative_flags", []))
+        structure_score = int(display.get("structure_score") or 0)
+        avwap_effect = str(display.get("avwap_effect_on_decision") or "none")
+        non_avwap_negatives = [flag for flag in dominant_negative_flags if flag != "avwap_blocked"]
         if state in {"ACTIONABLE_BREAKOUT", "ACTIONABLE_RECLAIM", "ACTIONABLE_RETEST"} and execution_lane == "actionable":
             actionable.append(row)
         elif (
@@ -118,7 +142,12 @@ def _prepare_watchlists(packets: dict, checklists: dict) -> dict:
             near_trigger.append(row)
         elif tier == "continuation":
             continuation.append(row)
-        elif dominant_negative_flags or state in {"FAILED", "BLOCKED", "DATA_UNAVAILABLE"} or (state == "EXTENDED" and production_meta.get("extended_subtype") == "EXTENDED_LATE"):
+        elif (
+            non_avwap_negatives
+            or state in {"FAILED", "BLOCKED", "DATA_UNAVAILABLE"}
+            or (state == "EXTENDED" and production_meta.get("extended_subtype") == "EXTENDED_LATE")
+            or (avwap_effect == "hard_block" and structure_score <= 0)
+        ):
             avoid.append(row)
         elif state in {"STALKING", "FORMING"}:
             stalking.append(row)
