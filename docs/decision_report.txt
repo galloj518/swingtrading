@@ -6,49 +6,17 @@ None
 ============================================================
 NEAR ACTION / STARTER CANDIDATES
 ============================================================
-1. ABT
-   State: ACTIONABLE_BREAKOUT
+1. PNC
+   State: FORMING
    Score: 79.9
    Structure Score: 3
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.93
-   Volume Ratio: 0.25
-   RSI 14: 70.93
-   RSI Bucket: 70_to_75
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: --
-   Sizing Tier: watchlist
-   AVWAP Location: caution
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: all_time_high
-   AVWAP Resistance Distance: 2.61
-   AVWAP Filter Reason: nearby_resistance+anchor_cluster+problematic_anchor
-   Execution Posture: watchlist
-   Recommended Lane: near_action
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 104.46
-   Stop: 103.38
-   Target: 117.82
-   RR: 0.12
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near
-2. ABBV
-   State: ACTIONABLE_RETEST
-   Score: 79.9
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.91
-   Volume Ratio: 0.15
-   RSI 14: 67.99
+   Range Ratio: 0.44
+   Volume Ratio: 0.13
+   RSI 14: 61.59
    RSI Bucket: 60_to_70
-   RSI Trend: rising
+   RSI Trend: falling
    Pivot Zone: near
    Trigger Band: favorable
    Breakout Band: favorable
@@ -64,605 +32,1085 @@ NEAR ACTION / STARTER CANDIDATES
    Recommended Lane: near_action
    Recommended Size: watchlist
    Recommended Action: watch
-   Trigger: 260.22
-   Stop: 257.3
-   Target: 283.73
-   RR: 0.26
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near
-
-============================================================
-RESEARCH ONLY
-============================================================
-1. MDT
+   Trigger: 251.0
+   Stop: 249.6
+   Target: 273.66
+   RR: 1.11
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster, pivot_zone:near
+2. ERIE
    State: FORMING
-   Score: 42.0
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.0
-   Volume Ratio: 0.23
-   RSI 14: 60.47
-   RSI Bucket: 60_to_70
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: ytd
-   AVWAP Resistance Distance: 1.04
-   AVWAP Filter Reason: near_resistance_ytd_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 84.25
-   Stop: 83.21
-   Target: 93.45
-   RR: 0.09
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near, negative:avwap_blocked
-2. T
-   State: FORMING
-   Score: 42.0
+   Score: 79.9
    Structure Score: 2
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.59
-   Volume Ratio: 0.26
-   RSI 14: 70.81
-   RSI Bucket: 70_to_75
+   Range Ratio: 1.05
+   Volume Ratio: 0.3
+   RSI 14: 57.74
+   RSI Bucket: 50_to_60
    RSI Trend: rising
    Pivot Zone: prime
    Trigger Band: favorable
    Breakout Band: acceptable
    Structural Band: favorable
-   Dominant Negatives: avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: covid_low
-   AVWAP Resistance Distance: 1.62
-   AVWAP Filter Reason: near_resistance_covid_low_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 24.32
-   Stop: 24.03
-   Target: 26.29
-   RR: 0.03
-   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, forming_readiness_cap, pivot_zone:prime, negative:avwap_blocked
-3. LHX
-   State: FORMING
-   Score: 42.0
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.68
-   Volume Ratio: 0.31
-   RSI 14: 59.19
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: covid_low
-   AVWAP Resistance Distance: 0.39
-   AVWAP Filter Reason: near_resistance_covid_low_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 304.6
-   Stop: 303.57
-   Target: 328.6
-   RR: 0.54
-   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, forming_readiness_cap, pivot_zone:near, negative:avwap_blocked
+   Dominant Negatives: --
+   Sizing Tier: watchlist
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: watchlist
+   Recommended Lane: near_action
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 240.65
+   Stop: 233.82
+   Target: 292.78
+   RR: 0.0
+   Clusters: pivot_trigger_alignment
+   Notes: pivot_trigger_alignment, forming_readiness_cap, pivot_zone:prime
 
 ============================================================
-REJECT / AVOID
+RESEARCH ONLY
 ============================================================
-1. PYPL
-   State: FORMING
-   Score: 59.7
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.66
-   Volume Ratio: 0.31
-   RSI 14: 75.75
-   RSI Bucket: above_75
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 56.05
-   Stop: 55.48
-   Target: 65.71
-   RR: 1.29
-   Clusters: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_structure_vs_location
-   Notes: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-2. NDAQ
-   State: FAILED
-   Score: 55.2
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.15
-   Volume Ratio: 0.24
-   RSI 14: 60.43
-   RSI Bucket: 60_to_70
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot
-   Sizing Tier: starter
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 91.04
-   Stop: 91.04
-   Target: 105.82
-   RR: 1.97
-   Clusters: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_structure_vs_location
-   Notes: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-3. PNC
-   State: FAILED
-   Score: 46.4
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.63
-   Volume Ratio: 0.14
-   RSI 14: 60.11
-   RSI Bucket: 60_to_70
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: far_from_pivot
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 251.69
-   Stop: 251.69
-   Target: 273.45
-   RR: 0.0
-   Clusters: trigger_breakout_structure, negative_conflict_structure_vs_location
-   Notes: trigger_breakout_structure, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
-4. AAPL
-   State: ACTIONABLE_BREAKOUT
-   Score: 42.0
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.72
-   Volume Ratio: 0.37
-   RSI 14: 67.96
-   RSI Bucket: 60_to_70
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 337.12
-   Stop: 334.02
-   Target: 370.53
-   RR: 0.13
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
-5. TROW
+1. AAPL
    State: TRIGGER_WATCH
    Score: 42.0
    Structure Score: 3
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 1.0
-   Volume Ratio: 0.12
-   RSI 14: 60.13
+   Range Ratio: 0.97
+   Volume Ratio: 0.4
+   RSI 14: 68.51
    RSI Bucket: 60_to_70
    RSI Trend: rising
    Pivot Zone: near
    Trigger Band: favorable
    Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 116.91
-   Stop: 117.07
-   Target: 126.8
-   RR: 1.1
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
-6. XNGSY
-   State: EXTENDED
-   Score: 42.0
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.08
-   Volume Ratio: 0.0
-   RSI 14: 53.76
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: prime
-   Trigger Band: unfavorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, weak_trigger_readiness, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: iran_war_start
-   AVWAP Resistance Distance: 1.93
-   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: --
-   Stop: 21.88
-   Target: 25.08
-   RR: 0.0
-   Clusters: pivot_breakout_alignment
-   Notes: pivot_breakout_alignment, prime_weak_trigger_cap, pivot_zone:prime, negative:overhead_supply, negative:weak_trigger_readiness, negative:avwap_blocked
-7. CBZ
-   State: EXTENDED
-   Score: 42.0
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.92
-   Volume Ratio: 0.23
-   RSI 14: 72.75
-   RSI Bucket: 70_to_75
-   RSI Trend: rising
-   Pivot Zone: prime
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 44.44
-   Stop: 42.74
-   Target: 52.56
-   RR: 0.01
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster, prime_ready_alignment_bonus, pivot_zone:prime, negative:overhead_supply
-8. FDS
-   State: EXTENDED
-   Score: 42.0
-   Structure Score: 3
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.48
-   Volume Ratio: 0.33
-   RSI 14: 61.56
-   RSI Bucket: 60_to_70
-   RSI Trend: rising
-   Pivot Zone: prime
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 261.51
-   Stop: 256.27
-   Target: 317.1
-   RR: 0.06
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster, prime_ready_alignment_bonus, pivot_zone:prime, negative:overhead_supply
-9. JNJ
-   State: FORMING
-   Score: 42.0
-   Structure Score: 3
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.33
-   Volume Ratio: 0.27
-   RSI 14: 65.73
-   RSI Bucket: 60_to_70
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 265.41
-   Stop: 261.35
-   Target: 292.17
-   RR: 0.1
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
-10. ZTS
-   State: FORMING
-   Score: 42.0
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.09
-   Volume Ratio: 0.17
-   RSI 14: 52.85
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: recent_earnings_gap
-   AVWAP Resistance Distance: 0.87
-   AVWAP Filter Reason: near_resistance_recent_earnings_gap_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 76.7
-   Stop: 75.53
-   Target: 82.53
-   RR: 0.55
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, ma_confirmation_cluster, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply, negative:avwap_blocked
-11. MMM
-   State: ACTIONABLE_RETEST
-   Score: 42.0
-   Structure Score: 3
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.32
-   Volume Ratio: 0.54
-   RSI 14: 73.22
-   RSI Bucket: 70_to_75
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 173.35
-   Stop: 173.52
-   Target: 199.0
-   RR: 0.22
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
-12. ACN
-   State: FORMING
-   Score: 42.0
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.96
-   Volume Ratio: 0.29
-   RSI 14: 59.77
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 152.6
-   Stop: 149.58
-   Target: 181.91
-   RR: 0.25
-   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
-13. VICI
-   State: BLOCKED
-   Score: 42.0
-   Structure Score: 2
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.27
-   Volume Ratio: 0.17
-   RSI 14: 53.92
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: acceptable
-   Dominant Negatives: far_from_pivot, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: iran_war_start
-   AVWAP Resistance Distance: 0.94
-   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 26.87
-   Stop: 26.64
-   Target: 28.32
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:far_from_pivot, negative:avwap_blocked
-14. CTSH
-   State: FORMING
-   Score: 42.0
-   Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.91
-   Volume Ratio: 0.23
-   RSI 14: 58.58
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 46.92
-   Stop: 46.18
-   Target: 55.03
-   RR: 0.43
-   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply
-15. PKG
-   State: FAILED
-   Score: 42.0
-   Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.67
-   Volume Ratio: 0.45
-   RSI 14: 68.57
-   RSI Bucket: 60_to_70
-   RSI Trend: rising
-   Pivot Zone: near
-   Trigger Band: favorable
-   Breakout Band: acceptable
    Structural Band: favorable
    Dominant Negatives: avwap_blocked
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
    AVWAP Resistance Anchor: all_time_high
-   AVWAP Resistance Distance: 0.5
+   AVWAP Resistance Distance: 0.0
    AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 254.44
-   Stop: 254.44
-   Target: 288.27
-   RR: 0.28
+   Trigger: 338.57
+   Stop: 337.15
+   Target: 373.7
+   RR: 0.42
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near, negative:avwap_blocked
+2. PKG
+   State: FORMING
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.81
+   Volume Ratio: 0.51
+   RSI 14: 72.98
+   RSI Bucket: 70_to_75
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: all_time_high
+   AVWAP Resistance Distance: 0.03
+   AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 258.34
+   Stop: 253.02
+   Target: 282.63
+   RR: 0.14
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, pivot_zone:near, negative:avwap_blocked
+3. IBP
+   State: FORMING
+   Score: 42.0
+   Structure Score: 1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.56
+   Volume Ratio: 0.13
+   RSI 14: 59.58
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: iran_war_start
+   AVWAP Resistance Distance: 0.41
+   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 234.68
+   Stop: 231.68
+   Target: 268.28
+   RR: 0.18
    Clusters: pivot_trigger_alignment, approaching_pivot_cluster
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, pivot_zone:near, negative:avwap_blocked
-16. WDAY
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, forming_readiness_cap, pivot_zone:near, negative:avwap_blocked
+4. REGN
    State: FORMING
    Score: 42.0
    Structure Score: 2
    Expansion Score: 0
    Expansion Quality: weak
    Range Ratio: 1.05
-   Volume Ratio: 0.46
-   RSI 14: 58.78
+   Volume Ratio: 0.31
+   RSI 14: 62.13
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: all_time_high
+   AVWAP Resistance Distance: 1.72
+   AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 678.12
+   Stop: 676.56
+   Target: 730.92
+   RR: 0.36
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, forming_readiness_cap, pivot_zone:near, negative:avwap_blocked
+5. ORLY
+   State: FORMING
+   Score: 42.0
+   Structure Score: 1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.67
+   Volume Ratio: 0.52
+   RSI 14: 60.39
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: all_time_high
+   AVWAP Resistance Distance: 0.0
+   AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 92.74
+   Stop: 91.51
+   Target: 100.53
+   RR: 0.08
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, forming_readiness_cap, pivot_zone:near, negative:avwap_blocked
+6. LHX
+   State: FORMING
+   Score: 42.0
+   Structure Score: 1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.72
+   Volume Ratio: 0.22
+   RSI 14: 59.95
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: covid_low
+   AVWAP Resistance Distance: 0.01
+   AVWAP Filter Reason: near_resistance_covid_low_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 308.42
+   Stop: 304.48
+   Target: 328.19
+   RR: 0.61
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, forming_readiness_cap, pivot_zone:near, negative:avwap_blocked
+
+============================================================
+REJECT / AVOID
+============================================================
+1. SMA
+   State: ACTIONABLE_RETEST
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.64
+   Volume Ratio: 0.23
+   RSI 14: 66.78
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: watchlist
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 35.61
+   Stop: 35.21
+   Target: 39.42
+   RR: 0.08
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+2. PYPL
+   State: ACTIONABLE_BREAKOUT
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.45
+   Volume Ratio: 0.61
+   RSI 14: 79.16
+   RSI Bucket: above_75
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 58.3
+   Stop: 56.47
+   Target: 66.97
+   RR: 0.14
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+3. NDAQ
+   State: EXTENDED
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.12
+   Volume Ratio: 0.2
+   RSI 14: 66.33
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 95.12
+   Stop: 93.52
+   Target: 107.39
+   RR: 0.01
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster, prime_ready_alignment_bonus, pivot_zone:prime, negative:overhead_supply
+4. ABT
+   State: FORMING
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.24
+   Volume Ratio: 0.38
+   RSI 14: 74.31
+   RSI Bucket: 70_to_75
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 105.86
+   Stop: 105.96
+   Target: 122.25
+   RR: 0.1
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+5. XNGSY
+   State: EXTENDED
+   Score: 42.0
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.11
+   Volume Ratio: 0.0
+   RSI 14: 53.46
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: prime
+   Trigger Band: unfavorable
+   Breakout Band: favorable
+   Structural Band: acceptable
+   Dominant Negatives: weak_trigger_readiness, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: iran_war_start
+   AVWAP Resistance Distance: 1.99
+   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: --
+   Stop: 21.95
+   Target: 25.02
+   RR: 0.0
+   Clusters: pivot_breakout_alignment
+   Notes: pivot_breakout_alignment, prime_weak_trigger_cap, pivot_zone:prime, negative:weak_trigger_readiness, negative:avwap_blocked
+6. TROW
+   State: EXTENDED
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.09
+   Volume Ratio: 0.28
+   RSI 14: 65.18
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 120.83
+   Stop: 119.21
+   Target: 133.39
+   RR: 0.01
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster, prime_ready_alignment_bonus, pivot_zone:prime, negative:overhead_supply
+7. ABBV
+   State: ACTIONABLE_RETEST
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.95
+   Volume Ratio: 0.23
+   RSI 14: 70.9
+   RSI Bucket: 70_to_75
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: watchlist
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 262.1
+   Stop: 261.45
+   Target: 290.21
+   RR: 0.21
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+8. KVUE
+   State: FORMING
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.07
+   Volume Ratio: 0.22
+   RSI 14: 65.41
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: watchlist
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 19.58
+   Stop: 19.69
+   Target: 21.64
+   RR: 0.27
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+9. ZTS
+   State: FORMING
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.9
+   Volume Ratio: 0.32
+   RSI 14: 58.05
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: watchlist
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 78.68
+   Stop: 78.17
+   Target: 84.15
+   RR: 0.33
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+10. CBZ
+   State: EXTENDED
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.52
+   Volume Ratio: 0.44
+   RSI 14: 75.74
+   RSI Bucket: above_75
+   RSI Trend: rising
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 45.13
+   Stop: 45.61
+   Target: 55.34
+   RR: 0.02
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, prime_ready_alignment_bonus, pivot_zone:prime, negative:overhead_supply
+11. MDT
+   State: FORMING
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.38
+   Volume Ratio: 0.82
+   RSI 14: 65.41
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: far_from_pivot, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: covid_low
+   AVWAP Resistance Distance: 1.0
+   AVWAP Filter Reason: near_resistance_covid_low_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 85.14
+   Stop: 86.15
+   Target: 98.49
+   RR: 0.36
+   Clusters: trigger_breakout_structure, negative_conflict_structure_vs_location
+   Notes: trigger_breakout_structure, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot, negative:avwap_blocked
+12. PRGS
+   State: ACTIONABLE_RETEST
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.37
+   Volume Ratio: 0.21
+   RSI 14: 64.37
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 39.98
+   Stop: 39.12
+   Target: 47.35
+   RR: 0.15
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+13. MMM
+   State: EXTENDED
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.21
+   Volume Ratio: 0.69
+   RSI 14: 77.95
+   RSI Bucket: above_75
+   RSI Trend: rising
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 182.9
+   Stop: 178.98
+   Target: 205.7
+   RR: 0.01
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, prime_ready_alignment_bonus, pivot_zone:prime, negative:overhead_supply
+14. LZB
+   State: ACTIONABLE_RECLAIM
+   Score: 42.0
+   Structure Score: 3
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.61
+   Volume Ratio: 0.09
+   RSI 14: 61.98
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 41.29
+   Stop: 40.27
+   Target: 45.21
+   RR: 0.25
+   Clusters: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, pivot_breakout_alignment, trigger_breakout_structure, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+15. PPG
+   State: FORMING
+   Score: 42.0
+   Structure Score: 1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.03
+   Volume Ratio: 0.42
+   RSI 14: 58.46
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 120.0
+   Stop: 120.21
+   Target: 132.18
+   RR: 0.29
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply
+16. VICI
+   State: BLOCKED
+   Score: 42.0
+   Structure Score: 1
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.28
+   Volume Ratio: 0.36
+   RSI 14: 56.11
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: far_from_pivot, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: iran_war_start
+   AVWAP Resistance Distance: 0.15
+   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 27.18
+   Stop: 27.07
+   Target: 28.74
+   RR: 1.36
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:far_from_pivot, negative:avwap_blocked
+17. FDS
+   State: ACTIONABLE_BREAKOUT
+   Score: 42.0
+   Structure Score: 2
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.46
+   Volume Ratio: 0.59
+   RSI 14: 67.18
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 279.8
+   Stop: 269.49
+   Target: 335.64
+   RR: 0.01
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:prime, negative:overhead_supply
+18. MLM
+   State: BLOCKED
+   Score: 42.0
+   Structure Score: 1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.92
+   Volume Ratio: 0.22
+   RSI 14: 51.74
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: iran_war_start
+   AVWAP Resistance Distance: 1.25
+   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 578.34
+   Stop: 575.48
+   Target: 627.31
+   RR: 0.97
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, pivot_zone:near, negative:avwap_blocked
+19. MSFT
+   State: FORMING
+   Score: 42.0
+   Structure Score: 2
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.85
+   Volume Ratio: 0.41
+   RSI 14: 55.09
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: ytd
+   AVWAP Resistance Distance: 1.43
+   AVWAP Filter Reason: near_resistance_ytd_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 395.8
+   Stop: 391.3
+   Target: 433.55
+   RR: 1.05
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply, negative:avwap_blocked
+20. KR
+   State: FORMING
+   Score: 42.0
+   Structure Score: 2
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.27
+   Volume Ratio: 0.25
+   RSI 14: 53.9
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 60.07
+   Stop: 58.7
+   Target: 64.55
+   RR: 0.0
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply
+21. WDAY
+   State: ACTIONABLE_BREAKOUT
+   Score: 42.0
+   Structure Score: 2
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.14
+   Volume Ratio: 0.67
+   RSI 14: 65.68
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: watchlist
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 154.77
+   Stop: 151.06
+   Target: 196.18
+   RR: 0.0
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:prime, negative:overhead_supply
+22. HD
+   State: FORMING
+   Score: 42.0
+   Structure Score: 1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.83
+   Volume Ratio: 0.42
+   RSI 14: 56.77
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: far_from_pivot, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: all_time_high
+   AVWAP Resistance Distance: 0.13
+   AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 341.89
+   Stop: 342.6
+   Target: 375.05
+   RR: 1.63
+   Clusters: --
+   Notes: forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot, negative:avwap_blocked
+23. CNXC
+   State: ACTIONABLE_BREAKOUT
+   Score: 42.0
+   Structure Score: 2
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.27
+   Volume Ratio: 0.31
+   RSI 14: 57.73
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 25.41
+   Stop: 24.39
+   Target: 31.85
+   RR: 0.12
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:near, negative:overhead_supply
+24. VRSN
+   State: FORMING
+   Score: 42.0
+   Structure Score: 2
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.62
+   Volume Ratio: 0.18
+   RSI 14: 60.37
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: near
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: watchlist
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 281.09
+   Stop: 278.16
+   Target: 310.69
+   RR: 0.83
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply
+25. ACN
+   State: EXTENDED
+   Score: 42.0
+   Structure Score: 2
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.71
+   Volume Ratio: 0.53
+   RSI 14: 67.67
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: recent_downtrend_high
+   AVWAP Resistance Distance: 1.75
+   AVWAP Filter Reason: near_resistance_recent_downtrend_high_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 163.83
+   Stop: 156.95
+   Target: 197.3
+   RR: 0.02
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:prime, negative:overhead_supply, negative:avwap_blocked
+26. PEP
+   State: FORMING
+   Score: 42.0
+   Structure Score: 1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.87
+   Volume Ratio: 0.43
+   RSI 14: 56.95
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: far_from_pivot, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: covid_low
+   AVWAP Resistance Distance: 0.7
+   AVWAP Filter Reason: near_resistance_covid_low_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 140.31
+   Stop: 143.01
+   Target: 151.04
+   RR: 1.37
+   Clusters: --
+   Notes: forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot, negative:avwap_blocked
+27. PHR
+   State: FORMING
+   Score: 42.0
+   Structure Score: 2
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.69
+   Volume Ratio: 0.24
+   RSI 14: 57.18
    RSI Bucket: 50_to_60
    RSI Trend: rising
    Pivot Zone: near
@@ -680,55 +1128,55 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: watchlist
    Recommended Action: watch
-   Trigger: 144.98
-   Stop: 140.19
-   Target: 183.6
-   RR: 0.36
-   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply
-17. HD
-   State: BLOCKED
+   Trigger: 10.77
+   Stop: 10.64
+   Target: 12.36
+   RR: 1.0
+   Clusters: pivot_trigger_alignment, negative_conflict_overhead_vs_trigger
+   Notes: pivot_trigger_alignment, negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:near, negative:overhead_supply
+28. TSCO
+   State: FORMING
    Score: 42.0
    Structure Score: 1
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.59
-   Volume Ratio: 0.21
-   RSI 14: 51.71
+   Range Ratio: 0.51
+   Volume Ratio: 0.3
+   RSI 14: 59.24
    RSI Bucket: 50_to_60
    RSI Trend: rising
-   Pivot Zone: far_below
+   Pivot Zone: near
    Trigger Band: favorable
    Breakout Band: acceptable
    Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot, avwap_blocked
+   Dominant Negatives: overhead_supply
    Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: ytd
-   AVWAP Resistance Distance: 0.57
-   AVWAP Filter Reason: near_resistance_ytd_within_2pct
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 333.46
-   Stop: 337.71
-   Target: 371.68
-   RR: 0.0
-   Clusters: ma_confirmation_cluster
-   Notes: ma_confirmation_cluster, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
-18. PRGS
+   Trigger: 32.4
+   Stop: 31.84
+   Target: 35.54
+   RR: 0.24
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply
+29. IVZ
    State: FORMING
    Score: 42.0
    Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.06
-   Volume Ratio: 0.25
-   RSI 14: 61.74
-   RSI Bucket: 60_to_70
-   RSI Trend: rising
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.54
+   Volume Ratio: 0.61
+   RSI 14: 58.75
+   RSI Bucket: 50_to_60
+   RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
@@ -738,59 +1186,59 @@ REJECT / AVOID
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
    AVWAP Resistance Anchor: all_time_high
-   AVWAP Resistance Distance: 0.26
+   AVWAP Resistance Distance: 0.45
    AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 39.47
-   Stop: 38.56
-   Target: 44.88
-   RR: 1.38
+   Trigger: 29.76
+   Stop: 29.06
+   Target: 33.76
+   RR: 0.0
    Clusters: ma_confirmation_cluster, negative_conflict_structure_vs_location
    Notes: ma_confirmation_cluster, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot, negative:avwap_blocked
-19. ORLY
-   State: FORMING
+30. ADP
+   State: ACTIONABLE_BREAKOUT
    Score: 42.0
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.15
-   Volume Ratio: 0.28
-   RSI 14: 56.92
-   RSI Bucket: 50_to_60
+   Structure Score: 2
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.52
+   Volume Ratio: 0.43
+   RSI 14: 70.54
+   RSI Bucket: 70_to_75
    RSI Trend: rising
-   Pivot Zone: near
+   Pivot Zone: prime
    Trigger Band: favorable
    Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, avwap_blocked
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply
    Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: ytd
-   AVWAP Resistance Distance: 0.79
-   AVWAP Filter Reason: near_resistance_ytd_within_2pct
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 89.43
-   Stop: 88.25
-   Target: 96.42
-   RR: 0.2
+   Trigger: 264.14
+   Stop: 258.35
+   Target: 299.39
+   RR: 0.0
    Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
-   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply, negative:avwap_blocked
-20. TSCO
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:prime, negative:overhead_supply
+31. CMCSA
    State: FORMING
    Score: 42.0
    Structure Score: 2
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.72
-   Volume Ratio: 0.33
-   RSI 14: 57.11
+   Range Ratio: 1.03
+   Volume Ratio: 0.36
+   RSI 14: 55.71
    RSI Bucket: 50_to_60
    RSI Trend: rising
    Pivot Zone: near
@@ -808,342 +1256,118 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: watchlist
    Recommended Action: watch
-   Trigger: 31.46
-   Stop: 31.09
-   Target: 34.44
-   RR: 0.21
+   Trigger: 23.75
+   Stop: 23.24
+   Target: 26.5
+   RR: 0.98
    Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
    Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, forming_readiness_cap, pivot_zone:near, negative:overhead_supply
-21. SGI
-   State: BLOCKED
+32. CTSH
+   State: EXTENDED
    Score: 42.0
-   Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.54
-   Volume Ratio: 0.27
-   RSI 14: 51.94
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: unfavorable
-   Dominant Negatives: far_from_pivot, weak_structure, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: iran_war_start
-   AVWAP Resistance Distance: 0.09
-   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 72.44
-   Stop: 73.65
-   Target: 83.76
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:far_from_pivot, negative:weak_structure, negative:avwap_blocked
-22. IVZ
-   State: FAILED
-   Score: 41.6
    Structure Score: 2
    Expansion Score: 1
    Expansion Quality: moderate
-   Range Ratio: 1.22
-   Volume Ratio: 0.52
-   RSI 14: 58.29
-   RSI Bucket: 50_to_60
-   RSI Trend: falling
-   Pivot Zone: far_below
+   Range Ratio: 1.69
+   Volume Ratio: 0.41
+   RSI 14: 66.49
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: prime
    Trigger Band: favorable
    Breakout Band: acceptable
    Structural Band: favorable
-   Dominant Negatives: late_extension, far_from_pivot, avwap_blocked
+   Dominant Negatives: overhead_supply
    Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: all_time_high
-   AVWAP Resistance Distance: 0.84
-   AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 30.39
-   Stop: 30.39
-   Target: 34.71
+   Trigger: 49.59
+   Stop: 48.37
+   Target: 59.62
    RR: 0.0
-   Clusters: ma_confirmation_cluster, negative_conflict_structure_vs_location
-   Notes: ma_confirmation_cluster, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
-23. MLM
-   State: BLOCKED
-   Score: 40.9
-   Structure Score: 0
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, extended_continuation_cluster, pivot_zone:prime, negative:overhead_supply
+33. SGI
+   State: FAILED
+   Score: 42.0
+   Structure Score: 1
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.56
-   Volume Ratio: 0.21
-   RSI 14: 49.34
+   Range Ratio: 1.04
+   Volume Ratio: 0.23
+   RSI 14: 49.31
    RSI Bucket: 40_to_50
    RSI Trend: rising
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: acceptable
-   Structural Band: unfavorable
-   Dominant Negatives: far_from_pivot, weak_structure, avwap_blocked
+   Structural Band: acceptable
+   Dominant Negatives: far_from_pivot, avwap_blocked
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
    AVWAP Resistance Anchor: recent_earnings_gap
-   AVWAP Resistance Distance: 0.67
+   AVWAP Resistance Distance: 0.94
    AVWAP Filter Reason: near_resistance_recent_earnings_gap_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 562.39
-   Stop: 570.12
-   Target: 623.97
+   Trigger: 70.97
+   Stop: 70.97
+   Target: 84.44
    RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:far_from_pivot, negative:weak_structure, negative:avwap_blocked
-24. PLD
-   State: FORMING
-   Score: 39.9
-   Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.52
-   Volume Ratio: 0.4
-   RSI 14: 54.46
-   RSI Bucket: 50_to_60
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: late_extension, far_from_pivot, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: all_time_high
-   AVWAP Resistance Distance: 0.5
-   AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 145.79
-   Stop: 146.65
-   Target: 158.56
-   RR: 3.97
-   Clusters: ma_confirmation_cluster, negative_conflict_structure_vs_location
-   Notes: ma_confirmation_cluster, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
-25. BRK.B
-   State: FORMING
-   Score: 38.7
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.64
-   Volume Ratio: 0.2
-   RSI 14: 54.56
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 491.0
-   Stop: 495.34
-   Target: 529.12
-   RR: 2.09
-   Clusters: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-26. WFC
-   State: FORMING
-   Score: 37.7
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.39
-   Volume Ratio: 0.18
-   RSI 14: 57.14
-   RSI Bucket: 50_to_60
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 86.49
-   Stop: 87.0
-   Target: 98.37
-   RR: 2.11
-   Clusters: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-27. MSFT
-   State: FORMING
-   Score: 37.5
+   Clusters: ma_confirmation_cluster
+   Notes: ma_confirmation_cluster, pivot_zone:far_below, negative:far_from_pivot, negative:avwap_blocked
+34. IBM
+   State: ACTIONABLE_BREAKOUT
+   Score: 42.0
    Structure Score: 1
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.54
-   Volume Ratio: 0.29
-   RSI 14: 50.29
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 0.53
-   AVWAP Filter Reason: near_resistance_major_pivot_high_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 389.03
-   Stop: 387.99
-   Target: 431.24
-   RR: 0.0
-   Clusters: --
-   Notes: forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
-28. PPG
-   State: BLOCKED
-   Score: 37.1
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.7
-   Volume Ratio: 0.23
-   RSI 14: 52.08
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 117.54
-   Stop: 117.68
-   Target: 130.51
-   RR: 0.0
-   Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger
-   Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-29. BLK
-   State: FAILED
-   Score: 34.7
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.7
-   Volume Ratio: 0.25
-   RSI 14: 54.77
-   RSI Bucket: 50_to_60
-   RSI Trend: flat
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 0.79
-   AVWAP Filter Reason: near_resistance_major_pivot_high_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 1059.79
-   Stop: 1059.79
-   Target: 1163.33
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
-30. IBP
-   State: FAILED
-   Score: 32.4
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.86
-   Volume Ratio: 0.14
-   RSI 14: 53.61
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 230.05
-   Stop: 230.05
-   Target: 260.83
-   RR: 2.23
-   Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger
-   Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-31. APD
-   State: FAILED
-   Score: 30.8
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.91
-   Volume Ratio: 0.19
-   RSI 14: 49.15
+   Range Ratio: 1.18
+   Volume Ratio: 0.42
+   RSI 14: 41.43
    RSI Bucket: 40_to_50
+   RSI Trend: rising
+   Pivot Zone: prime
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply
+   Sizing Tier: none
+   AVWAP Location: caution
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: major_pivot_high
+   AVWAP Resistance Distance: 0.77
+   AVWAP Filter Reason: nearby_resistance+anchor_cluster+problematic_anchor
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 222.8
+   Stop: 216.55
+   Target: 284.28
+   RR: 0.0
+   Clusters: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead
+   Notes: pivot_trigger_alignment, approaching_pivot_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_approach_vs_overhead, pivot_zone:prime, negative:overhead_supply
+35. APD
+   State: FORMING
+   Score: 40.1
+   Structure Score: 1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.82
+   Volume Ratio: 0.24
+   RSI 14: 51.78
+   RSI Bucket: 50_to_60
    RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
@@ -1154,59 +1378,91 @@ REJECT / AVOID
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
    AVWAP Resistance Anchor: major_pivot_low
-   AVWAP Resistance Distance: 1.33
+   AVWAP Resistance Distance: 0.45
    AVWAP Filter Reason: near_resistance_major_pivot_low_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 291.55
-   Stop: 291.55
-   Target: 320.03
+   Trigger: 297.61
+   Stop: 292.58
+   Target: 319.94
    RR: 0.0
    Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
-32. MUA
-   State: FAILED
-   Score: 30.3
+   Notes: forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
+36. AVGO
+   State: BLOCKED
+   Score: 37.7
    Structure Score: 0
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.76
-   Volume Ratio: 0.45
-   RSI 14: 33.23
-   RSI Bucket: below_40
+   Range Ratio: 0.83
+   Volume Ratio: 0.36
+   RSI 14: 48.1
+   RSI Bucket: 40_to_50
    RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_structure, avwap_blocked
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: far_from_pivot, weak_breakout_readiness, avwap_blocked
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: all_time_high
-   AVWAP Resistance Distance: 0.27
-   AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
+   AVWAP Resistance Anchor: iran_war_start
+   AVWAP Resistance Distance: 0.28
+   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 10.51
-   Stop: 10.51
-   Target: 11.12
+   Trigger: 379.31
+   Stop: 371.52
+   Target: 436.97
    RR: 0.0
    Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_structure, negative:avwap_blocked
-33. MU
-   State: FAILED
-   Score: 30.0
+   Notes: pivot_zone:far_below, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+37. NFLX
+   State: FORMING
+   Score: 37.5
+   Structure Score: 1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.15
+   Volume Ratio: 0.4
+   RSI 14: 49.16
+   RSI Bucket: 40_to_50
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: acceptable
+   Dominant Negatives: far_from_pivot
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 73.13
+   Stop: 71.23
+   Target: 81.83
+   RR: 0.0
+   Clusters: --
+   Notes: forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot
+38. MU
+   State: BLOCKED
+   Score: 35.2
    Structure Score: -1
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.33
-   Volume Ratio: 0.51
-   RSI 14: 43.66
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.92
+   Volume Ratio: 0.66
+   RSI 14: 40.33
    RSI Bucket: 40_to_50
    RSI Trend: falling
    Pivot Zone: far_below
@@ -1224,117 +1480,53 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 905.76
-   Stop: 905.76
-   Target: 1440.78
+   Trigger: 815.34
+   Stop: 805.41
+   Target: 1313.78
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-34. IFNNY
-   State: FAILED
-   Score: 29.4
-   Structure Score: 0
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.44
-   Volume Ratio: 0.03
-   RSI 14: 37.3
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 72.52
-   Stop: 72.52
-   Target: 98.48
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-35. PEP
+39. JNJ
    State: FORMING
-   Score: 27.9
-   Structure Score: 1
+   Score: 34.7
+   Structure Score: 2
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 1.14
-   Volume Ratio: 0.25
-   RSI 14: 50.95
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: none
-   AVWAP Location: caution
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: covid_low
-   AVWAP Resistance Distance: 3.06
-   AVWAP Filter Reason: nearby_resistance+anchor_cluster
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 138.44
-   Stop: 137.05
-   Target: 150.07
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-36. BDX
-   State: FORMING
-   Score: 27.7
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.83
-   Volume Ratio: 0.19
-   RSI 14: 60.79
+   Range Ratio: 1.01
+   Volume Ratio: 0.43
+   RSI 14: 66.58
    RSI Bucket: 60_to_70
    RSI Trend: rising
    Pivot Zone: far_below
    Trigger Band: favorable
-   Breakout Band: favorable
+   Breakout Band: acceptable
    Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Dominant Negatives: far_from_pivot, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: all_time_high
+   AVWAP Resistance Distance: 0.75
+   AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
    Execution Posture: observe
    Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 159.19
-   Stop: 157.09
-   Target: 179.25
-   RR: 0.66
-   Clusters: trigger_breakout_structure, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: trigger_breakout_structure, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-37. AVGO
-   State: FAILED
-   Score: 27.4
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 268.8
+   Stop: 269.52
+   Target: 299.25
+   RR: 0.54
+   Clusters: negative_conflict_structure_vs_location
+   Notes: negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:far_from_pivot, negative:avwap_blocked
+40. AXP
+   State: FORMING
+   Score: 34.0
    Structure Score: 0
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.25
-   Volume Ratio: 0.27
-   RSI 14: 46.53
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.68
+   Volume Ratio: 0.22
+   RSI 14: 45.24
    RSI Bucket: 40_to_50
    RSI Trend: falling
    Pivot Zone: far_below
@@ -1345,67 +1537,67 @@ REJECT / AVOID
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: major_pivot_low
-   AVWAP Resistance Distance: 1.11
-   AVWAP Filter Reason: near_resistance_major_pivot_low_within_2pct
+   AVWAP Resistance Anchor: major_pivot_high
+   AVWAP Resistance Distance: 1.9
+   AVWAP Filter Reason: near_resistance_major_pivot_high_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 381.53
-   Stop: 381.53
-   Target: 439.42
+   Trigger: 334.27
+   Stop: 331.43
+   Target: 378.36
+   RR: 0.0
+   Clusters: --
+   Notes: forming_readiness_cap, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+41. BP
+   State: FAILED
+   Score: 31.5
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.14
+   Volume Ratio: 0.41
+   RSI 14: 54.45
+   RSI Bucket: 50_to_60
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: recent_earnings_gap
+   AVWAP Resistance Distance: 0.04
+   AVWAP Filter Reason: near_resistance_recent_earnings_gap_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 42.27
+   Stop: 42.27
+   Target: 45.66
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-38. KVUE
-   State: FORMING
-   Score: 26.7
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.76
-   Volume Ratio: 0.27
-   RSI 14: 59.44
-   RSI Bucket: 50_to_60
+42. IQV
+   State: EXTENDED
+   Score: 31.2
+   Structure Score: 2
+   Expansion Score: 2
+   Expansion Quality: strong
+   Range Ratio: 2.39
+   Volume Ratio: 1.83
+   RSI 14: 78.21
+   RSI Bucket: above_75
    RSI Trend: rising
    Pivot Zone: far_below
    Trigger Band: favorable
-   Breakout Band: favorable
+   Breakout Band: acceptable
    Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 18.94
-   Stop: 19.28
-   Target: 20.73
-   RR: 2.03
-   Clusters: trigger_breakout_structure, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: trigger_breakout_structure, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-39. BE
-   State: FAILED
-   Score: 26.1
-   Structure Score: -1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.93
-   Volume Ratio: 0.5
-   RSI 14: 35.37
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Dominant Negatives: far_from_pivot
    Sizing Tier: none
    AVWAP Location: clear
    AVWAP Effect On Decision: none
@@ -1416,85 +1608,21 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 185.17
-   Stop: 185.17
-   Target: 351.15
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-40. SMA
-   State: FORMING
-   Score: 25.9
-   Structure Score: 3
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.7
-   Volume Ratio: 0.14
-   RSI 14: 63.64
-   RSI Bucket: 60_to_70
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: favorable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 34.97
-   Stop: 34.8
-   Target: 39.3
-   RR: 0.86
-   Clusters: trigger_breakout_structure, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: trigger_breakout_structure, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-41. COHR
+   Trigger: 213.48
+   Stop: 232.5
+   Target: 281.38
+   RR: 0.22
+   Clusters: negative_conflict_structure_vs_location
+   Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:far_from_pivot
+43. MUA
    State: FAILED
-   Score: 25.8
+   Score: 29.3
    Structure Score: -1
    Expansion Score: 1
    Expansion Quality: moderate
-   Range Ratio: 1.3
-   Volume Ratio: 0.43
-   RSI 14: 33.68
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 273.01
-   Stop: 273.01
-   Target: 478.36
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-42. AMZN
-   State: FAILED
-   Score: 25.1
-   Structure Score: -1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.66
-   Volume Ratio: 0.24
-   RSI 14: 37.51
+   Range Ratio: 1.05
+   Volume Ratio: 1.39
+   RSI 14: 24.54
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
@@ -1505,35 +1633,131 @@ REJECT / AVOID
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: covid_low
+   AVWAP Resistance Distance: 1.11
+   AVWAP Filter Reason: near_resistance_covid_low_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 10.25
+   Stop: 10.25
+   Target: 11.17
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure, negative:avwap_blocked
+44. AMZN
+   State: BLOCKED
+   Score: 28.2
+   Structure Score: -1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.88
+   Volume Ratio: 0.35
+   RSI 14: 36.35
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: covid_low
+   AVWAP Resistance Distance: 0.29
+   AVWAP Filter Reason: near_resistance_covid_low_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 230.02
+   Stop: 229.3
+   Target: 266.3
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure, negative:avwap_blocked
+45. VIAV
+   State: BLOCKED
+   Score: 28.0
+   Structure Score: -1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.04
+   Volume Ratio: 0.6
+   RSI 14: 34.28
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 34.62
+   Stop: 33.99
+   Target: 55.83
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
+46. TXN
+   State: BLOCKED
+   Score: 27.8
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.92
+   Volume Ratio: 0.48
+   RSI 14: 42.1
+   RSI Bucket: 40_to_50
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
    AVWAP Resistance Anchor: recent_earnings_gap
-   AVWAP Resistance Distance: 0.91
+   AVWAP Resistance Distance: 0.29
    AVWAP Filter Reason: near_resistance_recent_earnings_gap_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 233.22
-   Stop: 233.22
-   Target: 266.82
+   Trigger: 277.73
+   Stop: 274.01
+   Target: 336.91
    RR: 0.0
    Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure, negative:avwap_blocked
-43. GNRC
-   State: FAILED
-   Score: 24.7
-   Structure Score: -1
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+47. BDX
+   State: FORMING
+   Score: 27.7
+   Structure Score: 3
    Expansion Score: 1
    Expansion Quality: moderate
-   Range Ratio: 1.55
-   Volume Ratio: 0.52
-   RSI 14: 26.91
-   RSI Bucket: below_40
-   RSI Trend: falling
+   Range Ratio: 1.75
+   Volume Ratio: 0.45
+   RSI 14: 64.98
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
    Pivot Zone: far_below
    Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Breakout Band: favorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, far_from_pivot
    Sizing Tier: none
    AVWAP Location: clear
    AVWAP Effect On Decision: none
@@ -1544,21 +1768,21 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 203.13
-   Stop: 203.13
-   Target: 324.57
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-44. CLS
-   State: FAILED
-   Score: 24.4
+   Trigger: 160.55
+   Stop: 161.62
+   Target: 186.84
+   RR: 0.46
+   Clusters: trigger_breakout_structure, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
+   Notes: trigger_breakout_structure, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
+48. AAOI
+   State: BLOCKED
+   Score: 27.2
    Structure Score: -1
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.89
-   Volume Ratio: 0.59
-   RSI 14: 37.02
+   Range Ratio: 1.06
+   Volume Ratio: 0.75
+   RSI 14: 34.68
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
@@ -1576,21 +1800,21 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 302.25
-   Stop: 302.25
-   Target: 451.71
+   Trigger: 85.35
+   Stop: 82.3
+   Target: 174.56
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-45. CIEN
-   State: FAILED
-   Score: 23.9
+49. EOSE
+   State: BLOCKED
+   Score: 27.0
    Structure Score: 0
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 1.2
-   Volume Ratio: 0.31
-   RSI 14: 35.75
+   Range Ratio: 0.73
+   Volume Ratio: 0.43
+   RSI 14: 27.5
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
@@ -1608,21 +1832,53 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 375.71
-   Stop: 375.71
-   Target: 572.11
+   Trigger: 3.32
+   Stop: 3.24
+   Target: 6.15
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-46. LZB
+50. GNRC
+   State: BLOCKED
+   Score: 25.9
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.95
+   Volume Ratio: 0.59
+   RSI 14: 27.3
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 191.99
+   Stop: 190.87
+   Target: 324.72
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+51. WAT
    State: FORMING
-   Score: 23.8
+   Score: 25.6
    Structure Score: 2
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.82
-   Volume Ratio: 0.09
-   RSI 14: 57.8
+   Range Ratio: 1.04
+   Volume Ratio: 0.25
+   RSI 14: 56.19
    RSI Bucket: 50_to_60
    RSI Trend: rising
    Pivot Zone: far_below
@@ -1640,28 +1896,28 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: watchlist
    Recommended Action: watch
-   Trigger: 40.36
-   Stop: 40.1
-   Target: 43.48
-   RR: 0.83
+   Trigger: 375.97
+   Stop: 375.06
+   Target: 416.89
+   RR: 1.43
    Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
    Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-47. VRT
-   State: FAILED
-   Score: 23.8
-   Structure Score: -1
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.65
-   Volume Ratio: 0.37
-   RSI 14: 39.35
+52. GEV
+   State: BLOCKED
+   Score: 25.4
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.74
+   Volume Ratio: 0.61
+   RSI 14: 38.82
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
    Sizing Tier: none
    AVWAP Location: clear
    AVWAP Effect On Decision: none
@@ -1672,15 +1928,175 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 287.66
-   Stop: 287.66
-   Target: 382.46
+   Trigger: 934.05
+   Stop: 926.51
+   Target: 1400.34
    RR: 0.0
    Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-48. EXAS
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+53. EYPT
+   State: FAILED
+   Score: 24.9
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.99
+   Volume Ratio: 0.23
+   RSI 14: 37.56
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 11.89
+   Stop: 11.89
+   Target: 17.47
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+54. PLD
+   State: FORMING
+   Score: 24.6
+   Structure Score: 2
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.88
+   Volume Ratio: 0.6
+   RSI 14: 58.06
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot
+   Sizing Tier: watchlist
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 148.23
+   Stop: 146.04
+   Target: 159.14
+   RR: 2.76
+   Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
+   Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot
+55. EME
+   State: FAILED
+   Score: 23.5
+   Structure Score: 0
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.53
+   Volume Ratio: 0.28
+   RSI 14: 32.05
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 712.22
+   Stop: 712.22
+   Target: 928.48
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+56. IFNNY
+   State: BLOCKED
+   Score: 23.5
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.8
+   Volume Ratio: 0.2
+   RSI 14: 33.66
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 65.02
+   Stop: 64.75
+   Target: 107.14
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+57. WMB
+   State: FAILED
+   Score: 23.4
+   Structure Score: -1
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.9
+   Volume Ratio: 0.39
+   RSI 14: 37.06
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: unfavorable
+   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: ytd
+   AVWAP Resistance Distance: 1.76
+   AVWAP Filter Reason: near_resistance_ytd_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 70.11
+   Stop: 70.11
+   Target: 81.1
+   RR: 0.0
+   Clusters: --
+   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure, negative:avwap_blocked
+58. EXAS
    State: DATA_UNAVAILABLE
-   Score: 23.2
+   Score: 23.3
    Structure Score: -2
    Expansion Score: 0
    Expansion Quality: weak
@@ -1710,303 +2126,47 @@ REJECT / AVOID
    RR: --
    Clusters: --
    Notes: pivot_zone:far_below, negative:far_from_pivot, negative:weak_trigger_readiness, negative:weak_breakout_readiness
-49. IQV
+59. WFC
    State: FORMING
-   Score: 23.0
-   Structure Score: 2
+   Score: 20.2
+   Structure Score: 3
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.94
-   Volume Ratio: 0.31
-   RSI 14: 63.29
-   RSI Bucket: 60_to_70
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 210.18
-   Stop: 206.87
-   Target: 229.64
-   RR: 1.63
-   Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-50. GEV
-   State: FAILED
-   Score: 23.0
-   Structure Score: -1
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.31
-   Volume Ratio: 0.54
-   RSI 14: 40.73
-   RSI Bucket: 40_to_50
-   RSI Trend: flat
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 987.73
-   Stop: 987.73
-   Target: 1394.25
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-51. VIAV
-   State: FAILED
-   Score: 22.0
-   Structure Score: -1
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.41
-   Volume Ratio: 0.19
-   RSI 14: 37.8
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 38.85
-   Stop: 38.85
-   Target: 58.98
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-52. BP
-   State: FAILED
-   Score: 21.3
-   Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.82
-   Volume Ratio: 0.38
-   RSI 14: 59.33
-   RSI Bucket: 50_to_60
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: late_extension, far_from_pivot, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: all_time_high
-   AVWAP Resistance Distance: 0.58
-   AVWAP Filter Reason: near_resistance_all_time_high_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 42.48
-   Stop: 42.48
-   Target: 47.93
-   RR: 3.77
-   Clusters: negative_conflict_structure_vs_location
-   Notes: negative_conflict_structure_vs_location, pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
-53. WAT
-   State: FAILED
-   Score: 20.5
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.68
-   Volume Ratio: 0.17
-   RSI 14: 50.75
-   RSI Bucket: 50_to_60
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 0.32
-   AVWAP Filter Reason: near_resistance_major_pivot_high_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 367.67
-   Stop: 367.67
-   Target: 420.65
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
-54. CNXC
-   State: FORMING
-   Score: 18.9
-   Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.06
+   Range Ratio: 0.81
    Volume Ratio: 0.15
-   RSI 14: 52.25
+   RSI 14: 55.37
    RSI Bucket: 50_to_60
    RSI Trend: rising
    Pivot Zone: far_below
    Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 23.71
-   Stop: 22.82
-   Target: 29.39
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:weak_breakout_readiness
-55. IBM
-   State: FAILED
-   Score: 17.8
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.4
-   Volume Ratio: 0.24
-   RSI 14: 35.89
-   RSI Bucket: below_40
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 217.15
-   Stop: 217.15
-   Target: 287.76
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-56. KOD
-   State: FAILED
-   Score: 17.1
-   Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.69
-   Volume Ratio: 0.17
-   RSI 14: 56.96
-   RSI Bucket: 50_to_60
-   RSI Trend: flat
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
+   Breakout Band: favorable
    Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot, avwap_blocked
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, avwap_blocked
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
    AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 0.25
+   AVWAP Resistance Distance: 0.18
    AVWAP Filter Reason: near_resistance_major_pivot_high_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 41.32
-   Stop: 41.32
-   Target: 56.25
+   Trigger: 88.22
+   Stop: 86.41
+   Target: 94.41
    RR: 0.0
-   Clusters: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:avwap_blocked
-57. ERIE
-   State: FORMING
-   Score: 16.9
-   Structure Score: 1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.59
-   Volume Ratio: 0.13
-   RSI 14: 50.15
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: recent_uptrend_bottom
-   AVWAP Resistance Distance: 0.02
-   AVWAP Filter Reason: near_resistance_recent_uptrend_bottom_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 228.44
-   Stop: 224.06
-   Target: 272.74
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
-58. WMB
-   State: FAILED
-   Score: 15.8
+   Clusters: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_breakout_vs_extension, negative_conflict_structure_vs_location
+   Notes: trigger_breakout_structure, ma_confirmation_cluster, negative_conflict_overhead_vs_trigger, negative_conflict_breakout_vs_extension, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:avwap_blocked
+60. ETN
+   State: BLOCKED
+   Score: 18.8
    Structure Score: 0
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.94
-   Volume Ratio: 0.28
-   RSI 14: 40.64
+   Range Ratio: 0.62
+   Volume Ratio: 0.57
+   RSI 14: 41.52
    RSI Bucket: 40_to_50
    RSI Trend: falling
    Pivot Zone: far_below
@@ -2018,28 +2178,124 @@ REJECT / AVOID
    AVWAP Location: caution
    AVWAP Effect On Decision: soft_penalty
    AVWAP Resistance Anchor: iran_war_start
-   AVWAP Resistance Distance: 2.85
+   AVWAP Resistance Distance: 3.06
    AVWAP Filter Reason: nearby_resistance+anchor_cluster
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 72.22
-   Stop: 72.22
-   Target: 82.48
+   Trigger: 379.61
+   Stop: 376.44
+   Target: 461.2
    RR: 0.0
    Clusters: --
    Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-59. ADP
+61. BRK.B
    State: FORMING
-   Score: 15.3
+   Score: 17.3
+   Structure Score: 2
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 2.35
+   Volume Ratio: 0.56
+   RSI 14: 65.79
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, far_from_pivot
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 498.77
+   Stop: 499.5
+   Target: 519.5
+   RR: 0.42
+   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
+   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
+62. BLK
+   State: FORMING
+   Score: 15.8
+   Structure Score: 2
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.28
+   Volume Ratio: 0.38
+   RSI 14: 61.86
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, far_from_pivot
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 1080.89
+   Stop: 1062.51
+   Target: 1251.72
+   RR: 0.82
+   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
+   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
+63. ICLR
+   State: FORMING
+   Score: 13.5
+   Structure Score: 2
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.46
+   Volume Ratio: 0.85
+   RSI 14: 69.92
+   RSI Bucket: 60_to_70
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, far_from_pivot, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: recent_earnings_gap
+   AVWAP Resistance Distance: 0.44
+   AVWAP Filter Reason: near_resistance_recent_earnings_gap_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 169.98
+   Stop: 177.16
+   Target: 194.9
+   RR: 0.56
+   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
+   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:avwap_blocked
+64. T
+   State: FORMING
+   Score: 12.3
    Structure Score: 2
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.96
-   Volume Ratio: 0.16
-   RSI 14: 64.82
-   RSI Bucket: 60_to_70
+   Range Ratio: 0.86
+   Volume Ratio: 0.24
+   RSI 14: 73.03
+   RSI Bucket: 70_to_75
    RSI Trend: rising
    Pivot Zone: far_below
    Trigger Band: favorable
@@ -2056,117 +2312,53 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: watchlist
    Recommended Action: watch
-   Trigger: 254.15
-   Stop: 251.18
-   Target: 274.53
-   RR: 0.72
+   Trigger: 24.52
+   Stop: 24.76
+   Target: 28.14
+   RR: 0.28
    Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
    Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-60. NFLX
-   State: FORMING
-   Score: 14.6
+65. HROW
+   State: FAILED
+   Score: 11.9
    Structure Score: 0
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.68
-   Volume Ratio: 0.24
-   RSI 14: 42.01
-   RSI Bucket: 40_to_50
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 0.94
-   AVWAP Filter Reason: near_resistance_major_pivot_high_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 70.8
-   Stop: 69.93
-   Target: 81.44
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-61. EME
-   State: FAILED
-   Score: 14.3
-   Structure Score: 0
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.49
-   Volume Ratio: 0.19
-   RSI 14: 36.43
+   Range Ratio: 0.69
+   Volume Ratio: 0.23
+   RSI 14: 36.41
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
    Structural Band: acceptable
-   Dominant Negatives: late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   AVWAP Location: caution
-   AVWAP Effect On Decision: soft_penalty
-   AVWAP Resistance Anchor: recent_earnings_gap
-   AVWAP Resistance Distance: 2.18
-   AVWAP Filter Reason: nearby_resistance+anchor_cluster+problematic_anchor
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 746.62
-   Stop: 746.62
-   Target: 860.07
-   RR: 0.0
-   Clusters: --
-   Notes: pivot_zone:far_below, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-62. TTD
-   State: FORMING
-   Score: 13.2
-   Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.82
-   Volume Ratio: 0.37
-   RSI 14: 45.5
-   RSI Bucket: 40_to_50
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
    Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 1.21
-   AVWAP Filter Reason: near_resistance_major_pivot_high_within_2pct
+   AVWAP Resistance Anchor: iran_war_start
+   AVWAP Resistance Distance: 1.36
+   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 18.03
-   Stop: 17.64
-   Target: 21.81
+   Trigger: 36.45
+   Stop: 36.45
+   Target: 56.26
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-63. HROW
-   State: FAILED
-   Score: 11.1
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+66. ALAB
+   State: BLOCKED
+   Score: 11.0
    Structure Score: -1
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 1.0
-   Volume Ratio: 0.32
-   RSI 14: 38.28
+   Range Ratio: 0.66
+   Volume Ratio: 0.39
+   RSI 14: 34.29
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
@@ -2177,190 +2369,30 @@ REJECT / AVOID
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: recent_downtrend_high
-   AVWAP Resistance Distance: 0.36
-   AVWAP Filter Reason: near_resistance_recent_downtrend_high_within_2pct
+   AVWAP Resistance Anchor: iran_war_start
+   AVWAP Resistance Distance: 0.48
+   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 39.07
-   Stop: 39.07
-   Target: 54.93
+   Trigger: 256.76
+   Stop: 252.42
+   Target: 607.0
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure, negative:avwap_blocked
-64. CRDO
-   State: FAILED
-   Score: 9.9
-   Structure Score: -1
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.28
-   Volume Ratio: 0.27
-   RSI 14: 40.55
-   RSI Bucket: 40_to_50
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 210.68
-   Stop: 210.68
-   Target: 348.63
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-65. REGN
+67. GOOG
    State: FORMING
-   Score: 9.6
-   Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.16
-   Volume Ratio: 0.32
-   RSI 14: 58.89
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: recent_downtrend_high
-   AVWAP Resistance Distance: 1.25
-   AVWAP Filter Reason: near_resistance_recent_downtrend_high_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 671.98
-   Stop: 659.53
-   Target: 721.63
-   RR: 1.57
-   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:avwap_blocked
-66. ALAB
-   State: FAILED
-   Score: 9.6
-   Structure Score: -1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.09
-   Volume Ratio: 0.36
-   RSI 14: 35.24
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 286.15
-   Stop: 286.15
-   Target: 605.68
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-67. PHR
-   State: FORMING
-   Score: 8.7
-   Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.03
-   Volume Ratio: 0.31
-   RSI 14: 55.19
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: ytd
-   AVWAP Resistance Distance: 1.55
-   AVWAP Filter Reason: near_resistance_ytd_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 10.35
-   Stop: 10.38
-   Target: 12.25
-   RR: 1.86
-   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:avwap_blocked
-68. GOOGL
-   State: BLOCKED
-   Score: 8.7
+   Score: 10.2
    Structure Score: 0
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.6
-   Volume Ratio: 0.43
-   RSI 14: 38.39
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: major_pivot_low
-   AVWAP Resistance Distance: 1.71
-   AVWAP Filter Reason: near_resistance_major_pivot_low_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 324.18
-   Stop: 325.95
-   Target: 392.43
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-69. CMCSA
-   State: FORMING
-   Score: 8.5
-   Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.02
-   Volume Ratio: 0.29
-   RSI 14: 46.42
+   Range Ratio: 0.83
+   Volume Ratio: 0.37
+   RSI 14: 41.69
    RSI Bucket: 40_to_50
-   RSI Trend: falling
+   RSI Trend: rising
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
@@ -2370,27 +2402,251 @@ REJECT / AVOID
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
    AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 0.75
+   AVWAP Resistance Distance: 1.12
    AVWAP Filter Reason: near_resistance_major_pivot_high_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 22.85
-   Stop: 22.36
-   Target: 26.29
+   Trigger: 330.17
+   Stop: 324.54
+   Target: 388.84
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-70. EOSE
-   State: BLOCKED
-   Score: 7.9
+68. GOOGL
+   State: FORMING
+   Score: 10.1
    Structure Score: 0
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.74
-   Volume Ratio: 0.48
-   RSI 14: 27.19
+   Range Ratio: 0.87
+   Volume Ratio: 0.38
+   RSI 14: 41.27
+   RSI Bucket: 40_to_50
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: ytd
+   AVWAP Resistance Distance: 1.3
+   AVWAP Filter Reason: near_resistance_ytd_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 330.3
+   Stop: 324.44
+   Target: 391.03
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+69. NVDA
+   State: BLOCKED
+   Score: 9.5
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.68
+   Volume Ratio: 0.45
+   RSI 14: 43.01
+   RSI Bucket: 40_to_50
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: iran_war_start
+   AVWAP Resistance Distance: 1.68
+   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 195.46
+   Stop: 192.8
+   Target: 233.12
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+70. CLS
+   State: BLOCKED
+   Score: 9.4
+   Structure Score: 0
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 0.97
+   Volume Ratio: 1.81
+   RSI 14: 47.74
+   RSI Bucket: 40_to_50
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: recent_earnings_gap
+   AVWAP Resistance Distance: 0.8
+   AVWAP Filter Reason: near_resistance_recent_earnings_gap_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 327.1
+   Stop: 317.12
+   Target: 418.23
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+71. COHR
+   State: BLOCKED
+   Score: 7.7
+   Structure Score: 0
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.3
+   Volume Ratio: 0.88
+   RSI 14: 30.46
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: recent_earnings_gap
+   AVWAP Resistance Distance: 1.41
+   AVWAP Filter Reason: near_resistance_recent_earnings_gap_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 236.65
+   Stop: 233.5
+   Target: 483.16
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+72. SE
+   State: FORMING
+   Score: 7.4
+   Structure Score: 2
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.83
+   Volume Ratio: 0.56
+   RSI 14: 54.33
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: acceptable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot
+   Sizing Tier: watchlist
+   AVWAP Location: caution
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: major_pivot_high
+   AVWAP Resistance Distance: 2.94
+   AVWAP Filter Reason: nearby_resistance+anchor_cluster+problematic_anchor
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: watchlist
+   Recommended Action: watch
+   Trigger: 106.38
+   Stop: 102.81
+   Target: 121.47
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
+   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot
+73. CIEN
+   State: BLOCKED
+   Score: 7.4
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.19
+   Volume Ratio: 1.15
+   RSI 14: 31.62
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: recent_uptrend_bottom
+   AVWAP Resistance Distance: 0.8
+   AVWAP Filter Reason: near_resistance_recent_uptrend_bottom_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 337.03
+   Stop: 333.86
+   Target: 562.64
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+74. OCUL
+   State: BLOCKED
+   Score: 6.8
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.73
+   Volume Ratio: 0.18
+   RSI 14: 37.94
+   RSI Bucket: below_40
+   RSI Trend: flat
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 8.44
+   Stop: 8.39
+   Target: 12.0
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+75. BW
+   State: BLOCKED
+   Score: 6.8
+   Structure Score: 0
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.25
+   Volume Ratio: 0.35
+   RSI 14: 29.18
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
@@ -2408,150 +2664,54 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 3.5
-   Stop: 3.48
-   Target: 6.18
+   Trigger: 8.63
+   Stop: 8.54
+   Target: 14.58
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-71. GOOG
+76. PWR
    State: BLOCKED
-   Score: 7.8
+   Score: 6.4
    Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.57
-   Volume Ratio: 0.45
-   RSI 14: 39.08
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.57
+   Volume Ratio: 0.36
+   RSI 14: 31.24
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
    Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
    Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: major_pivot_low
-   AVWAP Resistance Distance: 1.55
-   AVWAP Filter Reason: near_resistance_major_pivot_low_within_2pct
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 327.54
-   Stop: 324.47
-   Target: 390.35
+   Trigger: 581.03
+   Stop: 580.19
+   Target: 800.79
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-72. NVDA
-   State: FAILED
-   Score: 7.3
-   Structure Score: 0
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.84
-   Volume Ratio: 0.53
-   RSI 14: 42.64
-   RSI Bucket: 40_to_50
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: iran_war_start
-   AVWAP Resistance Distance: 1.84
-   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 201.2
-   Stop: 201.2
-   Target: 237.39
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-73. AXP
-   State: FORMING
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+77. LITE
+   State: BLOCKED
    Score: 6.4
    Structure Score: 0
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.68
-   Volume Ratio: 0.42
-   RSI 14: 44.35
-   RSI Bucket: 40_to_50
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   AVWAP Location: caution
-   AVWAP Effect On Decision: soft_penalty
-   AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 2.54
-   AVWAP Filter Reason: nearby_resistance+anchor_cluster+problematic_anchor
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 332.61
-   Stop: 329.79
-   Target: 381.44
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-74. ICLR
-   State: FAILED
-   Score: 5.8
-   Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.14
-   Volume Ratio: 0.18
-   RSI 14: 54.98
-   RSI Bucket: 50_to_60
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   AVWAP Location: caution
-   AVWAP Effect On Decision: soft_penalty
-   AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 2.1
-   AVWAP Filter Reason: nearby_resistance+anchor_cluster+problematic_anchor
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 161.29
-   Stop: 161.29
-   Target: 194.14
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-75. ETN
-   State: FAILED
-   Score: 5.2
-   Structure Score: 0
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.4
-   Volume Ratio: 0.32
-   RSI 14: 43.32
-   RSI Bucket: 40_to_50
+   Range Ratio: 1.19
+   Volume Ratio: 0.72
+   RSI 14: 36.05
+   RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
@@ -2561,93 +2721,61 @@ REJECT / AVOID
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: iran_war_start
-   AVWAP Resistance Distance: 1.56
-   AVWAP Filter Reason: near_resistance_iran_war_start_within_2pct
+   AVWAP Resistance Anchor: recent_uptrend_bottom
+   AVWAP Resistance Distance: 1.01
+   AVWAP Filter Reason: near_resistance_recent_uptrend_bottom_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 398.54
-   Stop: 398.54
-   Target: 462.88
+   Trigger: 629.0
+   Stop: 615.01
+   Target: 1147.74
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-76. ROL
+78. VRT
    State: BLOCKED
-   Score: 5.2
-   Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.83
-   Volume Ratio: 0.3
-   RSI 14: 31.52
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 39.25
-   Stop: 38.6
-   Target: 48.71
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-77. OCUL
-   State: FAILED
-   Score: 4.4
-   Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.65
-   Volume Ratio: 0.15
-   RSI 14: 38.71
-   RSI Bucket: below_40
-   RSI Trend: flat
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: unfavorable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_structure
-   Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 8.57
-   Stop: 8.57
-   Target: 12.0
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_structure
-78. EYPT
-   State: FAILED
-   Score: 4.2
+   Score: 6.3
    Structure Score: 0
    Expansion Score: 0
    Expansion Quality: weak
    Range Ratio: 0.98
-   Volume Ratio: 0.31
-   RSI 14: 40.37
-   RSI Bucket: 40_to_50
+   Volume Ratio: 0.75
+   RSI 14: 36.35
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Sizing Tier: none
+   AVWAP Location: blocked
+   AVWAP Effect On Decision: hard_block
+   AVWAP Resistance Anchor: ytd
+   AVWAP Resistance Distance: 1.84
+   AVWAP Filter Reason: near_resistance_ytd_within_2pct
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 265.65
+   Stop: 263.43
+   Target: 395.55
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
+79. NVT
+   State: BLOCKED
+   Score: 6.2
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 1.06
+   Volume Ratio: 0.44
+   RSI 14: 34.72
+   RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
@@ -2664,21 +2792,53 @@ REJECT / AVOID
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 12.3
-   Stop: 12.3
-   Target: 17.85
+   Trigger: 139.41
+   Stop: 137.49
+   Target: 196.31
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-79. AAOI
+80. DOCN
+   State: BLOCKED
+   Score: 6.0
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.94
+   Volume Ratio: 0.36
+   RSI 14: 36.74
+   RSI Bucket: below_40
+   RSI Trend: falling
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 109.89
+   Stop: 108.25
+   Target: 196.93
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+81. BE
    State: FAILED
-   Score: 4.2
+   Score: 5.3
    Structure Score: -1
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.97
-   Volume Ratio: 0.37
-   RSI 14: 36.91
+   Range Ratio: 0.78
+   Volume Ratio: 0.7
+   RSI 14: 33.51
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
@@ -2689,29 +2849,29 @@ REJECT / AVOID
    Sizing Tier: none
    AVWAP Location: blocked
    AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: covid_low
-   AVWAP Resistance Distance: 0.96
-   AVWAP Filter Reason: near_resistance_covid_low_within_2pct
+   AVWAP Resistance Anchor: recent_earnings_gap
+   AVWAP Resistance Distance: 0.59
+   AVWAP Filter Reason: near_resistance_recent_earnings_gap_within_2pct
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 98.28
-   Stop: 98.28
-   Target: 179.17
+   Trigger: 163.33
+   Stop: 163.33
+   Target: 342.14
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure, negative:avwap_blocked
-80. LITE
-   State: FAILED
-   Score: 4.1
+82. CRDO
+   State: BLOCKED
+   Score: 3.6
    Structure Score: -1
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 1.17
-   Volume Ratio: 0.43
-   RSI 14: 40.86
-   RSI Bucket: 40_to_50
+   Range Ratio: 0.78
+   Volume Ratio: 0.42
+   RSI 14: 38.99
+   RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
@@ -2719,158 +2879,126 @@ REJECT / AVOID
    Structural Band: unfavorable
    Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
    Sizing Tier: none
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
+   AVWAP Location: caution
+   AVWAP Effect On Decision: soft_penalty
+   AVWAP Resistance Anchor: iran_war_start
+   AVWAP Resistance Distance: 0.89
+   AVWAP Filter Reason: nearby_resistance
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 725.02
-   Stop: 725.02
-   Target: 1129.5
+   Trigger: 189.84
+   Stop: 186.2
+   Target: 348.57
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
    Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
-81. TXN
+83. EZPW
    State: FAILED
-   Score: 3.8
-   Structure Score: -1
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.03
-   Volume Ratio: 0.28
-   RSI 14: 40.15
-   RSI Bucket: 40_to_50
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, weak_structure, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: recent_uptrend_bottom
-   AVWAP Resistance Distance: 0.55
-   AVWAP Filter Reason: near_resistance_recent_uptrend_bottom_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 280.74
-   Stop: 280.74
-   Target: 339.48
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure, negative:avwap_blocked
-82. KR
-   State: FORMING
-   Score: 3.2
-   Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.06
-   Volume Ratio: 0.21
-   RSI 14: 47.81
-   RSI Bucket: 40_to_50
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 57.99
-   Stop: 56.8
-   Target: 63.77
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-83. PWR
-   State: FAILED
-   Score: 3.2
-   Structure Score: -1
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.68
-   Volume Ratio: 0.27
-   RSI 14: 35.27
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, weak_structure, avwap_blocked
-   Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: ytd
-   AVWAP Resistance Distance: 0.76
-   AVWAP Filter Reason: near_resistance_ytd_within_2pct
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 622.92
-   Stop: 622.92
-   Target: 734.62
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure, negative:avwap_blocked
-84. BW
-   State: FAILED
-   Score: 3.0
+   Score: 3.3
    Structure Score: 0
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 1.16
-   Volume Ratio: 0.2
-   RSI 14: 30.93
+   Range Ratio: 0.61
+   Volume Ratio: 0.12
+   RSI 14: 38.09
    RSI Bucket: below_40
    RSI Trend: falling
    Pivot Zone: far_below
    Trigger Band: favorable
    Breakout Band: unfavorable
    Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, avwap_blocked
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
    Sizing Tier: none
-   AVWAP Location: blocked
-   AVWAP Effect On Decision: hard_block
-   AVWAP Resistance Anchor: recent_uptrend_bottom
-   AVWAP Resistance Distance: 1.39
-   AVWAP Filter Reason: near_resistance_recent_uptrend_bottom_within_2pct
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
    Execution Posture: observe
    Recommended Lane: research
    Recommended Size: none
    Recommended Action: observe
-   Trigger: 9.51
-   Stop: 9.51
-   Target: 17.18
+   Trigger: 29.91
+   Stop: 29.91
+   Target: 42.64
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:avwap_blocked
-85. SE
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+84. ROL
+   State: FAILED
+   Score: 3.0
+   Structure Score: 0
+   Expansion Score: 0
+   Expansion Quality: weak
+   Range Ratio: 0.71
+   Volume Ratio: 0.23
+   RSI 14: 31.21
+   RSI Bucket: below_40
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: acceptable
+   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 39.53
+   Stop: 39.53
+   Target: 48.45
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger
+   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
+85. TTD
    State: FORMING
-   Score: 2.0
+   Score: 1.1
+   Structure Score: 1
+   Expansion Score: 1
+   Expansion Quality: moderate
+   Range Ratio: 1.29
+   Volume Ratio: 0.49
+   RSI 14: 52.04
+   RSI Bucket: 50_to_60
+   RSI Trend: rising
+   Pivot Zone: far_below
+   Trigger Band: favorable
+   Breakout Band: unfavorable
+   Structural Band: favorable
+   Dominant Negatives: overhead_supply, far_from_pivot, weak_breakout_readiness
+   Sizing Tier: none
+   AVWAP Location: clear
+   AVWAP Effect On Decision: none
+   AVWAP Resistance Anchor: --
+   AVWAP Resistance Distance: --
+   AVWAP Filter Reason: no_nearby_resistance_avwap
+   Execution Posture: observe
+   Recommended Lane: research
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 18.54
+   Stop: 18.01
+   Target: 22.02
+   RR: 0.0
+   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
+   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot, negative:weak_breakout_readiness
+86. KOD
+   State: FAILED
+   Score: 0.2
    Structure Score: 2
    Expansion Score: 0
    Expansion Quality: weak
-   Range Ratio: 0.68
-   Volume Ratio: 0.47
-   RSI 14: 55.05
+   Range Ratio: 0.77
+   Volume Ratio: 0.26
+   RSI 14: 53.3
    RSI Bucket: 50_to_60
    RSI Trend: falling
    Pivot Zone: far_below
@@ -2878,147 +3006,19 @@ REJECT / AVOID
    Breakout Band: acceptable
    Structural Band: favorable
    Dominant Negatives: overhead_supply, late_extension, far_from_pivot
-   Sizing Tier: watchlist
+   Sizing Tier: none
    AVWAP Location: caution
    AVWAP Effect On Decision: none
    AVWAP Resistance Anchor: major_pivot_high
-   AVWAP Resistance Distance: 2.8
+   AVWAP Resistance Distance: 2.75
    AVWAP Filter Reason: nearby_resistance+anchor_cluster+problematic_anchor
    Execution Posture: observe
    Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 100.96
-   Stop: 102.4
-   Target: 121.86
+   Recommended Size: none
+   Recommended Action: observe
+   Trigger: 41.2
+   Stop: 41.2
+   Target: 52.71
    RR: 0.0
    Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot
-86. VRSN
-   State: FORMING
-   Score: 0.5
-   Structure Score: 2
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 1.06
-   Volume Ratio: 0.29
-   RSI 14: 57.99
-   RSI Bucket: 50_to_60
-   RSI Trend: rising
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: acceptable
-   Structural Band: favorable
-   Dominant Negatives: overhead_supply, far_from_pivot
-   Sizing Tier: watchlist
-   AVWAP Location: clear
-   AVWAP Effect On Decision: none
-   AVWAP Resistance Anchor: --
-   AVWAP Resistance Distance: --
-   AVWAP Filter Reason: no_nearby_resistance_avwap
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: watchlist
-   Recommended Action: watch
-   Trigger: 278.74
-   Stop: 276.32
-   Target: 306.79
-   RR: 1.41
-   Clusters: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location
-   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, forming_readiness_cap, pivot_zone:far_below, negative:overhead_supply, negative:far_from_pivot
-87. EZPW
-   State: BLOCKED
-   Score: 0.0
-   Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.45
-   Volume Ratio: 0.26
-   RSI 14: 39.17
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   AVWAP Location: caution
-   AVWAP Effect On Decision: soft_penalty
-   AVWAP Resistance Anchor: iran_war_start
-   AVWAP Resistance Distance: 3.42
-   AVWAP Filter Reason: nearby_resistance+anchor_cluster
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 29.94
-   Stop: 29.5
-   Target: 42.79
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-88. DOCN
-   State: FAILED
-   Score: 0.0
-   Structure Score: 0
-   Expansion Score: 0
-   Expansion Quality: weak
-   Range Ratio: 0.98
-   Volume Ratio: 0.24
-   RSI 14: 39.5
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: acceptable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness
-   Sizing Tier: none
-   AVWAP Location: caution
-   AVWAP Effect On Decision: soft_penalty
-   AVWAP Resistance Anchor: iran_war_start
-   AVWAP Resistance Distance: 0.83
-   AVWAP Filter Reason: nearby_resistance
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 118.5
-   Stop: 118.5
-   Target: 194.41
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness
-89. NVT
-   State: BLOCKED
-   Score: 0.0
-   Structure Score: -1
-   Expansion Score: 1
-   Expansion Quality: moderate
-   Range Ratio: 1.63
-   Volume Ratio: 0.38
-   RSI 14: 37.12
-   RSI Bucket: below_40
-   RSI Trend: falling
-   Pivot Zone: far_below
-   Trigger Band: favorable
-   Breakout Band: unfavorable
-   Structural Band: unfavorable
-   Dominant Negatives: overhead_supply, late_extension, far_from_pivot, weak_breakout_readiness, weak_structure
-   Sizing Tier: none
-   AVWAP Location: caution
-   AVWAP Effect On Decision: soft_penalty
-   AVWAP Resistance Anchor: iran_war_start
-   AVWAP Resistance Distance: 2.56
-   AVWAP Filter Reason: nearby_resistance+anchor_cluster
-   Execution Posture: observe
-   Recommended Lane: research
-   Recommended Size: none
-   Recommended Action: observe
-   Trigger: 144.81
-   Stop: 143.66
-   Target: 182.61
-   RR: 0.0
-   Clusters: negative_conflict_overhead_vs_trigger
-   Notes: negative_conflict_overhead_vs_trigger, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot, negative:weak_breakout_readiness, negative:weak_structure
+   Notes: negative_conflict_overhead_vs_trigger, negative_conflict_structure_vs_location, pivot_zone:far_below, negative:overhead_supply, negative:late_extension, negative:far_from_pivot
