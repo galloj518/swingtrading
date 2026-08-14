@@ -93,6 +93,7 @@ jobs:
           rm -rf site
           mkdir -p site/reports
           cp docs/dashboard.html site/index.html
+          cp docs/dashboard.html site/dashboard.html
           if [ -f docs/decision_report.txt ]; then
             cp docs/decision_report.txt site/
           fi
