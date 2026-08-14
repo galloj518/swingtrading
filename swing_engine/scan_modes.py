@@ -224,7 +224,13 @@ def _log_watch_signals(context: dict, run_mode: str) -> None:
         packet = context["packets"].get(symbol)
         if not packet:
             continue
-        signals.log_signal(packet, context["regime"].get("regime", ""), run_mode=run_mode)
+        try:
+            signals.log_signal(packet, context["regime"].get("regime", ""), run_mode=run_mode)
+        except Exception as exc:  # noqa: BLE001
+            import logging as _logging
+            _logging.getLogger(__name__).warning(
+                "Failed to log signal for %s: %s", symbol, exc
+            )
 
 
 def _save_report(context: dict, mode: str, narratives:Optional[dict] = None) -> None:

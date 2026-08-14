@@ -38,15 +38,14 @@ def _source_counts(data_status: dict, symbols: List[str]) -> Tuple[int, int, int
     unavailable = 0
     for symbol in symbols:
         status = data_status.get(symbol, {})
-        sources = {status.get("daily_source"), status.get("intraday_source")}
-        if "unavailable" in sources:
+        # Daily data drives availability — intraday is optional (may not exist for some modes)
+        daily_source = status.get("daily_source", "unavailable")
+        if daily_source == "unavailable":
             unavailable += 1
-        elif "cache_fallback" in sources:
+        elif daily_source == "cache_fallback":
             cache_fallback += 1
-        elif sources and sources.issubset({"yfinance", "fixture", None}):
-            live += 1
         else:
-            unavailable += 1
+            live += 1
     return live, cache_fallback, unavailable
 
 
