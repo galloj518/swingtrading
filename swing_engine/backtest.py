@@ -321,13 +321,13 @@ class WalkForwardReplay:
         return pd.DataFrame(all_rows)
 
 
-def _load_backtest_store(symbols: List[str], smoke_mode: bool = False) -> Tuple[dict, dict]:
+def _load_backtest_store(symbols: List[str], start_date: str, end_date: str, smoke_mode: bool = False) -> Tuple[dict, dict]:
     if smoke_mode:
         symbol_store = {symbol: smoke._data_bundle(symbol, idx) for idx, symbol in enumerate(symbols, start=10)}
         benchmark_store = {symbol: smoke._data_bundle(symbol, idx + 1) for idx, symbol in enumerate(cfg.BENCHMARKS)}
         return symbol_store, benchmark_store
-    symbol_store = {symbol: mdata.load_all(symbol, force=False) for symbol in symbols}
-    benchmark_store = {symbol: mdata.load_all(symbol, force=False) for symbol in cfg.BENCHMARKS}
+    symbol_store = {symbol: mdata.load_backtest_bundle(symbol, start_date, end_date, force=False) for symbol in symbols}
+    benchmark_store = {symbol: mdata.load_backtest_bundle(symbol, start_date, end_date, force=False) for symbol in cfg.BENCHMARKS}
     return symbol_store, benchmark_store
 
 
@@ -345,7 +345,7 @@ def run_event_backtest(
     smoke_mode: bool = False,
 ) -> Tuple[pd.DataFrame, Path]:
     db.initialize()
-    data_store, benchmark_store = _load_backtest_store(symbols, smoke_mode=smoke_mode)
+    data_store, benchmark_store = _load_backtest_store(symbols, start_date, end_date, smoke_mode=smoke_mode)
     engine = HistoricalEventStudy(
         symbols,
         data_store,
@@ -367,7 +367,7 @@ def run_walkforward_backtest(
     smoke_mode: bool = False,
 ) -> Tuple[pd.DataFrame, Path]:
     db.initialize()
-    data_store, benchmark_store = _load_backtest_store(symbols, smoke_mode=smoke_mode)
+    data_store, benchmark_store = _load_backtest_store(symbols, start_date, end_date, smoke_mode=smoke_mode)
     engine = WalkForwardReplay(
         symbols,
         data_store,

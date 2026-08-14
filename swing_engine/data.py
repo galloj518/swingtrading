@@ -46,6 +46,10 @@ def _cache_base(symbol: str, timeframe: str) -> Path:
     return cfg.CACHE_DIR / f"{safe_symbol}_{timeframe}"
 
 
+def _safe_symbol_name(symbol: str) -> str:
+    return symbol.replace("^", "IDX_").replace(".", "_")
+
+
 def _cache_paths(symbol: str, timeframe: str) -> Tuple[Path, Path]:
     base = _cache_base(symbol, timeframe)
     return base.with_suffix(".csv"), base.with_suffix(".json")
@@ -53,6 +57,66 @@ def _cache_paths(symbol: str, timeframe: str) -> Tuple[Path, Path]:
 
 def _empty_market_frame() -> pd.DataFrame:
     return EMPTY_MARKET_FRAME.copy()
+
+
+def _merge_history_frames(*frames: pd.DataFrame) -> pd.DataFrame:
+    usable = [frame.copy() for frame in frames if frame is not None and not frame.empty]
+    if not usable:
+        return _empty_market_frame()
+    merged = pd.concat(usable, ignore_index=True)
+    merged["date"] = pd.to_datetime(merged["date"], errors="coerce")
+    merged = (
+        merged.dropna(subset=["date", "close"])
+        .sort_values("date")
+        .drop_duplicates(subset=["date"], keep="last")
+        .reset_index(drop=True)
+    )
+    if merged.empty:
+        return _empty_market_frame()
+    return merged
+
+
+def _import_candidates(symbol: str) -> list[Path]:
+    safe_symbol = _safe_symbol_name(symbol)
+    return [
+        cfg.DAILY_IMPORTS_DIR / f"{symbol}.csv",
+        cfg.DAILY_IMPORTS_DIR / f"{safe_symbol}.csv",
+        cfg.DAILY_IMPORTS_DIR / f"{symbol}.parquet",
+        cfg.DAILY_IMPORTS_DIR / f"{safe_symbol}.parquet",
+    ]
+
+
+def _read_import_history(symbol: str) -> Tuple[pd.DataFrame, dict]:
+    for path in _import_candidates(symbol):
+        if not path.exists():
+            continue
+        try:
+            if path.suffix.lower() == ".parquet":
+                raw = pd.read_parquet(path)
+            else:
+                raw = pd.read_csv(path)
+            frame = _normalize_df(raw)
+            if frame.empty:
+                continue
+            meta = {
+                "symbol": symbol,
+                "timeframe": "daily_import",
+                "source": "local_import",
+                "import_path": str(path),
+                "bars": int(len(frame)),
+                "request_start": pd.Timestamp(frame["date"].min()).strftime("%Y-%m-%d"),
+                "request_end": pd.Timestamp(frame["date"].max()).strftime("%Y-%m-%d"),
+            }
+            return _clone_cached(frame, meta), meta
+        except Exception as exc:
+            log_event(LOGGER, 30, "market_data_import_failed", symbol=symbol, path=str(path), error=type(exc).__name__)
+    return pd.DataFrame(), {}
+
+
+def _write_import_history(symbol: str, df: pd.DataFrame) -> Path:
+    path = cfg.DAILY_IMPORTS_DIR / f"{_safe_symbol_name(symbol)}.csv"
+    df.to_csv(path, index=False)
+    return path
 
 
 def _serialize_timestamp(value:Optional[datetime]) -> Optional[str]:
@@ -242,6 +306,10 @@ def _fetch_daily(symbol: str) -> pd.DataFrame:
     return _download_history(symbol, start=start.isoformat(), end=end.isoformat(), interval="1d")
 
 
+def _fetch_daily_range(symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
+    return _download_history(symbol, start=start_date, end=end_date, interval="1d")
+
+
 def _fetch_intraday(symbol: str) -> pd.DataFrame:
     return _download_history(symbol, period=f"{cfg.INTRADAY_LOOKBACK_DAYS}d", interval="5m")
 
@@ -342,6 +410,21 @@ def load_intraday(symbol: str, force: bool = False) -> pd.DataFrame:
         return _load_from_cache_or_unavailable(symbol, "intra5m", cached_df, cached_meta, f"intraday_fetch_failed:{type(exc).__name__}")
 
 
+def load_intraday_cache_only(symbol: str) -> pd.DataFrame:
+    memory = _get_memory_cache(symbol, "intra5m")
+    if memory:
+        df, meta = memory
+        return _clone_cached(df, meta)
+    cached_df, cached_meta = _read_cache(symbol, "intra5m")
+    if not cached_df.empty:
+        _set_memory_cache(symbol, "intra5m", cached_df, cached_meta)
+        return _clone_cached(cached_df, cached_meta)
+    empty = _empty_market_frame()
+    meta = _unavailable_meta(symbol, "intra5m", "backtest_intraday_cache_missing", freshness_label="missing")
+    _set_memory_cache(symbol, "intra5m", empty, meta)
+    return _clone_cached(empty, meta)
+
+
 def build_weekly(daily_df: pd.DataFrame) -> pd.DataFrame:
     if daily_df.empty:
         return pd.DataFrame(columns=["date", "open", "high", "low", "close", "volume"])
@@ -371,6 +454,185 @@ def load_all(symbol: str, force: bool = False) -> dict:
             "market_hours": market_hours.market_context(),
         },
     }
+
+
+def load_backtest_daily(symbol: str, start_date: str, end_date: str, force: bool = False) -> pd.DataFrame:
+    timeframe = "daily_backtest"
+    request_start = (pd.Timestamp(start_date) - pd.Timedelta(days=cfg.BACKTEST_HISTORY_BUFFER_DAYS)).strftime("%Y-%m-%d")
+    request_end = (pd.Timestamp(end_date) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    imported_df, imported_meta = _read_import_history(symbol)
+    cached_df, cached_meta = _read_cache(symbol, timeframe)
+    regular_cached_df, regular_cached_meta = _read_cache(symbol, "daily")
+    if not imported_df.empty:
+        merged = _merge_history_frames(imported_df, regular_cached_df)
+        merged_start = pd.Timestamp(merged["date"].min()).strftime("%Y-%m-%d")
+        merged_end = pd.Timestamp(merged["date"].max()).strftime("%Y-%m-%d")
+        imported_result = dict(imported_meta)
+        imported_result.update({
+            "timeframe": timeframe,
+            "source": "local_import_plus_cache" if not regular_cached_df.empty else "local_import",
+            "fallback_used": False,
+            "request_start": request_start,
+            "request_end": request_end,
+            "coverage_start": merged_start,
+            "coverage_end": merged_end,
+        })
+        if merged_start <= request_start and merged_end >= request_end:
+            return _clone_cached(merged, imported_result)
+    cached_start = str(cached_meta.get("request_start") or "")
+    cached_end = str(cached_meta.get("request_end") or "")
+    if (
+        not force
+        and not cached_df.empty
+        and cached_start
+        and cached_end
+        and cached_start <= request_start
+        and cached_end >= request_end
+    ):
+        return _clone_cached(cached_df, cached_meta)
+
+    try:
+        df = _fetch_daily_range(symbol, request_start, request_end)
+        if df.empty:
+            raise ValueError("empty backtest daily frame")
+        if not imported_df.empty:
+            df = _merge_history_frames(imported_df, df)
+        meta = _make_meta(symbol, timeframe, "yfinance", datetime.now(tz=UTC), df, live_fetch=True)
+        meta["request_start"] = request_start
+        meta["request_end"] = request_end
+        if not imported_df.empty:
+            meta["source"] = "local_import_plus_yfinance"
+            meta["import_path"] = imported_meta.get("import_path")
+        _write_cache(symbol, timeframe, df, meta)
+        return _clone_cached(df, meta)
+    except Exception as exc:
+        if not imported_df.empty:
+            fallback = dict(imported_meta)
+            fallback.update({
+                "timeframe": timeframe,
+                "source": "local_import_plus_cache" if not regular_cached_df.empty else "local_import",
+                "fallback_used": bool(not regular_cached_df.empty),
+                "reason": f"backtest_daily_fetch_failed:{type(exc).__name__}",
+                "request_start": request_start,
+                "request_end": request_end,
+            })
+            merged = _merge_history_frames(imported_df, regular_cached_df)
+            if not merged.empty:
+                log_event(LOGGER, 30, "market_data_cache_fallback", symbol=symbol, timeframe=timeframe, reason=fallback["reason"])
+                return _clone_cached(merged, fallback)
+        if not regular_cached_df.empty:
+            fallback = dict(regular_cached_meta)
+            fallback.update({
+                "source": "cache_fallback",
+                "fallback_used": True,
+                "reason": f"backtest_daily_fetch_failed:{type(exc).__name__}",
+                "request_start": request_start,
+                "request_end": request_end,
+                "timeframe": timeframe,
+            })
+            log_event(LOGGER, 30, "market_data_cache_fallback", symbol=symbol, timeframe=timeframe, reason=fallback["reason"])
+            return _clone_cached(regular_cached_df, fallback)
+        if not cached_df.empty:
+            fallback = dict(cached_meta)
+            fallback.update({
+                "source": "cache_fallback",
+                "fallback_used": True,
+                "reason": f"backtest_daily_fetch_failed:{type(exc).__name__}",
+                "request_start": cached_start or request_start,
+                "request_end": cached_end or request_end,
+            })
+            log_event(LOGGER, 30, "market_data_cache_fallback", symbol=symbol, timeframe=timeframe, reason=fallback["reason"])
+            return _clone_cached(cached_df, fallback)
+        empty = _empty_market_frame()
+        meta = _unavailable_meta(symbol, timeframe, f"backtest_daily_fetch_failed:{type(exc).__name__}")
+        meta["request_start"] = request_start
+        meta["request_end"] = request_end
+        log_event(LOGGER, 30, "market_data_unavailable", symbol=symbol, timeframe=timeframe, reason=meta["reason"])
+        return _clone_cached(empty, meta)
+
+
+def load_backtest_bundle(symbol: str, start_date: str, end_date: str, force: bool = False) -> dict:
+    daily = load_backtest_daily(symbol, start_date, end_date, force=force)
+    intraday = load_intraday_cache_only(symbol)
+    weekly = build_weekly(daily)
+    weekly.attrs["cache_meta"] = get_frame_meta(daily)
+    return {
+        "daily": daily,
+        "weekly": weekly,
+        "intraday": intraday,
+        "meta": {
+            "daily": get_frame_meta(daily),
+            "weekly": get_frame_meta(weekly),
+            "intraday": get_frame_meta(intraday),
+            "market_hours": market_hours.market_context(),
+        },
+    }
+
+
+def backfill_daily_imports(
+    symbols: list[str],
+    start_date: str,
+    end_date: str,
+    *,
+    force: bool = False,
+) -> dict:
+    results = {
+        "start_date": start_date,
+        "end_date": end_date,
+        "downloaded": [],
+        "cache_seeded": [],
+        "failed": [],
+    }
+    for raw_symbol in symbols:
+        symbol = raw_symbol.upper()
+        imported_df, _ = _read_import_history(symbol)
+        if not imported_df.empty and not force:
+            imported_start = pd.Timestamp(imported_df["date"].min()).strftime("%Y-%m-%d")
+            imported_end = pd.Timestamp(imported_df["date"].max()).strftime("%Y-%m-%d")
+            if imported_start <= start_date and imported_end >= end_date:
+                results["downloaded"].append({
+                    "symbol": symbol,
+                    "path": str(cfg.DAILY_IMPORTS_DIR / f"{_safe_symbol_name(symbol)}.csv"),
+                    "bars": int(len(imported_df)),
+                    "source": "existing_import",
+                    "coverage_start": imported_start,
+                    "coverage_end": imported_end,
+                })
+                continue
+        try:
+            df = _fetch_daily_range(symbol, start_date, (pd.Timestamp(end_date) + pd.Timedelta(days=1)).strftime("%Y-%m-%d"))
+            if df.empty:
+                raise ValueError("empty import frame")
+            if not imported_df.empty:
+                df = _merge_history_frames(imported_df, df)
+            path = _write_import_history(symbol, df)
+            results["downloaded"].append({
+                "symbol": symbol,
+                "path": str(path),
+                "bars": int(len(df)),
+                "source": "yfinance",
+                "coverage_start": pd.Timestamp(df["date"].min()).strftime("%Y-%m-%d"),
+                "coverage_end": pd.Timestamp(df["date"].max()).strftime("%Y-%m-%d"),
+            })
+        except Exception as exc:
+            cached_df, _ = _read_cache(symbol, "daily")
+            if not cached_df.empty:
+                seeded = _merge_history_frames(imported_df, cached_df)
+                path = _write_import_history(symbol, seeded)
+                results["cache_seeded"].append({
+                    "symbol": symbol,
+                    "path": str(path),
+                    "bars": int(len(seeded)),
+                    "reason": type(exc).__name__,
+                    "coverage_start": pd.Timestamp(seeded["date"].min()).strftime("%Y-%m-%d"),
+                    "coverage_end": pd.Timestamp(seeded["date"].max()).strftime("%Y-%m-%d"),
+                })
+                continue
+            results["failed"].append({
+                "symbol": symbol,
+                "reason": type(exc).__name__,
+            })
+    return results
 
 
 def load_vix(force: bool = False) -> pd.DataFrame:

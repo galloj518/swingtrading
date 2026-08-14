@@ -31,6 +31,7 @@ Usage:
     python -m swing_engine soxx
     python -m swing_engine review
     python -m swing_engine backfill
+    python -m swing_engine backfill-daily-imports
     python -m swing_engine backtest-events
     python -m swing_engine backtest-walkforward
     python -m swing_engine calibrate-thresholds
@@ -95,6 +96,7 @@ COMMAND_HELP = {
     "soxx": "Usage: python -m swing_engine soxx [--force]",
     "review": "Usage: python -m swing_engine review",
     "backfill": "Usage: python -m swing_engine backfill",
+    "backfill-daily-imports": "Usage: python -m swing_engine backfill-daily-imports [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--force] [SYMBOL ...]",
     "backtest-events": "Usage: python -m swing_engine backtest-events [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--smoke] [SYMBOL ...]",
     "backtest-walkforward": "Usage: python -m swing_engine backtest-walkforward [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--smoke] [SYMBOL ...]",
     "calibrate-thresholds": "Usage: python -m swing_engine calibrate-thresholds [--mode backtest-events|backtest-walkforward]",
@@ -141,6 +143,17 @@ def run_backfill():
     print("  Backfilling signal outcomes...")
     count = signals.backfill_outcomes()
     print(f"  Backfilled {count} signals")
+
+
+def run_backfill_daily_imports(symbols: List[str], start_date: str, end_date: str, force: bool = False):
+    results = mdata.backfill_daily_imports(symbols, start_date, end_date, force=force)
+    print(f"  Daily import backfill requested: {start_date} -> {end_date}")
+    print(f"  Downloaded/import-covered: {len(results['downloaded'])}")
+    print(f"  Cache-seeded only: {len(results['cache_seeded'])}")
+    print(f"  Failed: {len(results['failed'])}")
+    if results["failed"]:
+        preview = ", ".join(item["symbol"] for item in results["failed"][:15])
+        print(f"  Failed symbols sample: {preview}")
 
 
 def run_db_sync():
@@ -216,6 +229,10 @@ def main():
         review.run_review()
     elif cmd == "backfill":
         run_backfill()
+    elif cmd == "backfill-daily-imports":
+        symbols_to_run, start, end, _, _ = _parse_backtest_args(args)
+        universe = list(dict.fromkeys(cfg.BENCHMARKS + symbols_to_run))
+        run_backfill_daily_imports(universe, start, end, force=force)
     elif cmd == "db-sync":
         run_db_sync()
     elif cmd == "log-trade" and len(args) >= 7:

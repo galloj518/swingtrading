@@ -90,7 +90,7 @@ jobs:
         run: |
           rm -rf site
           mkdir -p site/reports
-          cp dashboard.html site/index.html
+          cp docs/dashboard.html site/index.html
           if [ -d reports ]; then
             cp -R reports/. site/reports/
           fi
