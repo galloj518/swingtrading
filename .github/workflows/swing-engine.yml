@@ -6,10 +6,9 @@ on:
       mode:
         description: Scan mode
         required: false
-        default: run
+        default: run-structural
         type: choice
         options:
-          - run
           - run-structural
           - run-breakout-watch
           - run-triggers
@@ -22,6 +21,7 @@ on:
 permissions:
   pages: write
   id-token: write
+  contents: read
 
 concurrency:
   group: swing-engine-pages
@@ -30,6 +30,9 @@ concurrency:
 jobs:
   run-scan:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
 
     steps:
       - name: Check out repository
@@ -85,22 +88,23 @@ jobs:
           fi
 
       - name: Prepare Pages site
-        if: success()
         shell: bash
         run: |
           rm -rf site
           mkdir -p site/reports
           cp docs/dashboard.html site/index.html
+          if [ -f docs/decision_report.txt ]; then
+            cp docs/decision_report.txt site/
+          fi
           if [ -d reports ]; then
             cp -R reports/. site/reports/
           fi
 
       - name: Upload Pages artifact
-        if: success()
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
       - name: Deploy to GitHub Pages
-        if: success()
+        id: deploy
         uses: actions/deploy-pages@v4
